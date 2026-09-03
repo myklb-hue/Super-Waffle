@@ -1,0 +1,524 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin:0; background:#08090b; color:#e8ebf0; font-family:'Space Grotesk','Helvetica Neue',Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#56c7d6; text-decoration:none; }
+    a:hover { color:#93dde8; }
+    @keyframes flow { to { stroke-dashoffset:-28; } }
+    @keyframes breathe { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  </style>
+</helmet>
+<div style="width:1920px;height:1080px;display:flex;flex-direction:column;background:#08090b;overflow:hidden;font-family:'Space Grotesk','Helvetica Neue',Arial,sans-serif;">
+  <div style="display:flex;align-items:center;gap:10px;height:46px;flex:none;padding:0 12px;background:#0f1217;border-bottom:1px solid #242932;">
+  <div style="display:flex;align-items:center;gap:9px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="5.5" cy="6" r="2.2"/><circle cx="5.5" cy="18" r="2.2"/><circle cx="18.5" cy="12" r="2.6"/><path d="M7.7 6.9L16 11"/><path d="M7.7 17.1L16 13"/></svg>
+    <span style="width:1px;height:18px;background:#242932;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;font-weight:500;color:#e8ebf0;">home-assistant.graph</span>
+    <span style="transform:rotate(90deg);opacity:.5;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+    <span style="font-size:10px;color:#5f6875;">saved</span>
+  </div>
+  <span style="flex:1;"></span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 4px 0 10px;border-radius:6px;background:rgba(111,201,138,0.13);border:1px solid rgba(111,201,138,0.35);">
+        <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#6fc98a;letter-spacing:.03em;">live</span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:rgba(111,201,138,0.7);">4 h 12 m</span>
+        <div style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:rgba(224,104,95,0.16);margin-left:2px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e0685f" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg></div>
+      </div>
+    <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98a2ae" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M6 5l9 7-9 7z"/><path d="M18 5v14"/></svg></div>
+    <span style="width:1px;height:18px;background:#242932;"></span>
+    <div style="display:flex;align-items:center;gap:7px;height:26px;padding:0 9px;border-radius:6px;border:1px solid #242932;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#6fc98a;"></span>
+      <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#98a2ae;">local &middot; ollama + cuda</span>
+    </div>
+  </div>
+  <span style="flex:1;"></span>
+  <div style="display:flex;align-items:center;gap:4px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;margin-right:6px;">100%</span>
+    <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98a2ae" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9"/><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9"/><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg></div>
+    <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98a2ae" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg></div>
+    <div style="display:flex;align-items:center;gap:6px;height:26px;padding:0 11px;margin-left:6px;border-radius:6px;border:1px solid #242932;">
+      <span style="font-size:11px;font-weight:500;color:#e8ebf0;">Deploy</span>
+    </div>
+  </div>
+</div>
+  <div style="flex:1;display:flex;min-height:0;">
+    <div style="width:48px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;background:#111419;border-right:1px solid #242932;">
+  <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:#0b0d11;border:1px solid #242932;margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20"/></svg></div>
+  <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(86,199,214,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3l1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"/></svg></div><div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(224,164,88,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6.5A2.5 2.5 0 0 1 10.5 4h3A2.5 2.5 0 0 1 16 6.5V8"/><path d="M3 13h18"/></svg></div><div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(111,201,138,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 10l2.6 2-2.6 2"/><path d="M13 14h4"/></svg></div><div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(220,198,91,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg></div><div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(126,159,240,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6"/><path d="M5 12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8"/></svg></div><div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(232,134,90,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M13.5 3L5.5 13.5H11L10.5 21l8-10.5H13z"/></svg></div><div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(167,139,208,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bd0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9.5 4c-2.5 0-2 5.5-4 8 2 2.5 1.5 8 4 8"/><path d="M14.5 4c2.5 0 2 5.5 4 8-2 2.5-1.5 8-4 8"/></svg></div><div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(138,147,163,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a93a3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7" cy="5.5" r="2"/><circle cx="7" cy="18.5" r="2"/><circle cx="17" cy="9" r="2"/><path d="M7 7.5v9"/><path d="M9 5.5h3a3 3 0 0 1 3 3v.5"/></svg></div><div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(217,127,143,0.1);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97f8f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg></div>
+  <span style="flex:1;"></span>
+  <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></div>
+</div>
+    <div style="flex:1;position:relative;overflow:hidden;background-color:#0d0f13;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.055) 1px, transparent 0);background-size:22px 22px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="1544" height="1006" viewBox="0 0 1544 1006" style="position:absolute;left:0;top:0;pointer-events:none;"><path d="M204 101 C 252 101, 212 91, 260 91" fill="none" stroke="#d77bd0" stroke-width="7" stroke-linecap="round" opacity="0.16"/><path d="M204 101 C 252 101, 212 91, 260 91" fill="none" stroke="#d77bd0" stroke-width="1.9" stroke-linecap="round" opacity="0.95" stroke-dasharray="6 6" style="animation:flow .85s linear infinite;"/><path d="M204 101 C 252 101, 212 233, 260 233" fill="none" stroke="#d77bd0" stroke-width="7" stroke-linecap="round" opacity="0.16"/><path d="M204 101 C 252 101, 212 233, 260 233" fill="none" stroke="#d77bd0" stroke-width="1.9" stroke-linecap="round" opacity="0.95" stroke-dasharray="6 6" style="animation:flow .85s linear infinite;"/><path d="M204 301 C 252 301, 212 355, 260 355" fill="none" stroke="#dcc65b" stroke-width="7" stroke-linecap="round" opacity="0.16"/><path d="M204 301 C 252 301, 212 355, 260 355" fill="none" stroke="#dcc65b" stroke-width="1.9" stroke-linecap="round" opacity="0.95" stroke-dasharray="6 6" style="animation:flow .85s linear infinite;"/><path d="M204 445 C 520.8 445, 463.2 351, 780 351" fill="none" stroke="#56c7d6" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M204 445 C 520.8 445, 463.2 351, 780 351" fill="none" stroke="#56c7d6" stroke-width="1.9" stroke-linecap="round" opacity="0.95"/><path d="M460 355 C 636 355, 604 351, 780 351" fill="none" stroke="#56c7d6" stroke-width="7" stroke-linecap="round" opacity="0.16"/><path d="M460 355 C 636 355, 604 351, 780 351" fill="none" stroke="#56c7d6" stroke-width="1.9" stroke-linecap="round" opacity="0.95" stroke-dasharray="6 6" style="animation:flow .85s linear infinite;"/><path d="M460 91 C 636 91, 604 375, 780 375" fill="none" stroke="#a78bd0" stroke-width="7" stroke-linecap="round" opacity="0.16"/><path d="M460 91 C 636 91, 604 375, 780 375" fill="none" stroke="#a78bd0" stroke-width="1.9" stroke-linecap="round" opacity="0.95" stroke-dasharray="6 6" style="animation:flow .85s linear infinite;"/><path d="M460 233 C 636 233, 604 375, 780 375" fill="none" stroke="#a78bd0" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M460 233 C 636 233, 604 375, 780 375" fill="none" stroke="#a78bd0" stroke-width="1.9" stroke-linecap="round" opacity="0.95"/><path d="M460 509 C 508 509, 472 481, 520 481" fill="none" stroke="#e0a458" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M460 509 C 508 509, 472 481, 520 481" fill="none" stroke="#e0a458" stroke-width="1.9" stroke-linecap="round" opacity="0.95"/><path d="M460 636 C 508 636, 472 505, 520 505" fill="none" stroke="#e0a458" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M460 636 C 508 636, 472 505, 520 505" fill="none" stroke="#e0a458" stroke-width="1.9" stroke-linecap="round" opacity="0.95"/><path d="M720 481 C 768 481, 732 399, 780 399" fill="none" stroke="#e0a458" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M720 481 C 768 481, 732 399, 780 399" fill="none" stroke="#e0a458" stroke-width="2.2" stroke-linecap="round" opacity="0.95"/><path d="M460 763 C 508 763, 472 821, 520 821" fill="none" stroke="#7e9ff0" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M460 763 C 508 763, 472 821, 520 821" fill="none" stroke="#7e9ff0" stroke-width="1.9" stroke-linecap="round" opacity="0.95"/><path d="M460 894 C 508 894, 472 845, 520 845" fill="none" stroke="#7e9ff0" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M460 894 C 508 894, 472 845, 520 845" fill="none" stroke="#7e9ff0" stroke-width="1.9" stroke-linecap="round" opacity="0.95"/><path d="M730 821 C 817.56 821, 692.44 423, 780 423" fill="none" stroke="#7e9ff0" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M730 821 C 817.56 821, 692.44 423, 780 423" fill="none" stroke="#7e9ff0" stroke-width="2.2" stroke-linecap="round" opacity="0.95"/><path d="M1040 351 C 1088 351, 1052 251, 1100 251" fill="none" stroke="#56c7d6" stroke-width="7" stroke-linecap="round" opacity="0.16"/><path d="M1040 351 C 1088 351, 1052 251, 1100 251" fill="none" stroke="#56c7d6" stroke-width="1.9" stroke-linecap="round" opacity="0.95" stroke-dasharray="6 6" style="animation:flow .85s linear infinite;"/><path d="M1040 351 C 1088 351, 1052 411, 1100 411" fill="none" stroke="#56c7d6" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M1040 351 C 1088 351, 1052 411, 1100 411" fill="none" stroke="#56c7d6" stroke-width="1.9" stroke-linecap="round" opacity="0.5"/><path d="M1300 411 C 1348 411, 1292 411, 1340 411" fill="none" stroke="#dcc65b" stroke-width="5" stroke-linecap="round" opacity="0.09"/><path d="M1300 411 C 1348 411, 1292 411, 1340 411" fill="none" stroke="#dcc65b" stroke-width="1.9" stroke-linecap="round" opacity="0.5"/><path d="M1040 375 C 1088 375, 1052 541, 1100 541" fill="none" stroke="#56c7d6" stroke-width="7" stroke-linecap="round" opacity="0.16"/><path d="M1040 375 C 1088 375, 1052 541, 1100 541" fill="none" stroke="#56c7d6" stroke-width="1.9" stroke-linecap="round" opacity="0.95" stroke-dasharray="6 6" style="animation:flow .85s linear infinite;"/></svg>
+      <div style="position:absolute;left:24px;top:50px;width:180px;background:#191d24;border:1px solid rgba(111,201,138,0.5);border-radius:9px;box-shadow:0 0 0 4px rgba(111,201,138,0.09),0 12px 30px rgba(0,0,0,.5);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(220,198,91,0.13),rgba(220,198,91,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Webcam</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><span></span><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#d77bd0;box-shadow:0 0 0 3px rgba(215,123,208,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">frames</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="position:relative;height:46px;border-radius:5px;background:linear-gradient(135deg,#1c2027,#0e1116);border:1px solid #1a1e25;overflow:hidden;">
+  <div style="position:absolute;left:52px;top:9px;width:26px;height:30px;border:1px solid #d77bd0;border-radius:2px;"></div>
+  <div style="position:absolute;left:52px;top:2px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:7px;color:#d77bd0;">person .97</div>
+  <div style="position:absolute;left:108px;top:14px;width:34px;height:26px;border:1px solid rgba(215,123,208,0.6);border-radius:2px;"></div>
+  <div style="position:absolute;left:108px;top:7px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:7px;color:rgba(215,123,208,0.8);">door .88</div>
+</div><div style="margin-top:7px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;">1280&times;720 &middot; 15 fps</div></div>
+</div>
+<div style="position:absolute;left:24px;top:250px;width:180px;background:#191d24;border:1px solid rgba(111,201,138,0.5);border-radius:9px;box-shadow:0 0 0 4px rgba(111,201,138,0.09),0 12px 30px rgba(0,0,0,.5);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(220,198,91,0.13),rgba(220,198,91,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Microphone</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><span></span><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#dcc65b;box-shadow:0 0 0 3px rgba(220,198,91,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">audio</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;align-items:flex-end;gap:2px;height:22px;"><span style="width:5px;height:6px;border-radius:1px;background:#dcc65b;opacity:0.6;"></span><span style="width:5px;height:12px;border-radius:1px;background:#dcc65b;opacity:0.75;"></span><span style="width:5px;height:18px;border-radius:1px;background:#dcc65b;opacity:0.9;"></span><span style="width:5px;height:22px;border-radius:1px;background:#dcc65b;opacity:1;"></span><span style="width:5px;height:16px;border-radius:1px;background:#dcc65b;opacity:0.8500000000000001;"></span><span style="width:5px;height:20px;border-radius:1px;background:#dcc65b;opacity:0.95;"></span><span style="width:5px;height:10px;border-radius:1px;background:#dcc65b;opacity:0.7;"></span><span style="width:5px;height:14px;border-radius:1px;background:#dcc65b;opacity:0.8;"></span><span style="width:5px;height:19px;border-radius:1px;background:#dcc65b;opacity:0.925;"></span><span style="width:5px;height:8px;border-radius:1px;background:#dcc65b;opacity:0.65;"></span><span style="width:5px;height:12px;border-radius:1px;background:#dcc65b;opacity:0.75;"></span><span style="width:5px;height:17px;border-radius:1px;background:#dcc65b;opacity:0.875;"></span><span style="width:5px;height:9px;border-radius:1px;background:#dcc65b;opacity:0.675;"></span><span style="width:5px;height:5px;border-radius:1px;background:#dcc65b;opacity:0.575;"></span></div><div style="margin-top:7px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;">&minus;18 dB &middot; vad: speech</div></div>
+</div>
+<div style="position:absolute;left:24px;top:394px;width:180px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(220,198,91,0.13),rgba(220,198,91,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h4"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Keyboard</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><span></span><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">text</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">&gt; check the front door_</span>
+  
+  
+</div></div>
+</div>
+<div style="position:absolute;left:260px;top:40px;width:200px;background:#191d24;border:1px solid rgba(111,201,138,0.5);border-radius:9px;box-shadow:0 0 0 4px rgba(111,201,138,0.09),0 12px 30px rgba(0,0,0,.5);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(86,199,214,0.13),rgba(86,199,214,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Object detection</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#d77bd0;box-shadow:0 0 0 3px rgba(215,123,208,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">image</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#a78bd0;box-shadow:0 0 0 3px rgba(167,139,208,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">objects</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;gap:4px;"><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(215,123,208,0.12);border:1px solid rgba(215,123,208,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#d77bd0;">person .97</span><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(215,123,208,0.12);border:1px solid rgba(215,123,208,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#d77bd0;">door .88</span></div><div style="margin-top:7px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;">yolo-v8n &middot; 22 ms &middot; 5 fps</div></div>
+</div>
+<div style="position:absolute;left:260px;top:182px;width:200px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(86,199,214,0.13),rgba(86,199,214,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Face recognition</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#d77bd0;box-shadow:0 0 0 3px rgba(215,123,208,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">image</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#a78bd0;box-shadow:0 0 0 3px rgba(167,139,208,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">person</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:22px;border-radius:50%;background:rgba(217,127,143,0.25);border:1px solid rgba(217,127,143,0.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#d97f8f;flex:none;">M</span><div><div style="font-size:11px;color:#e8ebf0;">Mykl &middot; 0.93</div><div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;color:#39414c;">known &middot; seen 2 min ago</div></div></div></div>
+</div>
+<div style="position:absolute;left:260px;top:304px;width:200px;background:#191d24;border:1px solid rgba(111,201,138,0.5);border-radius:9px;box-shadow:0 0 0 4px rgba(111,201,138,0.09),0 12px 30px rgba(0,0,0,.5);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(86,199,214,0.13),rgba(86,199,214,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Speech to text</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#dcc65b;box-shadow:0 0 0 3px rgba(220,198,91,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">audio</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">text</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;line-height:1.55;color:#c3cad4;white-space:nowrap;overflow:hidden;">&#8230;check the front door<span style="color:#6fc98a;">&#9612;</span></div></div>
+</div>
+<div style="position:absolute;left:260px;top:458px;width:200px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(232,134,90,0.13),rgba(232,134,90,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M8.5 3v5"/><path d="M15.5 3v5"/><path d="M6 8h12v3.5a6 6 0 0 1-12 0z"/><path d="M12 17.5V21"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">USB device</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><span></span><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 3px rgba(224,164,88,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">tool</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/dev/ttyACM0 &middot; 115200</span>
+  
+  
+</div></div>
+</div>
+<div style="position:absolute;left:260px;top:585px;width:200px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(232,134,90,0.13),rgba(232,134,90,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4.5 10a7.5 7.5 0 0 1 12.8-3.5"/><path d="M19.5 14a7.5 7.5 0 0 1-12.8 3.5"/><path d="M17.5 3v4h-4"/><path d="M6.5 21v-4h4"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Motors</span>
+    <span style="flex:1;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,104,95,0.12);border:1px solid rgba(224,104,95,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0685f;"><span style="width:5px;height:5px;border-radius:50%;background:#e0685f;"></span>approval</span>
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><span></span><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 3px rgba(224,164,88,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">tool</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">2 servos &middot; pan / tilt</span>
+  
+  
+</div></div>
+</div>
+<div style="position:absolute;left:260px;top:712px;width:200px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(126,159,240,0.13),rgba(126,159,240,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9.5 4c-2.5 0-2 5.5-4 8 2 2.5 1.5 8 4 8"/><path d="M14.5 4c2.5 0 2 5.5 4 8-2 2.5-1.5 8-4 8"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Working memory</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><span></span><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#7e9ff0;box-shadow:0 0 0 3px rgba(126,159,240,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">memory</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;line-height:1.7;color:#39414c;white-space:nowrap;"><span style="color:#98a2ae;">14:02</span> Mykl at desk<br><span style="color:#98a2ae;">14:03</span> asked about the door</div></div>
+</div>
+<div style="position:absolute;left:260px;top:843px;width:200px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(126,159,240,0.13),rgba(126,159,240,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6"/><path d="M5 12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Long-term memory</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><span></span><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#7e9ff0;box-shadow:0 0 0 3px rgba(126,159,240,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">memory</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;line-height:1.6;color:#39414c;">Mykl &mdash; terse answers, works late</div><div style="margin-top:4px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;">12 people &middot; 2,140 episodes</div></div>
+</div>
+<div style="position:absolute;left:520px;top:430px;width:200px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(224,164,88,0.13),rgba(224,164,88,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6.5A2.5 2.5 0 0 1 10.5 4h3A2.5 2.5 0 0 1 16 6.5V8"/><path d="M3 13h18"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Toolbox</span>
+    <span style="flex:1;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,164,88,0.12);border:1px solid rgba(224,164,88,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0a458;">3 fns</span>
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 3px rgba(224,164,88,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">usb</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 3px rgba(224,164,88,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">tools</span>
+</div></div><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 3px rgba(224,164,88,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">motors</span>
+</div><span></span></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;flex-direction:column;gap:5px;"><div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:#0b0d11;border:1px solid #1a1e25;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M8.5 3v5"/><path d="M15.5 3v5"/><path d="M6 8h12v3.5a6 6 0 0 1-12 0z"/><path d="M12 17.5V21"/></svg><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#98a2ae;white-space:nowrap;">usb.send &middot; usb.read</span></div><div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:#0b0d11;border:1px solid #1a1e25;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4.5 10a7.5 7.5 0 0 1 12.8-3.5"/><path d="M19.5 14a7.5 7.5 0 0 1-12.8 3.5"/><path d="M17.5 3v4h-4"/><path d="M6.5 21v-4h4"/></svg><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#98a2ae;white-space:nowrap;">motor.move</span><span style="flex:1;"></span><span style="width:6px;height:6px;border-radius:50%;background:#e0685f;"></span></div></div></div>
+</div>
+<div style="position:absolute;left:520px;top:770px;width:210px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(126,159,240,0.13),rgba(126,159,240,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7" cy="19" r="2"/><circle cx="17" cy="5" r="2"/><path d="M7 17V11a4 4 0 0 1 4-4h4"/><path d="M13 4.5L15.5 7 13 9.5"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Memory hub</span>
+    <span style="flex:1;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(126,159,240,0.12);border:1px solid rgba(126,159,240,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#7e9ff0;">2</span>
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#7e9ff0;box-shadow:0 0 0 3px rgba(126,159,240,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">working</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#7e9ff0;box-shadow:0 0 0 3px rgba(126,159,240,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">memory</span>
+</div></div><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#7e9ff0;box-shadow:0 0 0 3px rgba(126,159,240,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">long-term</span>
+</div><span></span></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;flex-direction:column;gap:5px;"><div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:#0b0d11;border:1px solid #1a1e25;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9.5 4c-2.5 0-2 5.5-4 8 2 2.5 1.5 8 4 8"/><path d="M14.5 4c2.5 0 2 5.5 4 8-2 2.5-1.5 8-4 8"/></svg><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#98a2ae;white-space:nowrap;">working &middot; fast</span></div><div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:#0b0d11;border:1px solid #1a1e25;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6"/><path d="M5 12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8"/></svg><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#98a2ae;white-space:nowrap;">long-term &middot; vectors</span></div><div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;color:#39414c;padding-left:2px;">consolidate every 10 min</div></div></div>
+</div>
+<div style="position:absolute;left:780px;top:300px;width:260px;background:#191d24;border:1px solid #56c7d6;border-radius:9px;box-shadow:0 0 0 1px #56c7d6,0 0 0 5px rgba(86,199,214,0.15),0 16px 38px rgba(0,0,0,.6);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(86,199,214,0.13),rgba(86,199,214,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3l1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Orchestrator</span>
+    <span style="flex:1;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(111,201,138,0.12);border:1px solid rgba(111,201,138,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#6fc98a;"><span style="width:5px;height:5px;border-radius:50%;background:#6fc98a;"></span>thinking</span>
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">prompt</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">text</span>
+</div></div><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#a78bd0;box-shadow:0 0 0 3px rgba(167,139,208,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">context</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">thoughts</span>
+</div></div><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 3px rgba(224,164,88,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">tools</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#a78bd0;box-shadow:0 0 0 3px rgba(167,139,208,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">calls</span>
+</div></div><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#7e9ff0;box-shadow:0 0 0 3px rgba(126,159,240,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">memory</span>
+</div><span></span></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">model</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">qwen2.5:14b &middot; local</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div><div style="margin-top:9px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;line-height:1.55;color:#39414c;">Mykl asked about the front door. Camera shows it closed, no one near it for 2 min. Pan the camera to confirm&#8230;</div><div style="margin-top:8px;display:flex;align-items:center;gap:7px;height:23px;padding:0 8px;border-radius:5px;background:rgba(224,164,88,0.1);border:1px solid rgba(224,164,88,0.32);"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4.5 10a7.5 7.5 0 0 1 12.8-3.5"/><path d="M19.5 14a7.5 7.5 0 0 1-12.8 3.5"/><path d="M17.5 3v4h-4"/><path d="M6.5 21v-4h4"/></svg><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#e0a458;white-space:nowrap;">motor.move(pan: &minus;40)</span><span style="flex:1;"></span><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,104,95,0.12);border:1px solid rgba(224,104,95,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0685f;">confirm?</span></div></div>
+</div>
+<div style="position:absolute;left:1100px;top:200px;width:200px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(232,134,90,0.13),rgba(232,134,90,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h4"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Display</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">text</span>
+</div><span></span></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="padding:7px 9px;border-radius:5px;background:#0b0d11;border:1px solid #1a1e25;font-size:10.5px;line-height:1.5;color:#c3cad4;">Front door is closed. Last motion 14:01.</div><div style="margin-top:6px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;">HDMI-1 &middot; overlay</div></div>
+</div>
+<div style="position:absolute;left:1100px;top:360px;width:200px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(86,199,214,0.13),rgba(86,199,214,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Text to speech</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#39414c;box-shadow:0 0 0 3px rgba(57,65,76,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">text</span>
+</div><div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;margin-right:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#dcc65b;box-shadow:0 0 0 3px rgba(220,198,91,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">audio</span>
+</div></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">piper &middot; en_GB-alan</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div>
+</div>
+<div style="position:absolute;left:1100px;top:490px;width:200px;background:#191d24;border:1px solid rgba(111,201,138,0.5);border-radius:9px;box-shadow:0 0 0 4px rgba(111,201,138,0.09),0 12px 30px rgba(0,0,0,.5);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(111,201,138,0.13),rgba(111,201,138,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 10l2.6 2-2.6 2"/><path d="M13 14h4"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Terminal</span>
+    <span style="flex:1;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(152,162,174,0.12);border:1px solid rgba(152,162,174,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#98a2ae;">thoughts</span>
+    <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">text</span>
+</div><span></span></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="padding:6px 8px;border-radius:5px;background:#07080a;border:1px solid #1a1e25;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;line-height:1.65;color:#9aa4b0;white-space:nowrap;overflow:hidden;">[14:03:12] look: door closed<br>[14:03:12] recall: asked yesterday<br>[14:03:13] act: pan camera &minus;40&deg;<span style="color:#6fc98a;">&#9612;</span></div></div>
+</div>
+<div style="position:absolute;left:1340px;top:360px;width:180px;background:#191d24;border:1px solid #242932;border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.45);">
+  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid #1a1e25;border-radius:8px 8px 0 0;background:linear-gradient(180deg,rgba(232,134,90,0.13),rgba(232,134,90,0.02));">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:#e8ebf0;white-space:nowrap;">Speaker</span>
+    <span style="flex:1;"></span>
+    
+    <span style="width:7px;height:7px;border-radius:50%;background:#39414c;box-shadow:0 0 0 3px rgba(57,65,76,0.16);flex:none;"></span>
+  </div>
+  <div style="padding:8px 0 4px;"><div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;"><div style="display:flex;align-items:center;gap:8px;margin-left:-6.5px;opacity:1;">
+<span style="width:11px;height:11px;border-radius:50%;background:#dcc65b;box-shadow:0 0 0 3px rgba(220,198,91,0.12);flex:none;"></span>
+<span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:500;color:#98a2ae;letter-spacing:.03em;white-space:nowrap;">audio</span>
+</div><span></span></div></div>
+  <div style="position:relative;padding:4px 11px 12px;"><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#5f6875;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">default &middot; 48 kHz</span>
+  
+  
+</div></div>
+</div>
+      <div style="position:absolute;left:24px;top:888px;display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;">
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:#d77bd0;"></span>image</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:#dcc65b;"></span>audio</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:#7e9ff0;"></span>memory</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:#e0a458;"></span>tools</div>
+      </div>
+      <div style="position:absolute;right:14px;bottom:14px;width:138px;height:88px;background:rgba(10,12,16,0.92);border:1px solid #242932;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden;">
+  <div style="position:absolute;left:8px;top:9px;width:12px;height:8px;border-radius:2px;background:rgba(220,198,91,0.65);"></div><div style="position:absolute;left:8px;top:22px;width:12px;height:7px;border-radius:2px;background:rgba(220,198,91,0.65);"></div><div style="position:absolute;left:8px;top:32px;width:12px;height:6px;border-radius:2px;background:rgba(220,198,91,0.65);"></div><div style="position:absolute;left:24px;top:8px;width:13px;height:8px;border-radius:2px;background:rgba(86,199,214,0.65);"></div><div style="position:absolute;left:24px;top:18px;width:13px;height:8px;border-radius:2px;background:rgba(86,199,214,0.65);"></div><div style="position:absolute;left:24px;top:27px;width:13px;height:7px;border-radius:2px;background:rgba(86,199,214,0.65);"></div><div style="position:absolute;left:24px;top:37px;width:13px;height:7px;border-radius:2px;background:rgba(232,134,90,0.65);"></div><div style="position:absolute;left:24px;top:45px;width:13px;height:7px;border-radius:2px;background:rgba(232,134,90,0.65);"></div><div style="position:absolute;left:24px;top:54px;width:13px;height:8px;border-radius:2px;background:rgba(126,159,240,0.65);"></div><div style="position:absolute;left:24px;top:63px;width:13px;height:8px;border-radius:2px;background:rgba(126,159,240,0.65);"></div><div style="position:absolute;left:41px;top:34px;width:13px;height:10px;border-radius:2px;background:rgba(224,164,88,0.65);"></div><div style="position:absolute;left:41px;top:57px;width:13px;height:10px;border-radius:2px;background:rgba(126,159,240,0.65);"></div><div style="position:absolute;left:59px;top:26px;width:17px;height:13px;border-radius:2px;background:rgba(86,199,214,0.65);"></div><div style="position:absolute;left:80px;top:19px;width:13px;height:7px;border-radius:2px;background:rgba(232,134,90,0.65);"></div><div style="position:absolute;left:80px;top:28px;width:13px;height:6px;border-radius:2px;background:rgba(86,199,214,0.65);"></div><div style="position:absolute;left:80px;top:37px;width:13px;height:7px;border-radius:2px;background:rgba(111,201,138,0.65);"></div><div style="position:absolute;left:96px;top:28px;width:12px;height:6px;border-radius:2px;background:rgba(232,134,90,0.65);"></div>
+  <div style="position:absolute;left:6px;top:6px;width:104px;height:66px;border:1px solid rgba(86,199,214,0.55);border-radius:3px;"></div>
+</div>
+    </div>
+    <div style="width:328px;flex:none;display:flex;flex-direction:column;background:#111419;border-left:1px solid #242932;min-height:0;">
+  <div style="flex:none;padding:13px 16px 0;">
+        <div style="display:flex;align-items:center;gap:9px;">
+          <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(86,199,214,0.14);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3l1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"/></svg></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:#e8ebf0;">Orchestrator</div>
+            <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:2px;">models &middot; llm.chat &middot; role: orchestrator</div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:13px;border-bottom:1px solid #1a1e25;"><div style="padding-bottom:8px;font-size:11.5px;color:#e8ebf0;border-bottom:1.5px solid #56c7d6;margin-bottom:-1px;">Settings</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Ports</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Runs</div></div>
+      </div>
+  <div style="flex:1;overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Model</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Provider</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3l1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Ollama &middot; local &middot; cuda</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Model</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">qwen2.5:14b</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Role</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Orchestrator</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-top:8px;font-size:10px;line-height:1.5;color:#5f6875;">Coordinates the specialists below. It never sees raw frames or audio &mdash; only what they report.</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(86,199,214,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#56c7d6;text-transform:uppercase;">Specialists</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(86,199,214,0.12);border:1px solid rgba(86,199,214,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#56c7d6;">3</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;padding:8px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bd0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Object detection</div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">yolo-v8n &rarr; context</div>
+  </div>
+  <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+</div><div style="display:flex;align-items:center;gap:9px;padding:8px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bd0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Face recognition</div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">insightface &rarr; context</div>
+  </div>
+  <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+</div><div style="display:flex;align-items:center;gap:9px;padding:8px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Speech to text</div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">whisper-small &rarr; prompt</div>
+  </div>
+  <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;animation:breathe 1.3s ease-in-out infinite;"></span>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(126,159,240,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#7e9ff0;text-transform:uppercase;">Memory</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(126,159,240,0.12);border:1px solid rgba(126,159,240,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#7e9ff0;">hub</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;padding:8px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7" cy="19" r="2"/><circle cx="17" cy="5" r="2"/><path d="M7 17V11a4 4 0 0 1 4-4h4"/><path d="M13 4.5L15.5 7 13 9.5"/></svg>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Memory hub</div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">working + long-term</div>
+  </div>
+  <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+</div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">May write memories</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">remember() and forget() offered as tools</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#7e9ff0;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(224,164,88,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#e0a458;text-transform:uppercase;">Tools</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,164,88,0.12);border:1px solid rgba(224,164,88,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0a458;">3</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;padding:8px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6.5A2.5 2.5 0 0 1 10.5 4h3A2.5 2.5 0 0 1 16 6.5V8"/><path d="M3 13h18"/></svg>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Toolbox</div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">usb.send, usb.read, motor.move</div>
+  </div>
+  <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+</div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Confirm physical actions</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">motor.move waits for a human</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#e0685f;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Thoughts</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Print thoughts</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">&rarr; Terminal, one line per step</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#56c7d6;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Detail</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">look / recall / act</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div>
+</div></div>
+</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;height:28px;flex:none;padding:0 12px;background:#0a0c10;border-top:1px solid #242932;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;letter-spacing:.02em;">
+  17 blocks &middot; 17 wires &middot; 3 specialists<span style="flex:1;"></span>live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 action awaiting approval
+</div>
+</div>
+</x-dc>
+
+</body>
+</html>

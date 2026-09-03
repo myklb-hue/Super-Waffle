@@ -29,19 +29,32 @@ technical (port names, commands, log lines, values).
 Ports are typed and the type is the colour — that is the rule the whole
 design rests on:
 
-| type     | colour    | carries                          |
-| -------- | --------- | -------------------------------- |
-| `text`   | `#56c7d6` | prompts, stdout, any string      |
-| `tools`  | `#e0a458` | a bundle of callable functions   |
-| `data`   | `#a78bd0` | structured json or a record      |
-| `stream` | `#6fc98a` | output arriving incrementally    |
-| `file`   | `#7f93c9` | a path or blob on disk           |
-| `exec`   | `#e8ebf0` | control flow, never a value      |
-| `any`    | `#8a93a3` | accepts every type               |
+| type     | colour    | carries                                   |
+| -------- | --------- | ----------------------------------------- |
+| `text`   | `#56c7d6` | prompts, stdout, any string               |
+| `tools`  | `#e0a458` | one callable, or a Toolbox bundle of them |
+| `memory` | `#7e9ff0` | a store the model reads and writes        |
+| `data`   | `#a78bd0` | structured json or a record               |
+| `stream` | `#6fc98a` | output arriving incrementally             |
+| `image`  | `#d77bd0` | frames from a camera or a file            |
+| `audio`  | `#dcc65b` | samples from a microphone                 |
+| `file`   | `#7f93c9` | a path or blob on disk                    |
+| `exec`   | `#e8ebf0` | a trigger or control flow, never a value  |
+| `any`    | `#8a93a3` | accepts every type                        |
+
+Two bundling blocks follow the same shape: a **Toolbox** takes any number
+of `tools` inputs and exposes one `tools` output; a **Memory hub** does the
+same for `memory`. A runtime or actuator can also wire straight into
+`llm.tools` for a simple run.
+
+Ports are rows: inputs down the left edge, outputs down the right, one row
+per index, above the block's body. Row *i* is centred 51 + 24·*i* px from
+the block's top, which is what `build.mjs` uses to route wires.
 
 Block categories carry their own colour, shared between the library shelf
 and the block header: models cyan, capabilities amber, runtimes green,
-data violet, control slate, human rose.
+senses yellow, memory blue, actuators orange, data violet, control slate,
+human rose.
 
 ## Artboards
 
@@ -54,6 +67,21 @@ data violet, control slate, human rose.
 - `Inspector` — the same 328px column under five different selections.
 - `Library` — the six categories, all 27 blocks, and the port-type legend.
 - `BlockAnatomy` — one labelled block, every run state, the wiring rules.
+
+**Live and embodied**
+
+- `Continuous` — a graph that never finishes: three source blocks keep it
+  armed, a Loop frame repeats a region per item, the transport reads *live*,
+  and the inspector with nothing selected becomes the run-mode panel.
+- `RunModes` — the four transport states, plus panels for a source block, a
+  Schedule, and a Loop frame.
+- `Assistant` — a home assistant as one graph, library collapsed to a rail:
+  webcam and microphone feed specialist models, which feed an orchestrator;
+  memory stores bundle through a hub; text goes to a display and a speaker,
+  thoughts to a terminal, actions to motors via an approval-gated tool call.
+- `SensePanels` — inspector panels for a Webcam, Face recognition, the
+  Memory hub, and Motors. Each leads with the boundary that matters
+  (privacy, enrolment, what is stored, physical limits).
 
 **Clickable**
 

@@ -1,0 +1,412 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin:0; background:#08090b; color:#e8ebf0; font-family:'Space Grotesk','Helvetica Neue',Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#56c7d6; text-decoration:none; }
+    a:hover { color:#93dde8; }
+    @keyframes flow { to { stroke-dashoffset:-28; } }
+    @keyframes breathe { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  </style>
+</helmet>
+<div style="width:1460px;height:950px;box-sizing:border-box;padding:30px 32px;background:#08090b;font-family:'Space Grotesk','Helvetica Neue',Arial,sans-serif;display:flex;flex-direction:column;gap:22px;overflow:hidden;">
+  <div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:#56c7d6;margin-bottom:7px;">Embodied blocks</div>
+    <div style="font-size:19px;font-weight:600;letter-spacing:-.02em;color:#e8ebf0;">Senses, memory and actuators &mdash; the panel leads with the boundary that matters</div>
+  </div>
+  <div style="display:flex;gap:22px;">
+  <div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#dcc65b;flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:#e8ebf0;">Webcam</span>
+      <span style="font-size:10.5px;color:#5f6875;">a sense</span>
+    </div>
+    <div style="height:780px;background:#111419;border:1px solid #242932;border-radius:10px;overflow:hidden;"><div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+  <div style="flex:none;padding:13px 16px 0;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(220,198,91,0.14);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:#e8ebf0;">Webcam</div>
+        <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:2px;">senses &middot; video.capture</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:13px;border-bottom:1px solid #1a1e25;"><div style="padding-bottom:8px;font-size:11.5px;color:#e8ebf0;border-bottom:1.5px solid #56c7d6;margin-bottom:-1px;">Settings</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Subscribers</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Device</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Camera</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Logitech C920 &middot; /dev/video0</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Resolution</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">1280 &times; 720</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Frame rate</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">15 fps</span>
+  
+  
+</div></div><div style="margin-top:8px;font-size:10px;line-height:1.5;color:#5f6875;">Downstream blocks sample what they need; detection runs at 5 fps.</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Emits</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;"><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(215,123,208,0.12);border:1px solid rgba(215,123,208,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#d77bd0;"><span style="width:5px;height:5px;border-radius:50%;background:#d77bd0;"></span>image</span><span style="font-size:10.5px;color:#5f6875;">every frame &middot; 2 subscribers</span></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(224,104,95,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#e0685f;text-transform:uppercase;">Privacy</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,104,95,0.12);border:1px solid rgba(224,104,95,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0685f;"><span style="width:5px;height:5px;border-radius:50%;background:#e0685f;"></span>local only</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Frames never leave this machine</div>
+    
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#e0685f;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Record to disk</div>
+    
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#242932;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#6c7583;"></div>
+</div>
+</div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Retention</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#5f6875;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">none &middot; frames are dropped after use</span>
+  
+  
+</div></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(111,201,138,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#6fc98a;text-transform:uppercase;">Live</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(111,201,138,0.12);border:1px solid rgba(111,201,138,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#6fc98a;"><span style="width:5px;height:5px;border-radius:50%;background:#6fc98a;"></span>capturing</span>
+  </div>
+  <div style="position:relative;height:46px;border-radius:5px;background:linear-gradient(135deg,#1c2027,#0e1116);border:1px solid #1a1e25;overflow:hidden;">
+  <div style="position:absolute;left:52px;top:9px;width:26px;height:30px;border:1px solid #d77bd0;border-radius:2px;"></div>
+  <div style="position:absolute;left:52px;top:2px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:7px;color:#d77bd0;">person .97</div>
+  <div style="position:absolute;left:108px;top:14px;width:34px;height:26px;border:1px solid rgba(215,123,208,0.6);border-radius:2px;"></div>
+  <div style="position:absolute;left:108px;top:7px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:7px;color:rgba(215,123,208,0.8);">door .88</div>
+</div><div style="margin-top:8px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#98a2ae;">15 fps &middot; 22 ms &middot; 2 subscribers</div>
+</div></div>
+</div></div>
+  </div><div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#56c7d6;flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:#e8ebf0;">Face recognition</span>
+      <span style="font-size:10.5px;color:#5f6875;">a specialist model</span>
+    </div>
+    <div style="height:780px;background:#111419;border:1px solid #242932;border-radius:10px;overflow:hidden;"><div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+  <div style="flex:none;padding:13px 16px 0;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(86,199,214,0.14);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:#e8ebf0;">Face recognition</div>
+        <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:2px;">models &middot; face.identify</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:13px;border-bottom:1px solid #1a1e25;"><div style="padding-bottom:8px;font-size:11.5px;color:#e8ebf0;border-bottom:1.5px solid #56c7d6;margin-bottom:-1px;">Settings</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">People</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Runs</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Model</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Model</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">insightface &middot; buffalo_l</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:13px;">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;">
+    <span style="font-size:10.5px;color:#5f6875;">Match threshold</span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;">0.80</span>
+  </div>
+  <div style="position:relative;height:3px;border-radius:2px;background:#242932;">
+    <div style="position:absolute;left:0;top:0;height:3px;width:80%;border-radius:2px;background:#56c7d6;"></div>
+    <div style="position:absolute;left:calc(80% - 6px);top:-4.5px;width:12px;height:12px;border-radius:50%;background:#e8ebf0;box-shadow:0 1px 4px rgba(0,0,0,.6);"></div>
+  </div>
+</div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Runs on</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">GPU &middot; 9 ms</span>
+  
+  
+</div></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Known people</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(217,127,143,0.12);border:1px solid rgba(217,127,143,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#d97f8f;">12</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;padding:7px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <span style="width:22px;height:22px;border-radius:50%;background:rgba(217,127,143,0.22);border:1px solid rgba(217,127,143,0.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#d97f8f;flex:none;">M</span>
+  <div style="flex:1;min-width:0;"><div style="font-size:11.5px;color:#e8ebf0;">Mykl</div><div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;">you &middot; 412 sightings</div></div>
+  
+</div><div style="display:flex;align-items:center;gap:9px;padding:7px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <span style="width:22px;height:22px;border-radius:50%;background:rgba(217,127,143,0.22);border:1px solid rgba(217,127,143,0.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#d97f8f;flex:none;">S</span>
+  <div style="flex:1;min-width:0;"><div style="font-size:11.5px;color:#e8ebf0;">Sam</div><div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;">partner &middot; 96 sightings</div></div>
+  
+</div><div style="display:flex;align-items:center;gap:9px;padding:7px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <span style="width:22px;height:22px;border-radius:50%;background:rgba(152,162,174,0.22);border:1px solid rgba(152,162,174,0.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#98a2ae;flex:none;">?</span>
+  <div style="flex:1;min-width:0;"><div style="font-size:11.5px;color:#e8ebf0;">Unknown-3</div><div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;">seen 4&times; this week</div></div>
+  <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(86,199,214,0.12);border:1px solid rgba(86,199,214,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#56c7d6;">name</span>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Emits</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;"><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(167,139,208,0.12);border:1px solid rgba(167,139,208,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#a78bd0;"><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span>data</span><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">{ name, confidence, bbox }</span></div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Enrol new faces automatically</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">ask before anyone new is stored</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#242932;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#6c7583;"></div>
+</div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(224,104,95,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#e0685f;text-transform:uppercase;">Stored as</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="font-size:10.5px;line-height:1.55;color:#5f6875;">Embeddings only &mdash; 512 floats per person, never an image. Delete a person and every sighting goes with them.</div>
+</div></div>
+</div></div>
+  </div><div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#7e9ff0;flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:#e8ebf0;">Memory hub</span>
+      <span style="font-size:10.5px;color:#5f6875;">short and long term, one handle</span>
+    </div>
+    <div style="height:780px;background:#111419;border:1px solid #242932;border-radius:10px;overflow:hidden;"><div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+  <div style="flex:none;padding:13px 16px 0;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(126,159,240,0.14);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7" cy="19" r="2"/><circle cx="17" cy="5" r="2"/><path d="M7 17V11a4 4 0 0 1 4-4h4"/><path d="M13 4.5L15.5 7 13 9.5"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:#e8ebf0;">Memory hub</div>
+        <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:2px;">memory &middot; recall</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:13px;border-bottom:1px solid #1a1e25;"><div style="padding-bottom:8px;font-size:11.5px;color:#e8ebf0;border-bottom:1.5px solid #56c7d6;margin-bottom:-1px;">Settings</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Browse</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(126,159,240,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#7e9ff0;text-transform:uppercase;">Stores</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(126,159,240,0.12);border:1px solid rgba(126,159,240,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#7e9ff0;">2</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;padding:8px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9.5 4c-2.5 0-2 5.5-4 8 2 2.5 1.5 8 4 8"/><path d="M14.5 4c2.5 0 2 5.5 4 8-2 2.5-1.5 8-4 8"/></svg>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Working memory</div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">in-process &middot; 128 items &middot; 5 min</div>
+  </div>
+  <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+</div><div style="display:flex;align-items:center;gap:9px;padding:8px 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;margin-bottom:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6"/><path d="M5 12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8"/></svg>
+  <div style="flex:1;min-width:0;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Long-term memory</div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">sqlite + vectors &middot; 2,140 episodes</div>
+  </div>
+  <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.16);flex:none;"></span>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Recall</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Order</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">working first, then long-term</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Max recalled</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">12 items</span>
+  
+  
+</div></div><div style="margin-bottom:13px;">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;">
+    <span style="font-size:10.5px;color:#5f6875;">Relevance cutoff</span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;">0.62</span>
+  </div>
+  <div style="position:relative;height:3px;border-radius:2px;background:#242932;">
+    <div style="position:absolute;left:0;top:0;height:3px;width:62%;border-radius:2px;background:#7e9ff0;"></div>
+    <div style="position:absolute;left:calc(62% - 6px);top:-4.5px;width:12px;height:12px;border-radius:50%;background:#e8ebf0;box-shadow:0 1px 4px rgba(0,0,0,.6);"></div>
+  </div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Consolidation</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Every</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">10 min &middot; or when working is full</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Summarise before storing</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">the orchestrator writes one line per episode</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#56c7d6;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Forget after</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">off &mdash; episodes are kept until deleted</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#242932;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#6c7583;"></div>
+</div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(224,104,95,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#e0685f;text-transform:uppercase;">What is kept</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;">
+    <div style="display:flex;gap:10px;"><span style="color:#6fc98a;width:52px;">yes</span><span style="color:#98a2ae;">transcripts, who was seen, where, when</span></div>
+    <div style="display:flex;gap:10px;"><span style="color:#6fc98a;width:52px;">as vectors</span><span style="color:#98a2ae;">faces</span></div>
+    <div style="display:flex;gap:10px;"><span style="color:#e0685f;width:52px;">never</span><span style="color:#98a2ae;">frames, audio</span></div>
+  </div>
+</div></div>
+</div></div>
+  </div><div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#e8865a;flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:#e8ebf0;">Motors</span>
+      <span style="font-size:10.5px;color:#5f6875;">an actuator, offered as a tool</span>
+    </div>
+    <div style="height:780px;background:#111419;border:1px solid #242932;border-radius:10px;overflow:hidden;"><div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+  <div style="flex:none;padding:13px 16px 0;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(232,134,90,0.14);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4.5 10a7.5 7.5 0 0 1 12.8-3.5"/><path d="M19.5 14a7.5 7.5 0 0 1-12.8 3.5"/><path d="M17.5 3v4h-4"/><path d="M6.5 21v-4h4"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:#e8ebf0;">Motors</div>
+        <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:2px;">actuators &middot; motor.servo</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:13px;border-bottom:1px solid #1a1e25;"><div style="padding-bottom:8px;font-size:11.5px;color:#e8ebf0;border-bottom:1.5px solid #56c7d6;margin-bottom:-1px;">Settings</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Log</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Device</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Controller</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M8.5 3v5"/><path d="M15.5 3v5"/><path d="M6 8h12v3.5a6 6 0 0 1-12 0z"/><path d="M12 17.5V21"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Arduino Nano &middot; /dev/ttyACM0</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Channels</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">2 &middot; pan, tilt</span>
+  
+  
+</div></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(224,104,95,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#e0685f;text-transform:uppercase;">Limits</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,104,95,0.12);border:1px solid rgba(224,104,95,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0685f;"><span style="width:5px;height:5px;border-radius:50%;background:#e0685f;"></span>physical</span>
+  </div>
+  <div style="margin-bottom:13px;">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;">
+    <span style="font-size:10.5px;color:#5f6875;">Pan range</span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;">&plusmn; 90&deg;</span>
+  </div>
+  <div style="position:relative;height:3px;border-radius:2px;background:#242932;">
+    <div style="position:absolute;left:0;top:0;height:3px;width:100%;border-radius:2px;background:#e8865a;"></div>
+    <div style="position:absolute;left:calc(100% - 6px);top:-4.5px;width:12px;height:12px;border-radius:50%;background:#e8ebf0;box-shadow:0 1px 4px rgba(0,0,0,.6);"></div>
+  </div>
+</div><div style="margin-bottom:13px;">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;">
+    <span style="font-size:10.5px;color:#5f6875;">Tilt range</span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;">&plusmn; 30&deg;</span>
+  </div>
+  <div style="position:relative;height:3px;border-radius:2px;background:#242932;">
+    <div style="position:absolute;left:0;top:0;height:3px;width:33%;border-radius:2px;background:#e8865a;"></div>
+    <div style="position:absolute;left:calc(33% - 6px);top:-4.5px;width:12px;height:12px;border-radius:50%;background:#e8ebf0;box-shadow:0 1px 4px rgba(0,0,0,.6);"></div>
+  </div>
+</div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Max speed</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">60&deg; / s</span>
+  
+  
+</div></div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Require approval</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">every move pauses for a human</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#e0685f;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Exposes</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;gap:5px;"><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,164,88,0.12);border:1px solid rgba(224,164,88,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0a458;">motor.move</span><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,164,88,0.12);border:1px solid rgba(224,164,88,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0a458;">motor.home</span></div><div style="margin-top:8px;font-size:10px;line-height:1.5;color:#5f6875;">Wire the tool port straight into an LLM, or through a Toolbox to share guards with other tools.</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(224,164,88,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#e0a458;text-transform:uppercase;">Live</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,164,88,0.12);border:1px solid rgba(224,164,88,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0a458;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span>1 pending</span>
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Position</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">pan &minus;40&deg; &middot; tilt 5&deg;</span>
+  
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Pending</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">move(pan: &minus;40) &middot; awaiting ok</span>
+  
+  
+</div></div>
+</div></div>
+</div></div>
+  </div>
+</div>
+</div>
+</x-dc>
+
+</body>
+</html>

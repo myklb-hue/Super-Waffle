@@ -33,6 +33,9 @@ const T = {
   data:   '#a78bd0',
   stream: '#6fc98a',
   file:   '#7f93c9',
+  image:  '#d77bd0',
+  audio:  '#dcc65b',
+  memory: '#7e9ff0',
   exec:   '#e8ebf0',
   any:    '#8a93a3',
 };
@@ -40,6 +43,7 @@ const T = {
 const CAT = {
   models:'#56c7d6', capabilities:'#e0a458', runtimes:'#6fc98a',
   data:'#a78bd0', control:'#8a93a3', human:'#d97f8f',
+  senses:'#dcc65b', memory:'#7e9ff0', actuators:'#e8865a',
 };
 
 const rgba = (hex, a) => {
@@ -146,6 +150,35 @@ function statusDot(state) {
   return `<span style="width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 0 3px ${rgba(col, 0.16)};flex:none;${pulse ? 'animation:breathe 1.3s ease-in-out infinite;' : ''}"></span>`;
 }
 
+function portRow(p) {
+  const c = T[p.kind];
+  const ring = p.glow
+    ? `box-shadow:0 0 0 4px ${rgba(c, 0.3)},0 0 16px ${rgba(c, 0.6)};`
+    : `box-shadow:0 0 0 3px ${rgba(c, 0.12)};`;
+  const rev = p.side === 'out';
+  return `<div style="display:flex;align-items:center;gap:8px;${rev ? 'flex-direction:row-reverse;margin-right:-6.5px;' : 'margin-left:-6.5px;'}opacity:${p.dim ? 0.3 : 1};">
+<span style="width:11px;height:11px;border-radius:50%;background:${c};${ring}flex:none;"></span>
+<span style="font-family:${MONO};font-size:9.5px;font-weight:500;color:${C.mid};letter-spacing:.03em;white-space:nowrap;">${p.label}</span>
+</div>`;
+}
+
+// ports are rows: inputs down the left edge, outputs down the right, one row per index.
+// row i's dot is centred at y = 51 + 24 * i from the block's top (see PY).
+function portZone(ports = []) {
+  const ins = ports.filter(p => p.side === 'in');
+  const outs = ports.filter(p => p.side === 'out');
+  const n = Math.max(ins.length, outs.length);
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const a = ins[i], b = outs[i];
+    const hl = (a && a.hl) || (b && b.hl);
+    rows.push(`<div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 -1px;padding:0 1px;${hl ? `background:${rgba(T.tools, 0.09)};border-top:1px solid ${rgba(T.tools, 0.35)};border-bottom:1px solid ${rgba(T.tools, 0.35)};` : ''}">${a ? portRow(a) : '<span></span>'}${b ? portRow(b) : '<span></span>'}</div>`);
+  }
+  return { n, html: n ? `<div style="padding:8px 0 4px;">${rows.join('')}</div>` : '' };
+}
+const PY = (b, i) => b.y + 51 + 24 * i;
+const W = (B) => (from, oi, to, ii, kind, opt) => { const a = B[from], b = B[to]; return wire(a.x + a.w, PY(a, oi), b.x, PY(b, ii), kind, opt); };
+
 function blockNode(o) {
   const c = o.color || T.any;
   const selected = !!o.selected;
@@ -157,16 +190,17 @@ function blockNode(o) {
       ? `0 0 0 4px ${rgba(C.ok, 0.09)},0 12px 30px rgba(0,0,0,.5)`
       : `0 10px 26px rgba(0,0,0,.45)`;
   const ghost = o.ghost ? 'opacity:.5;' : '';
+  const zone = portZone(o.ports);
   return `<div style="position:absolute;left:${o.x}px;top:${o.y}px;width:${o.w}px;background:${C.block};border:1px solid ${borderCol};border-radius:9px;box-shadow:${shadow};${ghost}">
   <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid ${C.soft};border-radius:8px 8px 0 0;background:linear-gradient(180deg,${rgba(c, 0.13)},${rgba(c, 0.02)});">
     ${icon(o.icon, 13, c, 1.7)}
-    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:${C.hi};">${o.title}</span>
+    <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:${C.hi};white-space:nowrap;">${o.title}</span>
     <span style="flex:1;"></span>
     ${o.badge || ''}
     ${statusDot(o.state || 'idle')}
   </div>
-  <div style="position:relative;padding:${o.pad || '10px 11px 12px'};">${o.body || ''}</div>
-  ${(o.ports || []).map(port).join('\n  ')}
+  ${zone.html}
+  ${o.body ? `<div style="position:relative;padding:${o.pad || (zone.n ? '4px 11px 12px' : '10px 11px 12px')};">${o.body}</div>` : ''}
 </div>`;
 }
 
@@ -224,7 +258,7 @@ const switchRow = (l, on, opt = {}) => `<div style="display:flex;align-items:cen
   ${toggle(on, opt.col)}
 </div>`;
 
-const chip = (t, col, opt = {}) => `<span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:${rgba(col, opt.solid ? 0.9 : 0.12)};border:1px solid ${rgba(col, 0.3)};font-family:${MONO};font-size:9.5px;font-weight:600;letter-spacing:.04em;color:${opt.solid ? '#0b0d11' : col};">${opt.dot ? `<span style="width:5px;height:5px;border-radius:50%;background:${col};"></span>` : ''}${t}</span>`;
+const chip = (t, col, opt = {}) => `<span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:${rgba(col, opt.solid ? 0.9 : 0.12)};border:1px solid ${rgba(col, 0.3)};font-family:${MONO};font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:${opt.solid ? '#0b0d11' : col};">${opt.dot ? `<span style="width:5px;height:5px;border-radius:50%;background:${col};"></span>` : ''}${t}</span>`;
 
 const textBox = (text, h = 88) => `<div style="min-height:${h}px;padding:9px 10px;background:${C.field};border:1px solid ${C.line};border-radius:6px;font-family:${MONO};font-size:10.5px;line-height:1.6;color:#c3cad4;white-space:pre-wrap;">${text}</div>`;
 
@@ -248,8 +282,15 @@ const CH = SHELL_H - TOP_H - BOT_H;       // 826
 
 const iconBtn = (name, opt = {}) => `<div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;${opt.on ? `background:${rgba(C.accent, 0.14)};` : ''}">${icon(name, 14, opt.on ? C.accent : C.mid, 1.6)}</div>`;
 
-function topbar({ name = 'untitled.graph', saved = 'saved', running = false, elapsed = '' } = {}) {
-  const transport = running
+function topbar({ name = 'untitled.graph', saved = 'saved', running = false, elapsed = '', live = '', runtime = 'local &middot; ollama' } = {}) {
+  const transport = live
+    ? `<div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 4px 0 10px;border-radius:6px;background:${rgba(C.ok, 0.13)};border:1px solid ${rgba(C.ok, 0.35)};">
+        ${statusDot('running')}
+        <span style="font-family:${MONO};font-size:10.5px;font-weight:600;color:${C.ok};letter-spacing:.03em;">live</span>
+        <span style="font-family:${MONO};font-size:10.5px;color:${rgba(C.ok, 0.7)};">${live}</span>
+        <div style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:${rgba(C.err, 0.16)};margin-left:2px;">${icon('stop', 11, C.err, 0)}</div>
+      </div>`
+    : running
     ? `<div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 4px 0 10px;border-radius:6px;background:${rgba(C.ok, 0.13)};border:1px solid ${rgba(C.ok, 0.35)};">
         ${statusDot('running')}
         <span style="font-family:${MONO};font-size:10.5px;font-weight:600;color:${C.ok};letter-spacing:.03em;">running</span>
@@ -276,7 +317,7 @@ function topbar({ name = 'untitled.graph', saved = 'saved', running = false, ela
     <span style="width:1px;height:18px;background:${C.line};"></span>
     <div style="display:flex;align-items:center;gap:7px;height:26px;padding:0 9px;border-radius:6px;border:1px solid ${C.line};">
       <span style="width:6px;height:6px;border-radius:50%;background:${C.ok};"></span>
-      <span style="font-family:${MONO};font-size:10px;color:${C.mid};">local &middot; ollama</span>
+      <span style="font-family:${MONO};font-size:10px;color:${C.mid};">${runtime}</span>
     </div>
   </div>
   <span style="flex:1;"></span>
@@ -301,42 +342,65 @@ function statusbar(left, right) {
 
 const LIB = [
   { id:'models', name:'Models', blocks:[
-    { n:'LLM', i:'llm', sig:'text, tools &rarr; text', t:['text','tools'] },
-    { n:'Vision', i:'eye', sig:'image &rarr; text', t:['file','text'] },
-    { n:'Embedding', i:'embed', sig:'text &rarr; vector', t:['text','data'] },
-    { n:'Classifier', i:'shield', sig:'text &rarr; label', t:['text','data'] },
+    { n:'LLM', i:'llm', sig:'text, tools, mem &rarr; text', t:['text','tools','memory'] },
+    { n:'Object detection', i:'eye', sig:'image &rarr; data', t:['image','data'] },
+    { n:'Face recognition', i:'approve', sig:'image &rarr; data', t:['image','data'] },
+    { n:'Speech to text', i:'note', sig:'audio &rarr; text', t:['audio','text'] },
+    { n:'Text to speech', i:'form', sig:'text &rarr; audio', t:['text','audio'] },
+    { n:'Embedding', i:'embed', sig:'text &rarr; data', t:['text','data'] },
+    { n:'Classifier', i:'shield', sig:'text &rarr; data', t:['text','data'] },
   ]},
   { id:'capabilities', name:'Capabilities', blocks:[
-    { n:'Toolbox', i:'toolbox', sig:'tool[] &rarr; tools', t:['tools'] },
-    { n:'Web Search', i:'search', sig:'query &rarr; results', t:['text','data'] },
-    { n:'File System', i:'folder', sig:'path &rarr; file', t:['text','file'] },
-    { n:'MCP Server', i:'plug', sig:'&rarr; tool[]', t:['tools'] },
+    { n:'Toolbox', i:'toolbox', sig:'tools[] &rarr; tools', t:['tools'] },
+    { n:'Web Search', i:'search', sig:'text &rarr; data', t:['text','data'] },
+    { n:'File System', i:'folder', sig:'text &rarr; file', t:['text','file'] },
+    { n:'MCP Server', i:'plug', sig:'&rarr; tools', t:['tools'] },
   ]},
   { id:'runtimes', name:'Runtimes', blocks:[
-    { n:'Terminal', i:'terminal', sig:'cmd &rarr; stdout', t:['text','stream'] },
-    { n:'Python', i:'python', sig:'src &rarr; value', t:['text','data'] },
-    { n:'Node', i:'bolt', sig:'src &rarr; value', t:['text','data'] },
-    { n:'SQL', i:'db', sig:'query &rarr; rows', t:['text','data'] },
-    { n:'HTTP Request', i:'http', sig:'url &rarr; json', t:['text','data'] },
+    { n:'Terminal', i:'terminal', sig:'&rarr; tools, stream', t:['tools','stream'] },
+    { n:'Python', i:'python', sig:'&rarr; tools, data', t:['tools','data'] },
+    { n:'Node', i:'bolt', sig:'&rarr; tools, data', t:['tools','data'] },
+    { n:'SQL', i:'db', sig:'text &rarr; data', t:['text','data'] },
+    { n:'HTTP Request', i:'http', sig:'text &rarr; data', t:['text','data'] },
+  ]},
+  { id:'senses', name:'Senses', blocks:[
+    { n:'Webcam', i:'eye', sig:'&rarr; image', t:['image'] },
+    { n:'Microphone', i:'note', sig:'&rarr; audio', t:['audio'] },
+    { n:'Keyboard', i:'form', sig:'&rarr; text', t:['text'] },
+    { n:'Schedule', i:'clock', sig:'&rarr; exec', t:['exec'] },
+    { n:'Watch folder', i:'folder', sig:'&rarr; file', t:['file'] },
+    { n:'Webhook', i:'http', sig:'&rarr; data', t:['data'] },
+  ]},
+  { id:'memory', name:'Memory', blocks:[
+    { n:'Memory hub', i:'merge', sig:'memory[] &rarr; memory', t:['memory'] },
+    { n:'Working memory', i:'braces', sig:'&rarr; memory', t:['memory'] },
+    { n:'Long-term memory', i:'db', sig:'&rarr; memory', t:['memory'] },
+    { n:'Episode log', i:'chunk', sig:'data &rarr; memory', t:['data','memory'] },
+  ]},
+  { id:'actuators', name:'Actuators', blocks:[
+    { n:'Display', i:'form', sig:'text &rarr;', t:['text'] },
+    { n:'Speaker', i:'note', sig:'audio &rarr;', t:['audio'] },
+    { n:'USB device', i:'plug', sig:'&rarr; tools', t:['tools'] },
+    { n:'Motors', i:'loop', sig:'&rarr; tools', t:['tools'] },
+    { n:'GPIO', i:'bolt', sig:'&rarr; tools', t:['tools'] },
   ]},
   { id:'data', name:'Data', blocks:[
     { n:'Input', i:'input', sig:'&rarr; any', t:['any'] },
     { n:'Output', i:'output', sig:'any &rarr;', t:['any'] },
     { n:'Variable', i:'braces', sig:'any &rarr; any', t:['any'] },
-    { n:'Chunker', i:'chunk', sig:'text &rarr; text[]', t:['text'] },
-    { n:'Vector Store', i:'db', sig:'vector &rarr; match[]', t:['data'] },
-    { n:'Secret', i:'key', sig:'&rarr; string', t:['text'] },
+    { n:'Chunker', i:'chunk', sig:'text &rarr; text', t:['text'] },
+    { n:'Secret', i:'key', sig:'&rarr; text', t:['text'] },
   ]},
   { id:'control', name:'Control', blocks:[
+    { n:'Loop', i:'loop', sig:'any &rarr; data, exec', t:['any','exec'] },
     { n:'Branch', i:'branch', sig:'any &rarr; a | b', t:['exec'] },
-    { n:'Loop', i:'loop', sig:'any[] &rarr; any', t:['exec'] },
     { n:'Merge', i:'merge', sig:'any[] &rarr; any', t:['exec'] },
     { n:'Gate', i:'shield', sig:'any &rarr; any', t:['exec'] },
     { n:'Delay', i:'clock', sig:'any &rarr; any', t:['exec'] },
   ]},
   { id:'human', name:'Human', blocks:[
     { n:'Approval', i:'approve', sig:'any &rarr; any | halt', t:['exec'] },
-    { n:'Form', i:'form', sig:'&rarr; record', t:['data'] },
+    { n:'Form', i:'form', sig:'&rarr; data', t:['data'] },
     { n:'Notify', i:'note', sig:'text &rarr;', t:['text'] },
   ]},
 ];
@@ -348,7 +412,7 @@ function libRow(b, catCol, opt = {}) {
     : opt.state === 'drag' ? rgba(C.accent, 0.08) : 'transparent';
   const bd = opt.state === 'placed' ? rgba(catCol, 0.4)
     : opt.state === 'drag' ? rgba(C.accent, 0.4) : 'transparent';
-  return `<div style="display:flex;align-items:center;gap:9px;height:29px;padding:0 8px;border-radius:6px;background:${bg};border:1px solid ${bd};">
+  return `<div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:${bg};border:1px solid ${bd};">
   ${icon(b.i, 13, catCol, 1.7)}
   <span style="flex:1;font-size:11.5px;color:${C.hi};letter-spacing:-.005em;">${b.n}</span>
   ${opt.state === 'placed' ? chip('on canvas', catCol) : typeDots(b.t)}
@@ -357,7 +421,7 @@ function libRow(b, catCol, opt = {}) {
 
 function catHeader(cat, open, count) {
   const col = CAT[cat.id];
-  return `<div style="display:flex;align-items:center;gap:7px;height:26px;padding:0 6px;">
+  return `<div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
   <span style="transform:rotate(${open ? 90 : 0}deg);opacity:.7;display:flex;">${icon('chev', 10, C.low, 2)}</span>
   <span style="width:6px;height:6px;border-radius:2px;background:${col};"></span>
   <span style="font-family:${MONO};font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.mid};">${cat.name}</span>
@@ -479,8 +543,8 @@ const LLM_BODY = [
   sect('Model', rowField('Provider', 'Ollama &middot; local', { select: true, icon: 'llm' }) + rowField('Model', 'llama3.2:3b', { select: true }) + rowField('Endpoint', 'http://127.0.0.1:11434', { mono: true, gap: 0 })),
   sect('Sampling', slider('Temperature', '0.70', 70) + slider('Top-p', '0.90', 90) + rowField('Max tokens', '2048', { mono: true, gap: 0 })),
   sect('System prompt', textBox('You triage build failures. Read the\nerror, run the smallest command that\nconfirms the cause, then answer.', 62)),
-  sect('Tools', connRow('terminal', 'Terminal', 'shell.exec &middot; sandboxed', 'stream', 'ok')
-    + connRow('python', 'Python', 'python.exec &middot; 3.12', 'data', 'ok')
+  sect('Tools', connRow('terminal', 'Terminal', 'shell.exec &middot; sandboxed', 'tools', 'ok')
+    + connRow('python', 'Python', 'python.exec &middot; 3.12', 'tools', 'ok')
     + connRow('toolbox', 'Toolbox', 'tools &rarr; llm.tools', 'tools', 'pending')
     + `<div style="height:5px;"></div>` + rowField('Tool choice', 'auto', { select: true, gap: 0 }),
     { tint: T.tools, right: chip('2 + 1', T.tools) }),
@@ -558,54 +622,60 @@ const EMPTY = doc(shell({
 
 /* =================================================================== 2. Main */
 
+const MB = {
+  input: { x: 28, y: 110, w: 178 },
+  terminal: { x: 26, y: 418, w: 186 },
+  python: { x: 26, y: 570, w: 186 },
+  toolbox: { x: 250, y: 452, w: 196 },
+  llm: { x: 560, y: 104, w: 236 },
+};
+const mw = W(MB);
+const toolRow = (ic, t, extra = '') => `<div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon(ic, 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">${t}</span>${extra}</div>`;
+
 const mainNodes = [
-  blockNode({ x: 28, y: 110, w: 178, icon: 'input', color: CAT.data, title: 'Input', state: 'idle',
+  blockNode({ ...MB.input, icon: 'input', color: CAT.data, title: 'Input', state: 'idle',
     body: field('"triage ticket #4192"', { mono: true }),
-    ports: [{ kind: 'text', label: 'text', side: 'out', top: 56, dim: true }] }),
-  blockNode({ x: 26, y: 418, w: 186, icon: 'terminal', color: CAT.runtimes, title: 'Terminal', state: 'idle',
+    ports: [{ kind: 'text', label: 'text', side: 'out', dim: true }] }),
+  blockNode({ ...MB.terminal, icon: 'terminal', color: CAT.runtimes, title: 'Terminal', state: 'idle',
     body: label('command') + field('cargo build', { mono: true }),
-    ports: [{ kind: 'stream', label: 'tool', side: 'out', top: 76 }] }),
-  blockNode({ x: 26, y: 558, w: 186, icon: 'python', color: CAT.runtimes, title: 'Python', state: 'idle',
+    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
+  blockNode({ ...MB.python, icon: 'python', color: CAT.runtimes, title: 'Python', state: 'idle',
     body: label('source') + field('analyse.py', { mono: true }),
-    ports: [{ kind: 'data', label: 'tool', side: 'out', top: 76 }] }),
-  blockNode({ x: 250, y: 452, w: 196, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox', state: 'idle',
+    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
+  blockNode({ ...MB.toolbox, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox', state: 'idle',
     badge: chip('2', T.tools),
-    body: `<div style="display:flex;flex-direction:column;gap:5px;">
-      <div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon('terminal', 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">terminal.run</span></div>
-      <div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon('python', 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">python.exec</span></div>
-      <div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">exposes 4 functions</div>
-    </div>`,
+    body: `<div style="display:flex;flex-direction:column;gap:5px;">${toolRow('terminal', 'terminal.run')}${toolRow('python', 'python.exec')}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">exposes 4 functions</div></div>`,
     ports: [
-      { kind: 'stream', label: '', side: 'in', top: 54 },
-      { kind: 'data', label: '', side: 'in', top: 85 },
-      { kind: 'tools', label: 'tools', side: 'out', top: 68, glow: true },
+      { kind: 'tools', label: 'terminal', side: 'in' },
+      { kind: 'tools', label: 'python', side: 'in' },
+      { kind: 'tools', label: 'tools', side: 'out', glow: true },
     ] }),
-  blockNode({ x: 560, y: 104, w: 236, icon: 'llm', color: CAT.models, title: 'LLM', state: 'idle', selected: true,
+  blockNode({ ...MB.llm, icon: 'llm', color: CAT.models, title: 'LLM', state: 'idle', selected: true,
     badge: chip('selected', C.accent),
     body: label('model') + field('llama3.2:3b', { mono: true, select: true })
-      + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">You triage build failures. Read<br>the error, run the smallest&#8230;</div>`
-      + `<div style="position:absolute;left:-1px;right:-1px;top:97px;height:26px;border-top:1px solid ${rgba(T.tools, 0.35)};border-bottom:1px solid ${rgba(T.tools, 0.35)};background:${rgba(T.tools, 0.07)};"></div>`,
+      + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">You triage build failures. Read<br>the error, run the smallest&#8230;</div>`,
     ports: [
-      { kind: 'text', label: 'prompt', side: 'in', top: 56, dim: true },
-      { kind: 'text', label: 'context', side: 'in', top: 84, dim: true },
-      { kind: 'tools', label: 'tools', side: 'in', top: 112, glow: true },
-      { kind: 'text', label: 'text', side: 'out', top: 56, dim: true },
-      { kind: 'data', label: 'calls', side: 'out', top: 84, dim: true },
+      { kind: 'text', label: 'prompt', side: 'in', dim: true },
+      { kind: 'text', label: 'context', side: 'in', dim: true },
+      { kind: 'tools', label: 'tools', side: 'in', glow: true, hl: true },
+      { kind: 'text', label: 'text', side: 'out', dim: true },
+      { kind: 'data', label: 'calls', side: 'out', dim: true },
     ] }),
 ].join('\n');
 
+const snapX = MB.llm.x, snapY = PY(MB.llm, 2);
 const mainSvg = [
-  wire(206, 162, 560, 160, 'text', { opacity: 0.5 }),
-  wire(212, 494, 250, 506, 'stream'),
-  wire(212, 634, 250, 537, 'data'),
-  wire(446, 520, 560, 216, 'tools', { live: true, dash: '7 6', width: 2.3 }),
-  `<circle cx="560" cy="216" r="10" fill="none" stroke="${T.tools}" stroke-width="1.6" opacity=".95"/>`,
-  `<circle cx="560" cy="216" r="16" fill="none" stroke="${T.tools}" stroke-width="1" opacity=".35"/>`,
+  mw('input', 0, 'llm', 0, 'text', { opacity: 0.5 }),
+  mw('terminal', 0, 'toolbox', 0, 'tools'),
+  mw('python', 0, 'toolbox', 1, 'tools'),
+  mw('toolbox', 0, 'llm', 2, 'tools', { live: true, dash: '7 6', width: 2.3 }),
+  `<circle cx="${snapX}" cy="${snapY}" r="10" fill="none" stroke="${T.tools}" stroke-width="1.6" opacity=".95"/>`,
+  `<circle cx="${snapX}" cy="${snapY}" r="16" fill="none" stroke="${T.tools}" stroke-width="1" opacity=".35"/>`,
 ].join('');
 
-const dragCursor = `<div style="position:absolute;left:564px;top:220px;">
+const dragCursor = `<div style="position:absolute;left:${snapX + 4}px;top:${snapY + 4}px;">
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));"><path d="M5.5 3l12 8.2-5.4 1.1 2.6 5.6-2.4 1.1-2.6-5.6-4.2 3.6z" fill="${C.hi}" stroke="#0b0d11" stroke-width="1.2"/></svg>
-  <div style="position:absolute;left:16px;top:16px;display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:6px;background:${rgba('#12161c', 0.96)};border:1px solid ${rgba(T.tools, 0.5)};box-shadow:0 8px 20px rgba(0,0,0,.6);white-space:nowrap;">
+  <div style="position:absolute;right:22px;top:-4px;display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:6px;background:${rgba('#12161c', 0.96)};border:1px solid ${rgba(T.tools, 0.5)};box-shadow:0 8px 20px rgba(0,0,0,.6);white-space:nowrap;">
     <span style="width:6px;height:6px;border-radius:50%;background:${T.tools};"></span>
     <span style="font-family:${MONO};font-size:10px;color:${C.hi};">toolbox.tools &rarr; llm.tools</span>
   </div>
@@ -626,29 +696,34 @@ const MAIN = doc(shell({
 
 const RUN_STAGE_H = CH - 176;
 
+const RB = {
+  input: { x: 24, y: 110, w: 168 },
+  terminal: { x: 24, y: 300, w: 168 },
+  python: { x: 24, y: 450, w: 168 },
+  toolbox: { x: 236, y: 392, w: 180 },
+  llm: { x: 470, y: 56, w: 240 },
+  report: { x: 770, y: 96, w: 180 },
+};
+const rw = W(RB);
 const runNodes = [
-  blockNode({ x: 24, y: 110, w: 168, icon: 'input', color: CAT.data, title: 'Input', state: 'ok',
+  blockNode({ ...RB.input, icon: 'input', color: CAT.data, title: 'Input', state: 'ok',
     body: field('ticket #4192', { mono: true }),
-    ports: [{ kind: 'text', label: 'text', side: 'out', top: 56 }] }),
-  blockNode({ x: 24, y: 344, w: 168, icon: 'terminal', color: CAT.runtimes, title: 'Terminal', state: 'ok',
+    ports: [{ kind: 'text', label: 'text', side: 'out' }] }),
+  blockNode({ ...RB.terminal, icon: 'terminal', color: CAT.runtimes, title: 'Terminal', state: 'ok',
     badge: chip('42 lines', C.ok),
     body: label('last run') + field('exit 101', { mono: true, suffix: `<span style="font-family:${MONO};font-size:9px;color:${C.err};">err</span>` }),
-    ports: [{ kind: 'stream', label: 'tool', side: 'out', top: 76 }] }),
-  blockNode({ x: 24, y: 462, w: 168, icon: 'python', color: CAT.runtimes, title: 'Python', state: 'queued',
+    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
+  blockNode({ ...RB.python, icon: 'python', color: CAT.runtimes, title: 'Python', state: 'queued',
     body: label('source') + field('analyse.py', { mono: true, muted: true }),
-    ports: [{ kind: 'data', label: 'tool', side: 'out', top: 76 }] }),
-  blockNode({ x: 236, y: 392, w: 180, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox', state: 'ok',
-    body: `<div style="display:flex;flex-direction:column;gap:5px;">
-      <div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon('terminal', 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">terminal.run</span><span style="flex:1;"></span>${statusDot('ok')}</div>
-      <div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon('python', 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">python.exec</span><span style="flex:1;"></span>${statusDot('queued')}</div>
-      <div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">1 call &middot; 1 queued</div>
-    </div>`,
+    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
+  blockNode({ ...RB.toolbox, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox', state: 'ok',
+    body: `<div style="display:flex;flex-direction:column;gap:5px;">${toolRow('terminal', 'terminal.run', `<span style="flex:1;"></span>${statusDot('ok')}`)}${toolRow('python', 'python.exec', `<span style="flex:1;"></span>${statusDot('queued')}`)}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">1 call &middot; 1 queued</div></div>`,
     ports: [
-      { kind: 'stream', label: '', side: 'in', top: 54 },
-      { kind: 'data', label: '', side: 'in', top: 85 },
-      { kind: 'tools', label: 'tools', side: 'out', top: 68 },
+      { kind: 'tools', label: 'terminal', side: 'in' },
+      { kind: 'tools', label: 'python', side: 'in' },
+      { kind: 'tools', label: 'tools', side: 'out' },
     ] }),
-  blockNode({ x: 470, y: 56, w: 240, icon: 'llm', color: CAT.models, title: 'LLM', state: 'running',
+  blockNode({ ...RB.llm, icon: 'llm', color: CAT.models, title: 'LLM', state: 'running',
     badge: chip('streaming', C.ok, { dot: true }),
     body: `<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;">
       <span style="font-family:${MONO};font-size:10px;color:${C.mid};">412 tok</span>
@@ -659,22 +734,22 @@ const runNodes = [
       ${icon('toolbox', 11, T.tools, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${T.tools};">calling terminal.run</span>
     </div>`,
     ports: [
-      { kind: 'text', label: 'prompt', side: 'in', top: 54 },
-      { kind: 'tools', label: 'tools', side: 'in', top: 82 },
-      { kind: 'text', label: 'text', side: 'out', top: 54 },
-      { kind: 'data', label: 'calls', side: 'out', top: 82 },
+      { kind: 'text', label: 'prompt', side: 'in' },
+      { kind: 'tools', label: 'tools', side: 'in' },
+      { kind: 'text', label: 'text', side: 'out' },
+      { kind: 'data', label: 'calls', side: 'out' },
     ] }),
-  blockNode({ x: 770, y: 96, w: 180, icon: 'output', color: CAT.data, title: 'Report', state: 'queued',
+  blockNode({ ...RB.report, icon: 'output', color: CAT.data, title: 'Report', state: 'queued',
     body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.65;color:${C.faint};">waiting for llm.text<br>&#8230;</div>`,
-    ports: [{ kind: 'text', label: 'text', side: 'in', top: 54 }] }),
+    ports: [{ kind: 'text', label: 'text', side: 'in' }] }),
 ].join('\n');
 
 const runSvg = [
-  wire(192, 166, 470, 110, 'text', { live: true, dash: '7 7' }),
-  wire(192, 420, 236, 446, 'stream', { live: true, dash: '6 6' }),
-  wire(192, 538, 236, 477, 'data', { opacity: 0.35 }),
-  wire(416, 460, 470, 138, 'tools', { live: true, dash: '7 7', width: 2.2 }),
-  wire(710, 110, 770, 150, 'text', { opacity: 0.28, dash: '4 5' }),
+  rw('input', 0, 'llm', 0, 'text', { live: true, dash: '7 7' }),
+  rw('terminal', 0, 'toolbox', 0, 'tools', { live: true, dash: '6 6' }),
+  rw('python', 0, 'toolbox', 1, 'tools', { opacity: 0.35 }),
+  rw('toolbox', 0, 'llm', 1, 'tools', { live: true, dash: '7 7', width: 2.2 }),
+  rw('llm', 0, 'report', 0, 'text', { opacity: 0.28, dash: '4 5' }),
 ].join('');
 
 const consoleLine = (t, src, srcCol, msg) => `<div style="display:flex;gap:12px;">
@@ -803,7 +878,7 @@ const catCard = (cat) => `<div style="background:${C.panel};border:1px solid ${C
   <div style="padding:5px 8px 8px;">
     ${cat.blocks.map(b => `<div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
       ${icon(b.i, 14, CAT[cat.id], 1.7)}
-      <span style="width:98px;flex:none;font-size:11.5px;color:${C.hi};">${b.n}</span>
+      <span style="width:118px;flex:none;font-size:11.5px;color:${C.hi};">${b.n}</span>
       <span style="flex:1;font-family:${MONO};font-size:10px;color:${C.low};">${b.sig}</span>
       ${typeDots(b.t)}
     </div>`).join('')}
@@ -812,22 +887,27 @@ const catCard = (cat) => `<div style="background:${C.panel};border:1px solid ${C
 
 const TYPE_DOC = [
   ['text', 'prompts, stdout, any string', 'text &middot; any'],
-  ['tools', 'a bundle of callable functions', 'llm.tools'],
+  ['tools', 'one callable, or a bundle of them', 'llm.tools &middot; toolbox'],
+  ['memory', 'a store the model reads and writes', 'llm.memory &middot; hub'],
   ['data', 'structured json or a record', 'data &middot; any'],
   ['stream', 'output arriving incrementally', 'text &middot; data'],
+  ['image', 'frames from a camera or a file', 'image &middot; any'],
+  ['audio', 'samples from a microphone', 'audio &middot; any'],
   ['file', 'a path or blob on disk', 'file &middot; any'],
-  ['exec', 'control flow, never a value', 'exec'],
+  ['exec', 'a trigger or control flow, never a value', 'exec'],
   ['any', 'accepts every type', 'everything'],
 ];
+const byId = (id) => LIB.find(c => c.id === id);
 
 const LIBRARY_SHEET = doc(sheet({
-  w: 1180, h: 1040, kicker: 'Left panel',
-  title: 'Six categories, twenty-seven blocks, one type system',
+  w: 1470, h: 1120, kicker: 'Left panel',
+  title: 'Nine categories, forty-four blocks, one type system',
   body: `<div style="display:flex;gap:26px;align-items:flex-start;">
   <div style="width:${LIB_W}px;flex:none;height:748px;border:1px solid ${C.line};border-radius:10px;overflow:hidden;display:flex;">${libraryPanel({ open: ['models', 'capabilities', 'runtimes'] })}</div>
-  <div style="flex:1;display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:18px;align-content:start;">
-    <div style="display:flex;flex-direction:column;gap:18px;">${catCard(LIB[0])}${catCard(LIB[2])}${catCard(LIB[4])}</div>
-    <div style="display:flex;flex-direction:column;gap:18px;">${catCard(LIB[1])}${catCard(LIB[3])}${catCard(LIB[5])}</div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:18px;align-content:start;">
+    <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('models'))}${catCard(byId('senses'))}${catCard(byId('human'))}</div>
+    <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('capabilities'))}${catCard(byId('memory'))}${catCard(byId('control'))}</div>
+    <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('runtimes'))}${catCard(byId('actuators'))}${catCard(byId('data'))}</div>
   </div>
 </div>
 <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:15px 18px;">
@@ -836,7 +916,7 @@ const LIBRARY_SHEET = doc(sheet({
     <span style="flex:1;height:1px;background:${C.soft};"></span>
     <span style="font-size:10.5px;color:${C.low};">a wire is legal when its source type is accepted by the target port</span>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:14px;">
+  <div style="display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:16px 14px;">
     ${TYPE_DOC.map(([k, d, c]) => `<div>
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
         <span style="width:10px;height:10px;border-radius:50%;background:${T[k]};box-shadow:0 0 0 3px ${rgba(T[k], 0.14)};flex:none;"></span>
@@ -853,19 +933,21 @@ const LIBRARY_SHEET = doc(sheet({
 
 const callout = (x, y, w, t, align) => `<div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;text-align:${align};font-size:10.5px;line-height:1.45;color:${C.mid};">${t}</div>`;
 
+const AB = { x: 170, y: 60, w: 280 };
 const anatomyBlock = blockNode({
-  x: 170, y: 60, w: 280, icon: 'llm', color: CAT.models, title: 'LLM', state: 'running',
+  ...AB, icon: 'llm', color: CAT.models, title: 'LLM', state: 'running',
   badge: chip('streaming', C.ok, { dot: true }),
   body: label('model') + field('llama3.2:3b', { mono: true, select: true })
     + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">The arm64 build fails at link<br>time: ld cannot find -lssl&#8230;</div>`,
   ports: [
-    { kind: 'text', label: 'prompt', side: 'in', top: 56 },
-    { kind: 'text', label: 'context', side: 'in', top: 84 },
-    { kind: 'tools', label: 'tools', side: 'in', top: 112 },
-    { kind: 'text', label: 'text', side: 'out', top: 56 },
-    { kind: 'data', label: 'calls', side: 'out', top: 84 },
+    { kind: 'text', label: 'prompt', side: 'in' },
+    { kind: 'text', label: 'context', side: 'in' },
+    { kind: 'tools', label: 'tools', side: 'in' },
+    { kind: 'text', label: 'text', side: 'out' },
+    { kind: 'data', label: 'calls', side: 'out' },
   ],
 });
+const aHead = AB.y + 15, aIn = PY(AB, 1), aOut = PY(AB, 0), aBody = AB.y + 31 + 84 + 4 + 50;
 
 const STATES = [
   ['idle', 'idle', C.line, 'placed, never run'],
@@ -890,21 +972,20 @@ const ruleSvg = (c1, c2, stroke, dash) => `<svg xmlns="http://www.w3.org/2000/sv
 </svg>`;
 
 const ANATOMY = doc(sheet({
-  w: 1120, h: 760, kicker: 'Vocabulary',
+  w: 1240, h: 760, kicker: 'Vocabulary',
   title: 'A block, its ports, and the states it moves through',
   body: `<div style="display:flex;gap:28px;align-items:flex-start;">
-  <div style="position:relative;width:620px;height:290px;flex:none;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="620" height="290" viewBox="0 0 620 290" style="position:absolute;left:0;top:0;">
-      ${[[154, 75, 174], [154, 116, 165], [154, 172, 165]].map(([x1, y, x2]) => `<path d="M${x1} ${y}H${x2}" stroke="${C.faint}" stroke-width="1"/>`).join('')}
-      ${[[466, 75, 448], [466, 116, 455], [466, 178, 452]].map(([x1, y, x2]) => `<path d="M${x1} ${y}H${x2}" stroke="${C.faint}" stroke-width="1"/>`).join('')}
+  <div style="position:relative;width:620px;height:300px;flex:none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="620" height="300" viewBox="0 0 620 300" style="position:absolute;left:0;top:0;">
+      ${[[154, aHead, AB.x - 6], [154, aIn, AB.x - 8]].map(([x1, y, x2]) => `<path d="M${x1} ${y}H${x2}" stroke="${C.faint}" stroke-width="1"/>`).join('')}
+      ${[[466, aHead, AB.x + AB.w - 2], [466, aOut, AB.x + AB.w + 8], [466, aBody, AB.x + AB.w + 2]].map(([x1, y, x2]) => `<path d="M${x1} ${y}H${x2}" stroke="${C.faint}" stroke-width="1"/>`).join('')}
     </svg>
     ${anatomyBlock}
-    ${callout(0, 60, 148, 'Category colour and icon &mdash; the block always looks like its shelf in the library', 'right')}
-    ${callout(0, 101, 148, 'Typed input ports', 'right')}
-    ${callout(0, 157, 148, 'Port label is the name the graph API uses', 'right')}
-    ${callout(472, 62, 148, 'Run status, mirrored in the run panel', 'left')}
-    ${callout(472, 103, 148, 'Typed output ports', 'left')}
-    ${callout(472, 158, 148, 'Inline preview of the current value &mdash; no need to open the inspector', 'left')}
+    ${callout(0, aHead - 22, 148, 'Category colour and icon &mdash; the block looks like its shelf in the library', 'right')}
+    ${callout(0, aIn - 14, 148, 'Typed input ports &mdash; the label is the name the graph API uses', 'right')}
+    ${callout(472, aHead - 8, 148, 'Run status, mirrored in the run panel', 'left')}
+    ${callout(472, aOut - 8, 148, 'Typed output ports', 'left')}
+    ${callout(472, aBody - 16, 148, 'Inline preview of the current value &mdash; no need to open the inspector', 'left')}
   </div>
   <div style="flex:1;">
     <div style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${C.mid};margin-bottom:12px;">States</div>
@@ -926,6 +1007,7 @@ const ANATOMY = doc(sheet({
   ${ruleCard('Same type connects', 'Drop anywhere on the target block and it snaps to the first port that accepts the type.', ruleSvg(T.tools, T.tools, T.tools), C.ok)}
   ${ruleCard('Mismatched type is refused', 'Incompatible ports dim during the drag, so a wrong wire cannot be drawn in the first place.', ruleSvg(T.text, T.tools, rgba(C.err, 0.7), '5 5'), C.err)}
   ${ruleCard('any accepts everything', 'Input, Output and Variable take any type and pass it through unchanged.', ruleSvg(T.data, T.any, T.any), C.mid)}
+  ${ruleCard('Direct or bundled', 'A runtime wires straight into llm.tools for a simple run; a Toolbox bundles several and adds guards.', `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="34" viewBox="0 0 200 34" style="display:block;"><circle cx="10" cy="9" r="5" fill="${T.tools}"/><path d="M17 9 C 70 9, 110 17, 162 17" fill="none" stroke="${T.tools}" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="26" r="5" fill="${T.tools}"/><path d="M17 26 C 40 26, 50 26, 70 26" fill="none" stroke="${T.tools}" stroke-width="2" stroke-linecap="round"/><rect x="72" y="20" width="26" height="12" rx="3" fill="none" stroke="${T.tools}" stroke-width="1.5"/><path d="M99 26 C 120 26, 140 17, 162 17" fill="none" stroke="${T.tools}" stroke-width="2" stroke-linecap="round"/><circle cx="170" cy="17" r="5.5" fill="${T.tools}"/></svg>`, T.tools)}
 </div>`,
 }));
 
@@ -964,6 +1046,7 @@ const IN_BODY = [
 
 function iblock(o) {
   const c = o.color;
+  const zone = portZone(o.ports);
   return `<div onClick="{{pick${o.h}}}" style="position:absolute;left:${o.x}px;top:${o.y}px;width:${o.w}px;background:${C.block};border:1px solid {{bd${o.h}}};border-radius:9px;box-shadow:{{sh${o.h}}};cursor:pointer;">
   <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid ${C.soft};border-radius:8px 8px 0 0;background:linear-gradient(180deg,${rgba(c, 0.13)},${rgba(c, 0.02)});">
     ${icon(o.icon, 13, c, 1.7)}
@@ -971,43 +1054,47 @@ function iblock(o) {
     <span style="flex:1;"></span>
     <span style="width:7px;height:7px;border-radius:50%;background:{{dot${o.h}}};box-shadow:0 0 0 3px {{ring${o.h}}};flex:none;"></span>
   </div>
-  <div style="position:relative;padding:10px 11px 12px;">${o.body}</div>
-  ${(o.ports || []).map(port).join('')}
+  ${zone.html}
+  <div style="position:relative;padding:4px 11px 12px;">${o.body}</div>
 </div>`;
 }
 
+const IB = {
+  input: { x: 40, y: 120, w: 178 },
+  terminal: { x: 40, y: 430, w: 186 },
+  toolbox: { x: 300, y: 470, w: 196 },
+  llm: { x: 560, y: 110, w: 236 },
+};
+const iw = W(IB);
 const iNodes = [
-  iblock({ h: 'In', x: 40, y: 120, w: 178, icon: 'input', color: CAT.data, title: 'Input',
+  iblock({ h: 'In', ...IB.input, icon: 'input', color: CAT.data, title: 'Input',
     body: field('"triage ticket #4192"', { mono: true }),
-    ports: [{ kind: 'text', label: 'text', side: 'out', top: 56 }] }),
-  iblock({ h: 'Term', x: 40, y: 430, w: 186, icon: 'terminal', color: CAT.runtimes, title: 'Terminal',
+    ports: [{ kind: 'text', label: 'text', side: 'out' }] }),
+  iblock({ h: 'Term', ...IB.terminal, icon: 'terminal', color: CAT.runtimes, title: 'Terminal',
     body: label('command') + field('cargo build', { mono: true }),
-    ports: [{ kind: 'stream', label: 'tool', side: 'out', top: 76 }] }),
-  iblock({ h: 'Tool', x: 300, y: 470, w: 196, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox',
-    body: `<div style="display:flex;flex-direction:column;gap:5px;">
-      <div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon('terminal', 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">terminal.run</span></div>
-      <div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon('python', 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">python.exec</span></div>
-    </div>`,
+    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
+  iblock({ h: 'Tool', ...IB.toolbox, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox',
+    body: `<div style="display:flex;flex-direction:column;gap:5px;">${toolRow('terminal', 'terminal.run')}${toolRow('python', 'python.exec')}</div>`,
     ports: [
-      { kind: 'stream', label: '', side: 'in', top: 54 },
-      { kind: 'tools', label: 'tools', side: 'out', top: 68 },
+      { kind: 'tools', label: 'terminal', side: 'in' },
+      { kind: 'tools', label: 'tools', side: 'out' },
     ] }),
-  iblock({ h: 'Llm', x: 560, y: 110, w: 236, icon: 'llm', color: CAT.models, title: 'LLM',
+  iblock({ h: 'Llm', ...IB.llm, icon: 'llm', color: CAT.models, title: 'LLM',
     body: label('model') + field('llama3.2:3b', { mono: true, select: true })
       + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">You triage build failures. Read<br>the error, run the smallest&#8230;</div>`,
     ports: [
-      { kind: 'text', label: 'prompt', side: 'in', top: 56 },
-      { kind: 'text', label: 'context', side: 'in', top: 84 },
-      { kind: 'tools', label: 'tools', side: 'in', top: 112 },
-      { kind: 'text', label: 'text', side: 'out', top: 56 },
-      { kind: 'data', label: 'calls', side: 'out', top: 84 },
+      { kind: 'text', label: 'prompt', side: 'in' },
+      { kind: 'text', label: 'context', side: 'in' },
+      { kind: 'tools', label: 'tools', side: 'in' },
+      { kind: 'text', label: 'text', side: 'out' },
+      { kind: 'data', label: 'calls', side: 'out' },
     ] }),
 ].join('\n');
 
 const iWires = (live) => [
-  wire(218, 176, 560, 166, 'text', live ? { live: true, dash: '7 7' } : {}),
-  wire(226, 506, 300, 524, 'stream', live ? { live: true, dash: '6 6' } : {}),
-  wire(496, 538, 560, 222, 'tools', live ? { live: true, dash: '7 7', width: 2.2 } : { width: 2.1 }),
+  iw('input', 0, 'llm', 0, 'text', live ? { live: true, dash: '7 7' } : {}),
+  iw('terminal', 0, 'toolbox', 0, 'tools', live ? { live: true, dash: '6 6' } : {}),
+  iw('toolbox', 0, 'llm', 2, 'tools', live ? { live: true, dash: '7 7', width: 2.2 } : { width: 2.1 }),
 ].join('');
 
 const hintPill = `<div style="position:absolute;left:16px;top:16px;display:flex;align-items:center;gap:9px;height:30px;padding:0 13px;border-radius:15px;background:${rgba('#12161c', 0.9)};border:1px solid ${C.line};">
@@ -1101,6 +1188,411 @@ class Component extends DCLogic {
 }
 </script>`);
 
+
+/* ============================================================ 8. Continuous */
+
+function loopFrame({ x, y, w, h, title, counter, inner, ports = [] }) {
+  return `<div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:1.5px dashed ${rgba(CAT.control, 0.55)};border-radius:12px;background:${rgba('#ffffff', 0.018)};">
+  <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-bottom:1px dashed ${rgba(CAT.control, 0.3)};">
+    ${icon('loop', 13, CAT.control, 1.8)}
+    <span style="font-size:12px;font-weight:600;color:${C.hi};">${title}</span>
+    <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">as item</span>
+    <span style="flex:1;"></span>
+    ${counter}
+  </div>
+  ${inner}
+  ${ports.map(port).join('')}
+</div>`;
+}
+
+const CB = {
+  webhook: { x: 24, y: 60, w: 186 },
+  watch: { x: 24, y: 200, w: 186 },
+  schedule: { x: 24, y: 420, w: 186 },
+  frame: { x: 250, y: 50, w: 480, h: 300 },
+  classify: { x: 300, y: 100, w: 200 },
+  branch: { x: 530, y: 112, w: 186 },
+  notify: { x: 770, y: 90, w: 176 },
+  archive: { x: 770, y: 220, w: 176 },
+  digest: { x: 480, y: 420, w: 200 },
+  notify2: { x: 770, y: 400, w: 176 },
+};
+const cw = W(CB);
+const rel = (b, f) => ({ ...b, x: b.x - f.x, y: b.y - f.y });
+const frameInY = PY(CB.classify, 0);
+
+const contNodes = [
+  blockNode({ ...CB.webhook, icon: 'http', color: CAT.senses, title: 'Webhook', state: 'running',
+    badge: chip('listening', C.ok, { dot: true }),
+    body: field('POST /hooks/ticket', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">:8787 &middot; 0 events today</div>`,
+    ports: [{ kind: 'data', label: 'event', side: 'out' }] }),
+  blockNode({ ...CB.watch, icon: 'folder', color: CAT.senses, title: 'Watch folder', state: 'running',
+    badge: chip('3/min', C.ok, { dot: true }),
+    body: field('~/inbox/*.eml', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1,204 events &middot; last 12 s ago</div>`,
+    ports: [{ kind: 'file', label: 'file', side: 'out' }] }),
+  blockNode({ ...CB.schedule, icon: 'clock', color: CAT.senses, title: 'Schedule', state: 'queued',
+    badge: chip('armed', C.warn),
+    body: field('every 15 min', { mono: true, select: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">next in 4:12 &middot; jitter &plusmn;2 min</div>`,
+    ports: [{ kind: 'exec', label: 'tick', side: 'out' }] }),
+  loopFrame({ ...CB.frame, title: 'For each',
+    counter: `<div style="display:flex;align-items:center;gap:6px;">${chip('3 / 7', CAT.control)}${chip('queue 4', C.warn)}${chip('parallel 2', C.mid)}</div>`,
+    ports: [{ kind: 'any', label: 'items', side: 'in', top: frameInY - CB.frame.y - 7 }],
+    inner: blockNode({ ...rel(CB.classify, CB.frame), icon: 'llm', color: CAT.models, title: 'Classify', state: 'running',
+        body: label('model') + field('llama3.2:3b', { mono: true, select: true }) + `<div style="margin-top:8px;font-family:${MONO};font-size:9.5px;line-height:1.55;color:${C.faint};">urgent | routine | spam</div>`,
+        ports: [{ kind: 'text', label: 'item', side: 'in' }, { kind: 'data', label: 'label', side: 'out' }] })
+      + blockNode({ ...rel(CB.branch, CB.frame), icon: 'branch', color: CAT.control, title: 'Branch', state: 'ok',
+        body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.7;color:${C.faint};">label == "urgent"</div>`,
+        ports: [{ kind: 'any', label: 'in', side: 'in' }, { kind: 'exec', label: 'urgent', side: 'out' }, { kind: 'exec', label: 'else', side: 'out' }] })
+      + `<div style="position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:10px;font-family:${MONO};font-size:9.5px;color:${C.faint};">
+          ${statusDot('running')}<span>iteration 3 &middot; re-arm64-build.eml &middot; 1.2 s</span><span style="flex:1;"></span><span>done 2 &middot; failed 0</span>
+        </div>` }),
+  blockNode({ ...CB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'ok',
+    body: field('slack #oncall', { mono: true, select: true }),
+    ports: [{ kind: 'exec', label: 'send', side: 'in' }] }),
+  blockNode({ ...CB.archive, icon: 'output', color: CAT.data, title: 'Archive', state: 'ok',
+    body: field('~/inbox/done/', { mono: true }),
+    ports: [{ kind: 'exec', label: 'move', side: 'in' }] }),
+  blockNode({ ...CB.digest, icon: 'llm', color: CAT.models, title: 'Digest', state: 'idle',
+    body: label('context') + field('results.last(15 min)', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">summarise what happened</div>`,
+    ports: [{ kind: 'exec', label: 'trigger', side: 'in' }, { kind: 'text', label: 'text', side: 'out' }] }),
+  blockNode({ ...CB.notify2, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
+    body: field('email &middot; me', { mono: true, select: true }),
+    ports: [{ kind: 'text', label: 'text', side: 'in' }] }),
+].join('\n');
+
+const contSvg = [
+  wire(CB.webhook.x + CB.webhook.w, PY(CB.webhook, 0), CB.frame.x, frameInY, 'data', { opacity: 0.5 }),
+  wire(CB.watch.x + CB.watch.w, PY(CB.watch, 0), CB.frame.x, frameInY, 'file', { live: true, dash: '6 6' }),
+  wire(CB.frame.x, frameInY, CB.classify.x, frameInY, 'any', { opacity: 0.7 }),
+  cw('classify', 0, 'branch', 0, 'data', { live: true, dash: '6 6' }),
+  cw('branch', 0, 'notify', 0, 'exec'),
+  cw('branch', 1, 'archive', 0, 'exec'),
+  cw('schedule', 0, 'digest', 0, 'exec', { opacity: 0.45, dash: '4 5' }),
+  cw('digest', 0, 'notify2', 0, 'text', { opacity: 0.45, dash: '4 5' }),
+].join('');
+
+const segmented = (opts, on, col = C.ok) => `<div style="display:flex;gap:3px;padding:3px;background:${C.field};border:1px solid ${C.line};border-radius:7px;">${opts.map(o => `<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:24px;border-radius:5px;font-size:11px;font-weight:${o === on ? 600 : 500};color:${o === on ? '#08090b' : C.mid};background:${o === on ? col : 'transparent'};">${o === on ? `<span style="width:5px;height:5px;border-radius:50%;background:#08090b;"></span>` : ''}${o}</div>`).join('')}</div>`;
+
+const srcRow = (ic, name, meta, state, count) => `<div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 8px;border-radius:6px;">
+  ${icon(ic, 12, CAT.senses, 1.7)}
+  <div style="flex:1;min-width:0;"><div style="font-size:11.5px;color:${C.hi};">${name}</div></div>
+  <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">${meta}</span>
+  ${statusDot(state)}
+</div>`;
+
+const RUNMODE_BODY = [
+  sect('Run mode', segmented(['Once', 'Live', 'Schedule'], 'Live')
+    + `<div style="margin-top:10px;font-size:10.5px;line-height:1.55;color:${C.low};">Sources keep the graph armed. Each event runs everything downstream of it, and the graph stays up until you stop it.</div>`,
+    { tint: C.ok, right: chip('4 h 12 m', C.ok, { dot: true }) }),
+  sect('Sources armed', srcRow('http', 'Webhook', '0 today', 'running') + srcRow('folder', 'Watch folder', '3 / min', 'running') + srcRow('clock', 'Schedule', 'next 4:12', 'queued'), { right: chip('3', C.ok) }),
+  sect('When events overlap', rowField('Policy', 'Queue &middot; max 50', { select: true }) + switchRow('Coalesce bursts', true, { hint: 'merge events arriving within 500 ms' }) + rowField('Loop concurrency', '2', { mono: true, gap: 0 })),
+  sect('Between events', switchRow('Keep block state', true, { hint: 'variables and memory persist across events' }) + switchRow('Restart on crash', true, { hint: 'back off 5 s, 30 s, 2 min' })),
+  sect('Recent events', `<div style="font-family:${MONO};font-size:10px;line-height:1.9;">
+    ${[['12:41:07', 'folder', 're-arm64-build.eml', C.ok], ['12:41:02', 'folder', 'invoice-0912.eml', C.ok], ['12:40:58', 'folder', 'weekly-digest.eml', C.ok], ['12:30:00', 'clock', 'tick &rarr; digest', C.mid]].map(([t, s, m, c]) => `<div style="display:flex;gap:10px;"><span style="color:${C.faint};">${t}</span><span style="color:${CAT.senses};width:44px;">${s}</span><span style="color:${c};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m}</span></div>`).join('')}
+  </div>`, { right: chip('1,204', C.mid) }),
+].join('');
+
+const CONTINUOUS = doc(shell({
+  top: topbar({ name: 'inbox-triage.graph', saved: 'saved', live: '4 h 12 m &middot; 3.1 / min' }),
+  library: libraryPanel({ open: ['senses', 'control'], placed: ['Webhook', 'Watch folder', 'Schedule', 'Loop', 'Branch'] }),
+  canvas: stage({ svg: contSvg, nodes: contNodes, overlay: zoomPill + minimap([
+    [9, 11, 20, 7, CAT.senses], [9, 22, 20, 7, CAT.senses], [9, 40, 20, 7, CAT.senses],
+    [33, 10, 51, 24, CAT.control], [88, 13, 19, 6, CAT.human], [88, 24, 19, 6, CAT.data], [57, 40, 21, 7, CAT.models], [88, 38, 19, 6, CAT.human],
+  ]) }),
+  insp: inspector(RUNMODE_BODY, { title: 'Graph', sub: 'inbox-triage.graph &middot; live', icn: 'mark', col: C.accent, tabs: ['Settings', 'Variables', 'Runs'], tab: 'Settings' }),
+  status: statusbar('8 blocks &middot; 8 wires &middot; 1 loop', 'live &middot; 1,204 events &middot; queue 4 &middot; 0 errors'),
+}));
+
+/* ============================================================== 9. RunModes */
+
+const transportCard = (chipHtml, name, note) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:14px 16px;">
+  <div style="display:flex;align-items:center;height:32px;margin-bottom:10px;">${chipHtml}</div>
+  <div style="font-size:12px;font-weight:600;color:${C.hi};margin-bottom:4px;">${name}</div>
+  <div style="font-size:10.5px;line-height:1.5;color:${C.low};">${note}</div>
+</div>`;
+
+const tChip = (bg, bd, dotCol, textCol, label, extra = '', stop = true) => `<div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 ${stop ? 4 : 12}px 0 10px;border-radius:6px;background:${bg};border:1px solid ${bd};">
+  <span style="width:7px;height:7px;border-radius:50%;background:${dotCol};flex:none;"></span>
+  <span style="font-family:${MONO};font-size:10.5px;font-weight:600;color:${textCol};letter-spacing:.03em;">${label}</span>
+  ${extra ? `<span style="font-family:${MONO};font-size:10.5px;color:${rgba(textCol, 0.7)};">${extra}</span>` : ''}
+  ${stop ? `<div style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:${rgba(C.err, 0.16)};margin-left:2px;">${icon('stop', 11, C.err, 0)}</div>` : ''}
+</div>`;
+
+const WATCH_BODY = [
+  sect('Source', rowField('Path', '~/inbox', { mono: true, icon: 'folder' }) + rowField('Pattern', '*.eml', { mono: true }) + rowField('On', 'create, modify', { select: true, gap: 0 })),
+  sect('Rate', rowField('Debounce', '500 ms', { mono: true }) + rowField('When busy', 'Queue &middot; max 50', { select: true }) + switchRow('Drop duplicates', true, { hint: 'same path within 5 s' })),
+  sect('Emits', `<div style="display:flex;align-items:center;gap:8px;">${chip('file', T.file, { dot: true })}<span style="font-size:10.5px;color:${C.low};">one event per matching file</span></div>`),
+  sect('Live', rowField('Rate', '3 / min', { mono: true }) + rowField('Total', '1,204 &middot; last 12 s ago', { mono: true, gap: 0 }), { tint: C.ok, right: chip('watching', C.ok, { dot: true }) }),
+].join('');
+
+const SCHEDULE_BODY = [
+  sect('Interval', segmented(['Every', 'Cron', 'Once at'], 'Every', C.accent) + `<div style="height:11px;"></div>` + rowField('Every', '15 minutes', { select: true }) + rowField('Jitter', '&plusmn; 2 min', { mono: true, gap: 0 })),
+  sect('Catch-up', switchRow('Run missed ticks', false, { hint: 'after sleep or a crash' }) + switchRow('Skip if still running', true)),
+  sect('Emits', `<div style="display:flex;align-items:center;gap:8px;">${chip('exec', T.exec, { dot: true })}<span style="font-size:10.5px;color:${C.low};">a tick &mdash; wire it to any trigger port</span></div>`),
+  sect('Next', rowField('Fires in', '4:12', { mono: true }) + rowField('This hour', '3 ticks &middot; 0 skipped', { mono: true, gap: 0 }), { tint: C.warn, right: chip('armed', C.warn) }),
+].join('');
+
+const LOOP_BODY = [
+  sect('Iterate', rowField('Over', 'items &middot; any', { select: true }) + rowField('As', 'item', { mono: true }) + rowField('Parallel', '2', { mono: true }) + rowField('Max iterations', '500', { mono: true, gap: 0 })),
+  sect('Stop when', field('branch.urgent fires', { select: true, icon: 'branch' }) + switchRow('Continue on error', true, { hint: 'failed items go to the errors port' })),
+  sect('Ports', `<div style="display:flex;flex-direction:column;gap:6px;">
+    ${[['in', 'items', 'any'], ['out', 'results', 'data'], ['out', 'done', 'exec'], ['out', 'errors', 'data']].map(([d, n, k]) => `<div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;"><span style="font-family:${MONO};font-size:9.5px;color:${C.faint};width:22px;">${d}</span><span style="flex:1;font-family:${MONO};font-size:10.5px;color:${C.hi};">${n}</span>${chip(k, T[k], { dot: true })}</div>`).join('')}
+  </div>`),
+  sect('Live', rowField('Iteration', '3 of 7 &middot; queue 4', { mono: true, gap: 0 }), { tint: C.ok, right: chip('running', C.ok, { dot: true }) }),
+].join('');
+
+const RUNMODES_SHEET = doc(sheet({
+  w: 1120, h: 980, kicker: 'Continuous running',
+  title: 'The transport says how the graph runs; sources and loops say when',
+  body: `<div style="display:flex;gap:16px;">
+  ${transportCard(`<div style="display:flex;align-items:center;gap:7px;height:28px;padding:0 12px 0 10px;border-radius:6px;background:${C.accent};">${icon('play', 11, '#08090b', 0)}<span style="font-size:11.5px;font-weight:600;color:#08090b;">Run</span></div>`, 'Once', 'Runs the graph top to bottom, then stops. What every graph does until it has a source.')}
+  ${transportCard(tChip(rgba(C.ok, 0.13), rgba(C.ok, 0.35), C.ok, C.ok, 'live', '4h 12m'), 'Live', 'Sources stay armed and every event runs downstream. Stop tears the whole graph down.')}
+  ${transportCard(tChip(rgba(C.warn, 0.13), rgba(C.warn, 0.35), C.warn, C.warn, 'next in', '4:12'), 'Scheduled', 'Only Schedule blocks are armed. Between ticks the graph sleeps and costs nothing.')}
+  ${transportCard(tChip(rgba(C.mid, 0.13), rgba(C.mid, 0.35), C.mid, C.hi, 'paused', 'queue 12', false), 'Paused', 'Events keep queueing; nothing runs until you resume. Useful while you rewire a live graph.')}
+</div>
+<div style="display:flex;gap:22px;">
+  ${[['Watch folder', 'a source block', WATCH_BODY, { title: 'Watch folder', sub: 'senses &middot; fs.watch', icn: 'folder', col: CAT.senses, tabs: ['Settings', 'Events'], tab: 'Settings' }, CAT.senses],
+     ['Schedule', 'periodic trigger', SCHEDULE_BODY, { title: 'Schedule', sub: 'senses &middot; clock.tick', icn: 'clock', col: CAT.senses, tabs: ['Settings', 'Events'], tab: 'Settings' }, CAT.senses],
+     ['Loop frame', 'repeat a region of the canvas', LOOP_BODY, { title: 'For each', sub: 'control &middot; loop.frame', icn: 'loop', col: CAT.control, tabs: ['Settings', 'Ports'], tab: 'Settings' }, CAT.control],
+    ].map(([cap, note, body, meta, col]) => `<div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:${col};flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:${C.hi};">${cap}</span>
+      <span style="font-size:10.5px;color:${C.low};">${note}</span>
+    </div>
+    <div style="height:680px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
+  </div>`).join('')}
+</div>`,
+}));
+
+/* ============================================================= 10. Assistant */
+
+const RAIL_W = 48;
+const AW = 1920, AH = 1080;
+const ACW = AW - RAIL_W - INSP_W;   // 1544
+const ACH = AH - TOP_H - BOT_H;     // 1006
+
+function libraryRail() {
+  const cats = [['models', 'llm'], ['capabilities', 'toolbox'], ['runtimes', 'terminal'], ['senses', 'eye'], ['memory', 'db'], ['actuators', 'bolt'], ['data', 'braces'], ['control', 'branch'], ['human', 'approve']];
+  return `<div style="width:${RAIL_W}px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;background:${C.panel};border-right:1px solid ${C.line};">
+  <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:${C.field};border:1px solid ${C.line};margin-bottom:6px;">${icon('search', 13, C.low)}</div>
+  ${cats.map(([id, ic]) => `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:${rgba(CAT[id], 0.1)};">${icon(ic, 14, CAT[id], 1.7)}</div>`).join('')}
+  <span style="flex:1;"></span>
+  <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;">${icon('chev', 13, C.low, 2)}</div>
+</div>`;
+}
+
+const meter = (heights, col) => `<div style="display:flex;align-items:flex-end;gap:2px;height:22px;">${heights.map(h => `<span style="width:5px;height:${h}px;border-radius:1px;background:${col};opacity:${0.45 + h / 40};"></span>`).join('')}</div>`;
+
+const camPreview = `<div style="position:relative;height:46px;border-radius:5px;background:linear-gradient(135deg,#1c2027,#0e1116);border:1px solid ${C.soft};overflow:hidden;">
+  <div style="position:absolute;left:52px;top:9px;width:26px;height:30px;border:1px solid ${T.image};border-radius:2px;"></div>
+  <div style="position:absolute;left:52px;top:2px;font-family:${MONO};font-size:7px;color:${T.image};">person .97</div>
+  <div style="position:absolute;left:108px;top:14px;width:34px;height:26px;border:1px solid ${rgba(T.image, 0.6)};border-radius:2px;"></div>
+  <div style="position:absolute;left:108px;top:7px;font-family:${MONO};font-size:7px;color:${rgba(T.image, 0.8)};">door .88</div>
+</div>`;
+
+const fnChip = (t) => chip(t, T.tools);
+
+const XB = {
+  webcam: { x: 24, y: 50, w: 180 },
+  mic: { x: 24, y: 250, w: 180 },
+  keyboard: { x: 24, y: 394, w: 180 },
+  objdet: { x: 260, y: 40, w: 200 },
+  facerec: { x: 260, y: 182, w: 200 },
+  stt: { x: 260, y: 304, w: 200 },
+  usb: { x: 260, y: 458, w: 200 },
+  motors: { x: 260, y: 585, w: 200 },
+  wm: { x: 260, y: 712, w: 200 },
+  ltm: { x: 260, y: 843, w: 200 },
+  toolbox: { x: 520, y: 430, w: 200 },
+  hub: { x: 520, y: 770, w: 210 },
+  llm: { x: 780, y: 300, w: 260 },
+  display: { x: 1100, y: 200, w: 200 },
+  tts: { x: 1100, y: 360, w: 200 },
+  term: { x: 1100, y: 490, w: 200 },
+  speaker: { x: 1340, y: 360, w: 180 },
+};
+const xw = W(XB);
+const hubRow = (ic, t, col, extra = '') => `<div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon(ic, 11, col, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};white-space:nowrap;">${t}</span>${extra}</div>`;
+
+const asstNodes = [
+  blockNode({ ...XB.webcam, icon: 'eye', color: CAT.senses, title: 'Webcam', state: 'running',
+    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
+    ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
+  blockNode({ ...XB.mic, icon: 'note', color: CAT.senses, title: 'Microphone', state: 'running',
+    body: meter([6, 12, 18, 22, 16, 20, 10, 14, 19, 8, 12, 17, 9, 5], T.audio) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">&minus;18 dB &middot; vad: speech</div>`,
+    ports: [{ kind: 'audio', label: 'audio', side: 'out' }] }),
+  blockNode({ ...XB.keyboard, icon: 'form', color: CAT.senses, title: 'Keyboard', state: 'ok',
+    body: field('&gt; check the front door_', { mono: true }),
+    ports: [{ kind: 'text', label: 'text', side: 'out' }] }),
+  blockNode({ ...XB.objdet, icon: 'eye', color: CAT.models, title: 'Object detection', state: 'running',
+    body: `<div style="display:flex;gap:4px;">${chip('person .97', T.image)}${chip('door .88', T.image)}</div><div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">yolo-v8n &middot; 22 ms &middot; 5 fps</div>`,
+    ports: [{ kind: 'image', label: 'image', side: 'in' }, { kind: 'data', label: 'objects', side: 'out' }] }),
+  blockNode({ ...XB.facerec, icon: 'approve', color: CAT.models, title: 'Face recognition', state: 'ok',
+    body: `<div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:22px;border-radius:50%;background:${rgba(CAT.human, 0.25)};border:1px solid ${rgba(CAT.human, 0.5)};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${CAT.human};flex:none;">M</span><div><div style="font-size:11px;color:${C.hi};">Mykl &middot; 0.93</div><div style="font-family:${MONO};font-size:9px;color:${C.faint};">known &middot; seen 2 min ago</div></div></div>`,
+    ports: [{ kind: 'image', label: 'image', side: 'in' }, { kind: 'data', label: 'person', side: 'out' }] }),
+  blockNode({ ...XB.stt, icon: 'note', color: CAT.models, title: 'Speech to text', state: 'running',
+    body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.55;color:#c3cad4;white-space:nowrap;overflow:hidden;">&#8230;check the front door<span style="color:${C.ok};">&#9612;</span></div>`,
+    ports: [{ kind: 'audio', label: 'audio', side: 'in' }, { kind: 'text', label: 'text', side: 'out' }] }),
+  blockNode({ ...XB.usb, icon: 'plug', color: CAT.actuators, title: 'USB device', state: 'ok',
+    body: field('/dev/ttyACM0 &middot; 115200', { mono: true }),
+    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
+  blockNode({ ...XB.motors, icon: 'loop', color: CAT.actuators, title: 'Motors', state: 'ok',
+    badge: chip('approval', C.err, { dot: true }),
+    body: field('2 servos &middot; pan / tilt', { mono: true }),
+    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
+  blockNode({ ...XB.wm, icon: 'braces', color: CAT.memory, title: 'Working memory', state: 'ok',
+    body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.7;color:${C.faint};white-space:nowrap;"><span style="color:${C.mid};">14:02</span> Mykl at desk<br><span style="color:${C.mid};">14:03</span> asked about the door</div>`,
+    ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
+  blockNode({ ...XB.ltm, icon: 'db', color: CAT.memory, title: 'Long-term memory', state: 'ok',
+    body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">Mykl &mdash; terse answers, works late</div><div style="margin-top:4px;font-family:${MONO};font-size:9.5px;color:${C.faint};">12 people &middot; 2,140 episodes</div>`,
+    ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
+  blockNode({ ...XB.toolbox, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox', state: 'ok',
+    badge: chip('3 fns', T.tools),
+    body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('plug', 'usb.send &middot; usb.read', CAT.actuators)}${hubRow('loop', 'motor.move', CAT.actuators, `<span style="flex:1;"></span><span style="width:6px;height:6px;border-radius:50%;background:${C.err};"></span>`)}</div>`,
+    ports: [{ kind: 'tools', label: 'usb', side: 'in' }, { kind: 'tools', label: 'motors', side: 'in' }, { kind: 'tools', label: 'tools', side: 'out' }] }),
+  blockNode({ ...XB.hub, icon: 'merge', color: CAT.memory, title: 'Memory hub', state: 'ok',
+    badge: chip('2', T.memory),
+    body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('braces', 'working &middot; fast', CAT.memory)}${hubRow('db', 'long-term &middot; vectors', CAT.memory)}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">consolidate every 10 min</div></div>`,
+    ports: [{ kind: 'memory', label: 'working', side: 'in' }, { kind: 'memory', label: 'long-term', side: 'in' }, { kind: 'memory', label: 'memory', side: 'out' }] }),
+  blockNode({ ...XB.llm, icon: 'llm', color: CAT.models, title: 'Orchestrator', state: 'running', selected: true,
+    badge: chip('thinking', C.ok, { dot: true }),
+    body: label('model') + field('qwen2.5:14b &middot; local', { mono: true, select: true })
+      + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.55;color:${C.faint};">Mykl asked about the front door. Camera shows it closed, no one near it for 2 min. Pan the camera to confirm&#8230;</div>`
+      + `<div style="margin-top:8px;display:flex;align-items:center;gap:7px;height:23px;padding:0 8px;border-radius:5px;background:${rgba(T.tools, 0.1)};border:1px solid ${rgba(T.tools, 0.32)};">${icon('loop', 11, T.tools, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${T.tools};white-space:nowrap;">motor.move(pan: &minus;40)</span><span style="flex:1;"></span>${chip('confirm?', C.err)}</div>`,
+    ports: [
+      { kind: 'text', label: 'prompt', side: 'in' },
+      { kind: 'data', label: 'context', side: 'in' },
+      { kind: 'tools', label: 'tools', side: 'in' },
+      { kind: 'memory', label: 'memory', side: 'in' },
+      { kind: 'text', label: 'text', side: 'out' },
+      { kind: 'text', label: 'thoughts', side: 'out' },
+      { kind: 'data', label: 'calls', side: 'out' },
+    ] }),
+  blockNode({ ...XB.display, icon: 'form', color: CAT.actuators, title: 'Display', state: 'ok',
+    body: `<div style="padding:7px 9px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};font-size:10.5px;line-height:1.5;color:#c3cad4;">Front door is closed. Last motion 14:01.</div><div style="margin-top:6px;font-family:${MONO};font-size:9.5px;color:${C.faint};">HDMI-1 &middot; overlay</div>`,
+    ports: [{ kind: 'text', label: 'text', side: 'in' }] }),
+  blockNode({ ...XB.tts, icon: 'note', color: CAT.models, title: 'Text to speech', state: 'idle',
+    body: field('piper &middot; en_GB-alan', { mono: true, select: true }),
+    ports: [{ kind: 'text', label: 'text', side: 'in' }, { kind: 'audio', label: 'audio', side: 'out' }] }),
+  blockNode({ ...XB.term, icon: 'terminal', color: CAT.runtimes, title: 'Terminal', state: 'running',
+    badge: chip('thoughts', C.mid),
+    body: `<div style="padding:6px 8px;border-radius:5px;background:#07080a;border:1px solid ${C.soft};font-family:${MONO};font-size:9px;line-height:1.65;color:#9aa4b0;white-space:nowrap;overflow:hidden;">[14:03:12] look: door closed<br>[14:03:12] recall: asked yesterday<br>[14:03:13] act: pan camera &minus;40&deg;<span style="color:${C.ok};">&#9612;</span></div>`,
+    ports: [{ kind: 'text', label: 'text', side: 'in' }] }),
+  blockNode({ ...XB.speaker, icon: 'note', color: CAT.actuators, title: 'Speaker', state: 'idle',
+    body: field('default &middot; 48 kHz', { mono: true, muted: true }),
+    ports: [{ kind: 'audio', label: 'audio', side: 'in' }] }),
+].join('\n');
+
+const asstSvg = [
+  xw('webcam', 0, 'objdet', 0, 'image', { live: true, dash: '6 6' }),
+  xw('webcam', 0, 'facerec', 0, 'image', { live: true, dash: '6 6' }),
+  xw('mic', 0, 'stt', 0, 'audio', { live: true, dash: '6 6' }),
+  xw('keyboard', 0, 'llm', 0, 'text'),
+  xw('stt', 0, 'llm', 0, 'text', { live: true, dash: '6 6' }),
+  xw('objdet', 0, 'llm', 1, 'data', { live: true, dash: '6 6' }),
+  xw('facerec', 0, 'llm', 1, 'data'),
+  xw('usb', 0, 'toolbox', 0, 'tools'),
+  xw('motors', 0, 'toolbox', 1, 'tools'),
+  xw('toolbox', 0, 'llm', 2, 'tools', { width: 2.2 }),
+  xw('wm', 0, 'hub', 0, 'memory'),
+  xw('ltm', 0, 'hub', 1, 'memory'),
+  xw('hub', 0, 'llm', 3, 'memory', { width: 2.2 }),
+  xw('llm', 0, 'display', 0, 'text', { live: true, dash: '6 6' }),
+  xw('llm', 0, 'tts', 0, 'text', { opacity: 0.5 }),
+  xw('tts', 0, 'speaker', 0, 'audio', { opacity: 0.5 }),
+  xw('llm', 1, 'term', 0, 'text', { live: true, dash: '6 6' }),
+].join('');
+
+const ORCH_BODY = [
+  sect('Model', rowField('Provider', 'Ollama &middot; local &middot; cuda', { select: true, icon: 'llm' }) + rowField('Model', 'qwen2.5:14b', { select: true }) + rowField('Role', 'Orchestrator', { select: true, gap: 0 })
+    + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Coordinates the specialists below. It never sees raw frames or audio &mdash; only what they report.</div>`),
+  sect('Specialists', connRow('eye', 'Object detection', 'yolo-v8n &rarr; context', 'data', 'running') + connRow('approve', 'Face recognition', 'insightface &rarr; context', 'data', 'ok') + connRow('note', 'Speech to text', 'whisper-small &rarr; prompt', 'text', 'running'), { tint: CAT.models, right: chip('3', CAT.models) }),
+  sect('Memory', connRow('merge', 'Memory hub', 'working + long-term', 'memory', 'ok') + switchRow('May write memories', true, { hint: 'remember() and forget() offered as tools', col: T.memory }), { tint: T.memory, right: chip('hub', T.memory) }),
+  sect('Tools', connRow('toolbox', 'Toolbox', 'usb.send, usb.read, motor.move', 'tools', 'ok') + switchRow('Confirm physical actions', true, { hint: 'motor.move waits for a human', col: C.err }), { tint: T.tools, right: chip('3', T.tools) }),
+  sect('Thoughts', switchRow('Print thoughts', true, { hint: '&rarr; Terminal, one line per step' }) + rowField('Detail', 'look / recall / act', { select: true, gap: 0 })),
+].join('');
+
+const ASSISTANT = doc(`<div style="width:${AW}px;height:${AH}px;display:flex;flex-direction:column;background:${C.ground};overflow:hidden;font-family:${SANS};">
+  ${topbar({ name: 'home-assistant.graph', saved: 'saved', live: '4 h 12 m', runtime: 'local &middot; ollama + cuda' })}
+  <div style="flex:1;display:flex;min-height:0;">
+    ${libraryRail()}
+    <div style="flex:1;position:relative;overflow:hidden;background-color:${C.canvas};background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.055) 1px, transparent 0);background-size:22px 22px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="${ACW}" height="${ACH}" viewBox="0 0 ${ACW} ${ACH}" style="position:absolute;left:0;top:0;pointer-events:none;">${asstSvg}</svg>
+      ${asstNodes}
+      <div style="position:absolute;left:24px;top:${ACH - 118}px;display:flex;flex-direction:column;gap:5px;font-family:${MONO};font-size:9.5px;color:${C.faint};">
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.image};"></span>image</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.audio};"></span>audio</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.memory};"></span>memory</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.tools};"></span>tools</div>
+      </div>
+      ${minimap([[8, 9, 12, 8, CAT.senses], [8, 22, 12, 7, CAT.senses], [8, 32, 12, 6, CAT.senses], [24, 8, 13, 8, CAT.models], [24, 18, 13, 8, CAT.models], [24, 27, 13, 7, CAT.models], [24, 37, 13, 7, CAT.actuators], [24, 45, 13, 7, CAT.actuators], [24, 54, 13, 8, CAT.memory], [24, 63, 13, 8, CAT.memory], [41, 34, 13, 10, CAT.capabilities], [41, 57, 13, 10, CAT.memory], [59, 26, 17, 13, CAT.models], [80, 19, 13, 7, CAT.actuators], [80, 28, 13, 6, CAT.models], [80, 37, 13, 7, CAT.runtimes], [96, 28, 12, 6, CAT.actuators]])}
+    </div>
+    ${inspector(ORCH_BODY, { title: 'Orchestrator', sub: 'models &middot; llm.chat &middot; role: orchestrator', icn: 'llm', col: CAT.models, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' })}
+  </div>
+  ${statusbar('17 blocks &middot; 17 wires &middot; 3 specialists', 'live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 action awaiting approval')}
+</div>`);
+
+/* =========================================================== 11. SensePanels */
+
+const personRow = (initial, name, meta, col, action = '') => `<div style="display:flex;align-items:center;gap:9px;padding:7px 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;margin-bottom:6px;">
+  <span style="width:22px;height:22px;border-radius:50%;background:${rgba(col, 0.22)};border:1px solid ${rgba(col, 0.5)};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${col};flex:none;">${initial}</span>
+  <div style="flex:1;min-width:0;"><div style="font-size:11.5px;color:${C.hi};">${name}</div><div style="font-family:${MONO};font-size:9.5px;color:${C.low};margin-top:1px;">${meta}</div></div>
+  ${action}
+</div>`;
+
+const WEBCAM_BODY = [
+  sect('Device', rowField('Camera', 'Logitech C920 &middot; /dev/video0', { select: true, icon: 'eye' }) + rowField('Resolution', '1280 &times; 720', { select: true }) + rowField('Frame rate', '15 fps', { mono: true, gap: 0 })
+    + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Downstream blocks sample what they need; detection runs at 5 fps.</div>`),
+  sect('Emits', `<div style="display:flex;align-items:center;gap:8px;">${chip('image', T.image, { dot: true })}<span style="font-size:10.5px;color:${C.low};">every frame &middot; 2 subscribers</span></div>`),
+  sect('Privacy', switchRow('Frames never leave this machine', true, { col: C.err }) + switchRow('Record to disk', false) + rowField('Retention', 'none &middot; frames are dropped after use', { muted: true, gap: 0 }), { tint: C.err, right: chip('local only', C.err, { dot: true }) }),
+  sect('Live', camPreview + `<div style="margin-top:8px;font-family:${MONO};font-size:10px;color:${C.mid};">15 fps &middot; 22 ms &middot; 2 subscribers</div>`, { tint: C.ok, right: chip('capturing', C.ok, { dot: true }) }),
+].join('');
+
+const FACE_BODY = [
+  sect('Model', rowField('Model', 'insightface &middot; buffalo_l', { select: true }) + slider('Match threshold', '0.80', 80, CAT.models) + rowField('Runs on', 'GPU &middot; 9 ms', { mono: true, gap: 0 })),
+  sect('Known people', personRow('M', 'Mykl', 'you &middot; 412 sightings', CAT.human) + personRow('S', 'Sam', 'partner &middot; 96 sightings', CAT.human) + personRow('?', 'Unknown-3', 'seen 4&times; this week', C.mid, chip('name', C.accent)), { right: chip('12', CAT.human) }),
+  sect('Emits', `<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;">${chip('data', T.data, { dot: true })}<span style="font-family:${MONO};font-size:10px;color:${C.low};">{ name, confidence, bbox }</span></div>` + switchRow('Enrol new faces automatically', false, { hint: 'ask before anyone new is stored' })),
+  sect('Stored as', `<div style="font-size:10.5px;line-height:1.55;color:${C.low};">Embeddings only &mdash; 512 floats per person, never an image. Delete a person and every sighting goes with them.</div>`, { tint: C.err }),
+].join('');
+
+const HUB_BODY = [
+  sect('Stores', connRow('braces', 'Working memory', 'in-process &middot; 128 items &middot; 5 min', 'memory', 'ok') + connRow('db', 'Long-term memory', 'sqlite + vectors &middot; 2,140 episodes', 'memory', 'ok'), { right: chip('2', T.memory), tint: T.memory }),
+  sect('Recall', rowField('Order', 'working first, then long-term', { select: true }) + rowField('Max recalled', '12 items', { mono: true }) + slider('Relevance cutoff', '0.62', 62, T.memory)),
+  sect('Consolidation', rowField('Every', '10 min &middot; or when working is full', { select: true }) + switchRow('Summarise before storing', true, { hint: 'the orchestrator writes one line per episode' }) + switchRow('Forget after', false, { hint: 'off &mdash; episodes are kept until deleted' })),
+  sect('What is kept', `<div style="display:flex;flex-direction:column;gap:5px;font-family:${MONO};font-size:10px;">
+    <div style="display:flex;gap:10px;"><span style="color:${C.ok};width:52px;">yes</span><span style="color:${C.mid};">transcripts, who was seen, where, when</span></div>
+    <div style="display:flex;gap:10px;"><span style="color:${C.ok};width:52px;">as vectors</span><span style="color:${C.mid};">faces</span></div>
+    <div style="display:flex;gap:10px;"><span style="color:${C.err};width:52px;">never</span><span style="color:${C.mid};">frames, audio</span></div>
+  </div>`, { tint: C.err }),
+].join('');
+
+const MOTOR_BODY = [
+  sect('Device', rowField('Controller', 'Arduino Nano &middot; /dev/ttyACM0', { select: true, icon: 'plug' }) + rowField('Channels', '2 &middot; pan, tilt', { mono: true, gap: 0 })),
+  sect('Limits', slider('Pan range', '&plusmn; 90&deg;', 100, CAT.actuators) + slider('Tilt range', '&plusmn; 30&deg;', 33, CAT.actuators) + rowField('Max speed', '60&deg; / s', { mono: true }) + switchRow('Require approval', true, { hint: 'every move pauses for a human', col: C.err }), { tint: C.err, right: chip('physical', C.err, { dot: true }) }),
+  sect('Exposes', `<div style="display:flex;gap:5px;">${fnChip('motor.move')}${fnChip('motor.home')}</div><div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Wire the tool port straight into an LLM, or through a Toolbox to share guards with other tools.</div>`),
+  sect('Live', rowField('Position', 'pan &minus;40&deg; &middot; tilt 5&deg;', { mono: true }) + rowField('Pending', 'move(pan: &minus;40) &middot; awaiting ok', { mono: true, gap: 0 }), { tint: C.warn, right: chip('1 pending', C.warn, { dot: true }) }),
+].join('');
+
+const SENSE_SHEET = doc(sheet({
+  w: 1460, h: 950, kicker: 'Embodied blocks',
+  title: 'Senses, memory and actuators &mdash; the panel leads with the boundary that matters',
+  body: `<div style="display:flex;gap:22px;">
+  ${[['Webcam', 'a sense', WEBCAM_BODY, { title: 'Webcam', sub: 'senses &middot; video.capture', icn: 'eye', col: CAT.senses, tabs: ['Settings', 'Subscribers'], tab: 'Settings' }, CAT.senses],
+     ['Face recognition', 'a specialist model', FACE_BODY, { title: 'Face recognition', sub: 'models &middot; face.identify', icn: 'approve', col: CAT.models, tabs: ['Settings', 'People', 'Runs'], tab: 'Settings' }, CAT.models],
+     ['Memory hub', 'short and long term, one handle', HUB_BODY, { title: 'Memory hub', sub: 'memory &middot; recall', icn: 'merge', col: CAT.memory, tabs: ['Settings', 'Browse'], tab: 'Settings' }, CAT.memory],
+     ['Motors', 'an actuator, offered as a tool', MOTOR_BODY, { title: 'Motors', sub: 'actuators &middot; motor.servo', icn: 'loop', col: CAT.actuators, tabs: ['Settings', 'Log'], tab: 'Settings' }, CAT.actuators],
+    ].map(([cap, note, body, meta, col]) => `<div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:${col};flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:${C.hi};">${cap}</span>
+      <span style="font-size:10.5px;color:${C.low};">${note}</span>
+    </div>
+    <div style="height:780px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
+  </div>`).join('')}
+</div>`,
+}));
+
 /* =================================================================== write */
 
 const files = {
@@ -1110,6 +1602,10 @@ const files = {
   'Inspector.dc.html': INSPECTOR_SHEET,
   'Library.dc.html': LIBRARY_SHEET,
   'BlockAnatomy.dc.html': ANATOMY,
+  'Continuous.dc.html': CONTINUOUS,
+  'RunModes.dc.html': RUNMODES_SHEET,
+  'Assistant.dc.html': ASSISTANT,
+  'SensePanels.dc.html': SENSE_SHEET,
   'Interactive.dc.html': INTERACTIVE,
 };
 
@@ -1119,9 +1615,13 @@ const canvas = {
     { file: 'Main.dc.html', x: 1680, y: 0, w: 1560, h: 900, page: 'page-1', title: 'Wiring a block in' },
     { file: 'Running.dc.html', x: 3360, y: 0, w: 1560, h: 900, page: 'page-1', title: 'Graph running' },
     { file: 'Inspector.dc.html', x: 0, y: 1080, w: 1800, h: 980, page: 'page-1', title: 'Inspector states' },
-    { file: 'Library.dc.html', x: 1920, y: 1080, w: 1180, h: 1040, page: 'page-1', title: 'Block library' },
-    { file: 'BlockAnatomy.dc.html', x: 3200, y: 1080, w: 1120, h: 760, page: 'page-1', title: 'Block anatomy' },
-    { file: 'Interactive.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-2', title: 'Clickable shell', is_interactive: true },
+    { file: 'Library.dc.html', x: 1920, y: 1080, w: 1470, h: 1120, page: 'page-1', title: 'Block library' },
+    { file: 'BlockAnatomy.dc.html', x: 3510, y: 1080, w: 1240, h: 760, page: 'page-1', title: 'Block anatomy' },
+    { file: 'Continuous.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-2', title: 'Live graph' },
+    { file: 'RunModes.dc.html', x: 1680, y: 0, w: 1120, h: 980, page: 'page-2', title: 'Run modes' },
+    { file: 'Assistant.dc.html', x: 0, y: 1160, w: 1920, h: 1080, page: 'page-2', title: 'Home assistant' },
+    { file: 'SensePanels.dc.html', x: 2040, y: 1160, w: 1460, h: 950, page: 'page-2', title: 'Embodied panels' },
+    { file: 'Interactive.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-3', title: 'Clickable shell', is_interactive: true },
   ],
   annotations: [
     { id: 'brief', x: 0, y: -186, w: 700, page: 'page-1',
@@ -1129,17 +1629,22 @@ const canvas = {
     { id: 'panel-note', x: 0, y: 940, w: 560, page: 'page-1',
       text: 'The right panel is the whole idea: five different selections, five different panels, one 328px column.' },
     { id: 'types-note', x: 1920, y: 940, w: 520, page: 'page-1',
-      text: 'Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag.' },
-    { id: 'anatomy-note', x: 3200, y: 940, w: 480, page: 'page-1',
-      text: 'One block, labelled, plus every run state - so the vocabulary reads the same on all three shells.' },
-    { id: 'proto-note', x: 0, y: -150, w: 620, page: 'page-2',
+      text: 'Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag. Now ten types, nine categories.' },
+    { id: 'anatomy-note', x: 3510, y: 940, w: 480, page: 'page-1',
+      text: 'One block, labelled, plus every run state - and the direct-or-bundled rule for tools.' },
+    { id: 'live-note', x: 0, y: -200, w: 720, page: 'page-2',
+      text: 'Continuous running.\n\nA graph with a source block (Senses: watch folder, webhook, schedule, webcam...) never finishes - it stays armed and every event runs downstream. The transport chip switches from Run to live, and the inspector with nothing selected becomes the run-mode panel.\n\nA Loop is a dashed frame on the canvas: blocks inside repeat once per item.' },
+    { id: 'asst-note', x: 0, y: 1010, w: 760, page: 'page-2',
+      text: 'The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model\'s text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that waits for approval.\n\nThe library is collapsed to a rail here to make room.' },
+    { id: 'proto-note', x: 0, y: -150, w: 620, page: 'page-3',
       text: 'Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports.' },
   ],
   pages: [
     { id: 'page-1', name: 'Screens' },
-    { id: 'page-2', name: 'Clickable' },
+    { id: 'page-2', name: 'Live and embodied' },
+    { id: 'page-3', name: 'Clickable' },
   ],
-  launch: { view: 'canvas', page: 'page-1' },
+  launch: { view: 'canvas', page: 'page-2' },
 };
 
 for (const [name, html] of Object.entries(files)) writeFileSync(name, html);

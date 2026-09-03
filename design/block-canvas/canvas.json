@@ -40,19 +40,55 @@
       "file": "Library.dc.html",
       "x": 1920,
       "y": 1080,
-      "w": 1180,
-      "h": 1040,
+      "w": 1470,
+      "h": 1120,
       "page": "page-1",
       "title": "Block library"
     },
     {
       "file": "BlockAnatomy.dc.html",
-      "x": 3200,
+      "x": 3510,
       "y": 1080,
-      "w": 1120,
+      "w": 1240,
       "h": 760,
       "page": "page-1",
       "title": "Block anatomy"
+    },
+    {
+      "file": "Continuous.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-2",
+      "title": "Live graph"
+    },
+    {
+      "file": "RunModes.dc.html",
+      "x": 1680,
+      "y": 0,
+      "w": 1120,
+      "h": 980,
+      "page": "page-2",
+      "title": "Run modes"
+    },
+    {
+      "file": "Assistant.dc.html",
+      "x": 0,
+      "y": 1160,
+      "w": 1920,
+      "h": 1080,
+      "page": "page-2",
+      "title": "Home assistant"
+    },
+    {
+      "file": "SensePanels.dc.html",
+      "x": 2040,
+      "y": 1160,
+      "w": 1460,
+      "h": 950,
+      "page": "page-2",
+      "title": "Embodied panels"
     },
     {
       "file": "Interactive.dc.html",
@@ -60,7 +96,7 @@
       "y": 0,
       "w": 1560,
       "h": 900,
-      "page": "page-2",
+      "page": "page-3",
       "title": "Clickable shell",
       "is_interactive": true
     }
@@ -88,22 +124,38 @@
       "y": 940,
       "w": 520,
       "page": "page-1",
-      "text": "Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag."
+      "text": "Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag. Now ten types, nine categories."
     },
     {
       "id": "anatomy-note",
-      "x": 3200,
+      "x": 3510,
       "y": 940,
       "w": 480,
       "page": "page-1",
-      "text": "One block, labelled, plus every run state - so the vocabulary reads the same on all three shells."
+      "text": "One block, labelled, plus every run state - and the direct-or-bundled rule for tools."
+    },
+    {
+      "id": "live-note",
+      "x": 0,
+      "y": -200,
+      "w": 720,
+      "page": "page-2",
+      "text": "Continuous running.\n\nA graph with a source block (Senses: watch folder, webhook, schedule, webcam...) never finishes - it stays armed and every event runs downstream. The transport chip switches from Run to live, and the inspector with nothing selected becomes the run-mode panel.\n\nA Loop is a dashed frame on the canvas: blocks inside repeat once per item."
+    },
+    {
+      "id": "asst-note",
+      "x": 0,
+      "y": 1010,
+      "w": 760,
+      "page": "page-2",
+      "text": "The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model's text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that waits for approval.\n\nThe library is collapsed to a rail here to make room."
     },
     {
       "id": "proto-note",
       "x": 0,
       "y": -150,
       "w": 620,
-      "page": "page-2",
+      "page": "page-3",
       "text": "Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports."
     }
   ],
@@ -114,11 +166,15 @@
     },
     {
       "id": "page-2",
+      "name": "Live and embodied"
+    },
+    {
+      "id": "page-3",
       "name": "Clickable"
     }
   ],
   "launch": {
     "view": "canvas",
-    "page": "page-1"
+    "page": "page-2"
   }
 }
