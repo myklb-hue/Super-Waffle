@@ -1,0 +1,124 @@
+{
+  "artboards": [
+    {
+      "file": "EmptyShell.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-1",
+      "title": "Empty shell"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 1680,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-1",
+      "title": "Wiring a block in"
+    },
+    {
+      "file": "Running.dc.html",
+      "x": 3360,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-1",
+      "title": "Graph running"
+    },
+    {
+      "file": "Inspector.dc.html",
+      "x": 0,
+      "y": 1080,
+      "w": 1800,
+      "h": 980,
+      "page": "page-1",
+      "title": "Inspector states"
+    },
+    {
+      "file": "Library.dc.html",
+      "x": 1920,
+      "y": 1080,
+      "w": 1180,
+      "h": 1040,
+      "page": "page-1",
+      "title": "Block library"
+    },
+    {
+      "file": "BlockAnatomy.dc.html",
+      "x": 3200,
+      "y": 1080,
+      "w": 1120,
+      "h": 760,
+      "page": "page-1",
+      "title": "Block anatomy"
+    },
+    {
+      "file": "Interactive.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-2",
+      "title": "Clickable shell",
+      "is_interactive": true
+    }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 0,
+      "y": -186,
+      "w": 700,
+      "page": "page-1",
+      "text": "Block Canvas - a shell for wiring blocks into runnable graphs.\n\nLeft: the library, categorised by what a block does. Centre: an infinite node canvas. Right: an inspector that reshapes itself around whatever is selected.\n\nTop row is the same shell at three moments: nothing built, mid-wire, mid-run."
+    },
+    {
+      "id": "panel-note",
+      "x": 0,
+      "y": 940,
+      "w": 560,
+      "page": "page-1",
+      "text": "The right panel is the whole idea: five different selections, five different panels, one 328px column."
+    },
+    {
+      "id": "types-note",
+      "x": 1920,
+      "y": 940,
+      "w": 520,
+      "page": "page-1",
+      "text": "Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag."
+    },
+    {
+      "id": "anatomy-note",
+      "x": 3200,
+      "y": 940,
+      "w": 480,
+      "page": "page-1",
+      "text": "One block, labelled, plus every run state - so the vocabulary reads the same on all three shells."
+    },
+    {
+      "id": "proto-note",
+      "x": 0,
+      "y": -150,
+      "w": 620,
+      "page": "page-2",
+      "text": "Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports."
+    }
+  ],
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Screens"
+    },
+    {
+      "id": "page-2",
+      "name": "Clickable"
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-1"
+  }
+}
