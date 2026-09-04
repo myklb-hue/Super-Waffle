@@ -734,7 +734,8 @@ Avatar gives it a presence: something to look at, and read a mood from.
 A rig is one aesthetic plus the animations it supports. Four ship: **Line**
 (two eyes and a mouth, nothing else), **Robot** (a head with LED eyes and a
 segmented mouth), **Orb** (a sphere whose colour and glow carry the
-expression), **Pixel** (an 8 × 8 LED matrix). A user adds a rig as a folder
+expression), **Pixel** (an 8 × 8 LED matrix). Each ships the same seven
+expressions and the gestures its form allows. A user adds a rig as a folder
 of states; Rive files are the natural format because their state machines
 take inputs directly. Rigs are content, not code: adding one is not a
 custom block.
@@ -748,6 +749,7 @@ custom block.
 | `surprised` | a beat, then settles | ● | ● | ● | ● |
 | `thinking` | held while the orchestrator streams thoughts | ● | ● | ● | ● |
 | `speaking` | driven by the speech port, never by a command | ● | ● | ● | ● |
+| `love` | affection: heart eyes on Line and Robot, a rose glow on Orb, the whole matrix on Pixel | ● | ● | ● | ● |
 | `sleepy` | after the sleep timeout; any event wakes it | ● | ● | ● | |
 | `look(at)` | gaze to a point or a person | ● | ● | ● | |
 | `nod` / `shake` | one-shot gestures | ● | ● | | |

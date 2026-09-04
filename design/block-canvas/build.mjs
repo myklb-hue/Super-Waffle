@@ -1441,7 +1441,9 @@ function stageBlock(o) {
 
 /* --------------------------------------------------------------- rigs */
 // Four base aesthetics, one expression vocabulary. Each returns a 64-unit SVG.
-const RIG_EXPR = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking'];
+const RIG_EXPR = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking', 'love'];
+const heart = (cx, cy, r, fill) => `<path d="M${cx} ${cy + r * 0.95} C${cx - r * 1.5} ${cy - r * 0.05}, ${cx - r * 1.05} ${cy - r * 1.25}, ${cx} ${cy - r * 0.45} C${cx + r * 1.05} ${cy - r * 1.25}, ${cx + r * 1.5} ${cy - r * 0.05}, ${cx} ${cy + r * 0.95}Z" fill="${fill}"/>`;
+const ROSE = CAT.human;
 function rigFace(rig, expr, size = 64) {
   const W = C.hi, cy = C.accent, am = T.tools, vi = T.data;
   let g = '';
@@ -1453,6 +1455,7 @@ function rigFace(rig, expr, size = 64) {
       surprised: `<circle cx="22" cy="25" r="4.2"/><circle cx="42" cy="25" r="4.2"/>`,
       thinking: `<circle cx="22" cy="26" r="2.6" fill="${W}"/><circle cx="43" cy="22" r="2.6" fill="${W}"/><path d="M37 16q5-3 10 0"/>`,
       speaking: `<circle cx="22" cy="26" r="2.6" fill="${W}"/><circle cx="42" cy="26" r="2.6" fill="${W}"/>`,
+      love: heart(22, 26, 5, ROSE) + heart(42, 26, 5, ROSE),
     }[expr];
     const mouth = {
       neutral: `<path d="M25 43h14"/>`,
@@ -1461,6 +1464,7 @@ function rigFace(rig, expr, size = 64) {
       surprised: `<ellipse cx="32" cy="44" rx="4.5" ry="6.5"/>`,
       thinking: `<path d="M25 44q5-4 10 0"/><circle cx="43" cy="45" r="1.4" fill="${W}"/><circle cx="48" cy="45" r="1.4" fill="${W}"/>`,
       speaking: `<ellipse cx="32" cy="43" rx="7" ry="4"/>`,
+      love: `<path d="M21 40q11 11 22 0"/>`,
     }[expr];
     g = `<g fill="none" stroke="${W}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${eyes}${mouth}</g>`;
   } else if (rig === 'robot') {
@@ -1472,6 +1476,7 @@ function rigFace(rig, expr, size = 64) {
       surprised: eye(17, 11) + eye(36, 11),
       thinking: eye(17, 6) + `<rect x="36" y="22" width="11" height="4" rx="2" fill="${cy}"/>`,
       speaking: eye(17, 6) + eye(36, 6),
+      love: heart(22.5, 28, 5.5, ROSE) + heart(41.5, 28, 5.5, ROSE),
     }[expr];
     const bars = {
       neutral: [[0, 3], [0, 3], [0, 3], [0, 3], [0, 3]],
@@ -1480,13 +1485,14 @@ function rigFace(rig, expr, size = 64) {
       surprised: null,
       thinking: [[0, 3], [0, 3], [0, 3], null, null],
       speaking: [[0, 3], [0, 7], [0, 5], [0, 8], [0, 4]],
+      love: [[-3, 3], [0, 3], [1.5, 3], [0, 3], [-3, 3]],
     }[expr];
     const mouth = bars === null
       ? `<rect x="28" y="38" width="8" height="8" rx="2" fill="${cy}"/>`
       : bars.map((b, i) => b ? `<rect x="${20 + i * 5.2}" y="${42 - b[0] - b[1] / 2}" width="3.6" height="${b[1]}" rx="1" fill="${cy}"/>` : '').join('');
     g = `<rect x="10" y="12" width="44" height="42" rx="9" fill="${C.block}" stroke="${C.mid}" stroke-width="2"/><path d="M32 12V6" stroke="${C.mid}" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="5" r="2" fill="${C.mid}"/>${eyes}${mouth}`;
   } else if (rig === 'orb') {
-    const col = { neutral: cy, smile: am, frown: '#4e6392', surprised: W, thinking: vi, speaking: cy }[expr];
+    const col = { neutral: cy, smile: am, frown: '#4e6392', surprised: W, thinking: vi, speaking: cy, love: ROSE }[expr];
     const r = expr === 'surprised' ? 23 : 20;
     const ink = '#0b0d11';
     const eyes = {
@@ -1496,6 +1502,7 @@ function rigFace(rig, expr, size = 64) {
       surprised: `<circle cx="25" cy="29" r="3.4" fill="${ink}"/><circle cx="39" cy="29" r="3.4" fill="${ink}"/>`,
       thinking: `<circle cx="26" cy="31" r="2.2" fill="${ink}"/><circle cx="39" cy="27" r="2.2" fill="${ink}"/><circle cx="50" cy="16" r="2.4" fill="${vi}"/>`,
       speaking: `<circle cx="26" cy="30" r="2.2" fill="${ink}"/><circle cx="38" cy="30" r="2.2" fill="${ink}"/><circle cx="32" cy="32" r="26" fill="none" stroke="${cy}" stroke-width="1.2" opacity=".55"/><circle cx="32" cy="32" r="30" fill="none" stroke="${cy}" stroke-width="1" opacity=".25"/>`,
+      love: heart(26, 30, 3.2, ink) + heart(38, 30, 3.2, ink) + heart(51, 13, 3.4, ROSE),
     }[expr];
     g = `<circle cx="32" cy="32" r="${r + 6}" fill="${col}" opacity=".16"/><circle cx="32" cy="32" r="${r}" fill="${col}"/><circle cx="26" cy="24" r="6" fill="#ffffff" opacity=".16"/>${eyes}`;
   } else if (rig === 'pixel') {
@@ -1508,10 +1515,12 @@ function rigFace(rig, expr, size = 64) {
       surprised: [[2, 1], [2, 2], [5, 1], [5, 2], [3, 5], [4, 5], [3, 6], [4, 6]],
       thinking: [[2, 2], [5, 1], [2, 5], [3, 5], [4, 5], [7, 3]],
       speaking: [...eyesN, [2, 5], [3, 5], [4, 5], [5, 5], [3, 6], [4, 6]],
+      love: [[1, 1], [2, 1], [5, 1], [6, 1], [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [2, 5], [3, 5], [4, 5], [5, 5], [3, 6], [4, 6]],
     }[expr];
     let grid = '';
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) grid += `<rect x="${8 + x * 6}" y="${8 + y * 6}" width="5" height="5" rx="1" fill="${C.soft}"/>`;
-    g = `<rect x="4" y="4" width="56" height="56" rx="4" fill="#07080a"/>${grid}${cells.map(([x, y]) => `<rect x="${8 + x * 6}" y="${8 + y * 6}" width="5" height="5" rx="1" fill="${led}"/>`).join('')}`;
+    const lit = expr === 'love' ? ROSE : led;
+    g = `<rect x="4" y="4" width="56" height="56" rx="4" fill="#07080a"/>${grid}${cells.map(([x, y]) => `<rect x="${8 + x * 6}" y="${8 + y * 6}" width="5" height="5" rx="1" fill="${lit}"/>`).join('')}`;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" style="display:block;flex:none;">${g}</svg>`;
 }
@@ -2091,11 +2100,11 @@ const RIGS = [['line', 'Line'], ['robot', 'Robot'], ['orb', 'Orb'], ['pixel', 'P
 
 const rigThumb = (rig, name, on) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 4px 6px;border-radius:7px;background:${on ? rgba(CAT.actuators, 0.12) : C.field};border:1px solid ${on ? rgba(CAT.actuators, 0.5) : C.line};">${rigFace(rig, 'neutral', 40)}<span style="font-size:10.5px;color:${on ? C.hi : C.mid};">${name}</span></div>`;
 
-const VOCAB = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking', 'sleepy', 'look', 'nod', 'shake'];
+const VOCAB = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking', 'love', 'sleepy', 'look', 'nod', 'shake'];
 
 function avatarBody(stage = false) { return [
   sect('Rig', `<div style="display:flex;gap:6px;">${RIGS.map(([r, n]) => rigThumb(r, n, r === 'line')).join('')}</div><div style="margin-top:9px;display:flex;align-items:center;gap:8px;"><span style="font-size:10px;color:${C.low};">Rigs are content, not code.</span><span style="flex:1;"></span>${chip('add rig&#8230;', C.mid)}</div>`, { tint: CAT.actuators, right: chip('line', CAT.actuators) }),
-  sect('Vocabulary', `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px;">${VOCAB.map(v => chip(v, T.tools)).join('')}</div>` + rowField('Offered as', 'face.express, face.look, face.gesture', { mono: true, gap: 0 }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Generated from the rig. A rig without <span style="font-family:${MONO};">frown</span> simply doesn't offer it.</div>`, { right: chip('10', T.tools) }),
+  sect('Vocabulary', `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px;">${VOCAB.map(v => chip(v, T.tools)).join('')}</div>` + rowField('Offered as', 'face.express, face.look, face.gesture', { mono: true, gap: 0 }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Generated from the rig. A rig without <span style="font-family:${MONO};">frown</span> simply doesn't offer it.</div>`, { right: chip('11', T.tools) }),
   sect('Inputs', connRow('note', 'speech', 'Text to speech &middot; lip sync from amplitude', 'audio', 'ok') + connRow('face', 'express', 'Affect &middot; from the orchestrator\'s own words', 'data', 'running') + connRow('approve', 'look', 'Face recognition &middot; gaze follows a person', 'data', 'ok') + switchRow('Auto-affect from speech', false, { hint: 'off &mdash; an Affect block feeds express instead' })),
   sect('Idle', rowField('Blink', 'every 3&ndash;6 s', { mono: true }) + rowField('Breathe', 'on &middot; 12 / min', { mono: true }) + rowField('Settle to neutral after', '4 s', { mono: true }) + rowField('Sleep after', '10 min without events', { select: true, gap: 0 })),
   sect('View', segmented(['Compact', 'Summary', 'Stage'], stage ? 'Stage' : 'Summary', C.accent) + `<div style="height:11px;"></div>` + rowField('Size on canvas', stage ? '240 &times; 240 &middot; drag the corner' : '200 wide &middot; drag the corner', { mono: true }) + switchRow('Keep aspect', true, { hint: 'the rig stays square while you resize' })),
@@ -2120,12 +2129,12 @@ const AVATAR_SHEET = doc(sheet({
   </div>
   <div style="flex:1;display:flex;flex-direction:column;gap:18px;">
     <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:14px 16px 12px;">
-      <div style="display:grid;grid-template-columns:70px repeat(6, minmax(0, 1fr));gap:6px;align-items:center;">
+      <div style="display:grid;grid-template-columns:70px repeat(7, minmax(0, 1fr));gap:6px;align-items:center;">
         <span></span>
         ${RIG_EXPR.map(e => `<span style="font-family:${MONO};font-size:9.5px;letter-spacing:.06em;color:${C.mid};text-align:center;">${e}</span>`).join('')}
         ${RIGS.map(([r, n]) => `<span style="font-size:11.5px;font-weight:600;color:${C.hi};">${n}</span>` + RIG_EXPR.map(e => `<div style="display:flex;align-items:center;justify-content:center;height:96px;border-radius:8px;background:${C.field};border:1px solid ${C.soft};">${rigFace(r, e, 72)}</div>`).join('')).join('')}
       </div>
-      <div style="margin-top:10px;font-size:10.5px;line-height:1.5;color:${C.low};">Same six commands, four answers. Add a rig as a folder of states (Rive files are the natural format); it appears in the picker and its vocabulary is read from what it contains.</div>
+      <div style="margin-top:10px;font-size:10.5px;line-height:1.5;color:${C.low};">Same seven commands, four answers. Add a rig as a folder of states (Rive files are the natural format); it appears in the picker and its vocabulary is read from what it contains.</div>
     </div>
     <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">
       <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:14px;padding:9px 10px;border-bottom:1px solid ${C.soft};font-family:${MONO};font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:${C.low};"><span>command</span><span>what it does</span><span>line &middot; robot &middot; orb &middot; pixel</span></div>
@@ -2134,6 +2143,7 @@ const AVATAR_SHEET = doc(sheet({
       ${vocabRow('surprised', 'a beat, then settles', ['line', 'robot', 'orb', 'pixel'])}
       ${vocabRow('thinking', 'held while the orchestrator streams thoughts', ['line', 'robot', 'orb', 'pixel'])}
       ${vocabRow('speaking', 'driven by the speech port, not by a command', ['line', 'robot', 'orb', 'pixel'])}
+      ${vocabRow('love', 'affection; heart eyes, a rose glow, or the whole matrix', ['line', 'robot', 'orb', 'pixel'])}
       ${vocabRow('sleepy', 'after the sleep timeout; any event wakes it', ['line', 'robot', 'orb'])}
       ${vocabRow('look(at)', 'gaze to a point or a person; from the look port or a call', ['line', 'robot', 'orb'])}
       ${vocabRow('nod / shake', 'gestures; a one-shot animation', ['line', 'robot'])}
