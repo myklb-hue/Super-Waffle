@@ -364,3 +364,117 @@ fn a_live_graph_with_no_source_says_so() {
     );
     live.stop();
 }
+
+/// A camera is a source, and a live graph has to arm it like one.
+///
+/// This was a hole rather than a subtlety: `webcam` said `source: true` in the
+/// catalogue, so a graph holding one was live, and nothing armed it — the graph
+/// came up, reported nothing armed, and sat there. Every capture in the engine
+/// had a test and none of them was live.
+///
+/// `lavfi:` stands in for a camera the way it does throughout: the same code
+/// path that opens `/dev/video0`, with a device this machine actually has.
+#[test]
+fn a_live_camera_captures_on_its_own() {
+    let dir = scratch("camera");
+    let mut graph = graph_format::load(fixtures().join("graphs/customer-triage.loom")).unwrap();
+    graph.run_mode = graph_format::RunMode::Live;
+    graph.blocks = vec![
+        block(
+            "eye",
+            "webcam",
+            &[
+                ("device", "lavfi:testsrc"),
+                ("resolution", "160x120"),
+                ("fps", "4"),
+            ],
+        ),
+        block(
+            "note",
+            "terminal",
+            &[
+                (
+                    "command",
+                    &format!("date +%s%N >> {}/frames", dir.display()),
+                ),
+                ("warnBefore", "false"),
+            ],
+        ),
+    ];
+    graph.wires = vec![graph_format::Wire {
+        id: "w1".into(),
+        from: graph_format::Endpoint::new("eye", "frames"),
+        to: graph_format::Endpoint::new("note", "text"),
+    }];
+    graph.frames.clear();
+    let live = Running::start(graph, vec![]);
+
+    live.wait(
+        "the camera arming",
+        |e| matches!(e, RunEvent::SourceArmed { block, state, .. } if block == "eye" && state.contains("4 fps")),
+    );
+
+    // The camera itself ran, and what came off it is a frame rather than the
+    // `null` a tick carries.
+    let done = live.wait(
+        "a frame",
+        |e| matches!(e, RunEvent::BlockDone { block, .. } if block == "eye"),
+    );
+    let RunEvent::BlockDone { outputs, .. } = &done else {
+        unreachable!()
+    };
+    let frame = outputs.iter().find(|p| p.port == "frames").expect("frames");
+    assert!(
+        matches!(&frame.value, loomd::run::value::Value::Image(m) if m.mime == "image/png"),
+        "the camera put {:?} on its wire, not a picture",
+        frame.value
+    );
+
+    // And it keeps going: a source fires more than once.
+    live.wait(
+        "a second frame",
+        |e| matches!(e, RunEvent::BlockDone { block, .. } if block == "eye"),
+    );
+    live.stop();
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// A camera that is not there holds the graph rather than flooding it.
+///
+/// SPEC §12.1: "a hardware fault *pauses*; one click resumes". Without it a
+/// missing camera reports the same failure at the camera's tick rate, forever
+/// — which is how a console becomes useless at the exact moment it is needed.
+#[test]
+fn a_camera_that_is_not_there_holds_the_graph() {
+    let mut graph = graph_format::load(fixtures().join("graphs/customer-triage.loom")).unwrap();
+    graph.run_mode = graph_format::RunMode::Live;
+    graph.blocks = vec![
+        block(
+            "eye",
+            "webcam",
+            &[("device", "/dev/video-nothing-is-here"), ("fps", "20")],
+        ),
+        block("note", "output", &[]),
+    ];
+    graph.wires = vec![graph_format::Wire {
+        id: "w1".into(),
+        from: graph_format::Endpoint::new("eye", "frames"),
+        to: graph_format::Endpoint::new("note", "value"),
+    }];
+    graph.frames.clear();
+    let live = Running::start(graph, vec![]);
+
+    live.wait(
+        "the hold",
+        |e| matches!(e, RunEvent::Held { held, .. } if *held),
+    );
+
+    // And it stays held: the flood is what pausing is for, so nothing may run
+    // after it. Twenty ticks a second means a graph still going would be
+    // unmistakable within half a second.
+    assert!(
+        live.quiet_for(Duration::from_millis(700)),
+        "the graph kept running after the fault held it"
+    );
+    live.stop();
+}

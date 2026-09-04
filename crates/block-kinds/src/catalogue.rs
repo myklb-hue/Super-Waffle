@@ -72,10 +72,12 @@ pub static KINDS: &[BlockKind] = &[
                 switch("enrolment", "Enrolment", false),
                 "Off by default. Adding a person stores 512 floats, never a picture.",
             ),
-            hinted(
-                switch("storeImages", "Store images", false),
-                "Off. Turning this on writes frames to disk until you turn it off again.",
-            ),
+            // No "store images" switch, deliberately. §12.3 does not say images
+            // are off by default, it says faces are stored as embeddings and
+            // never as images — a property of the program, not a preference. A
+            // switch would have made it a preference, and the panel would have
+            // read "never an image" directly above a control offering one.
+            falls_back_to(range("threshold", "Match threshold", 0.0, 1.0), "0.8"),
         ],
     },
     BlockKind {
@@ -1047,8 +1049,16 @@ mod tests {
         // §6.1: "enrolment is off by default".
         let face = kind("face-recognition").unwrap();
         assert_eq!(face.setting("enrolment").unwrap().default, Some("false"));
-        // §12.3: faces are stored as embeddings, never images.
-        assert_eq!(face.setting("storeImages").unwrap().default, Some("false"));
+        // §12.3: faces are stored as embeddings, never images. Unconditionally
+        // — so what the catalogue owes is the absence of any way to ask for an
+        // image, not a switch that starts off.
+        assert!(
+            face.settings
+                .iter()
+                .all(|def| !def.name.to_lowercase().contains("image")),
+            "face recognition has a setting about images: {:?}",
+            face.settings.iter().map(|d| d.name).collect::<Vec<_>>()
+        );
         // §12.3: frames and audio are not recorded unless the user turns it on.
         assert_eq!(
             kind("webcam").unwrap().setting("store").unwrap().default,

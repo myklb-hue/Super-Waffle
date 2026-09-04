@@ -896,3 +896,53 @@ What this environment cannot prove, and what it now can:
   face recognition, speech and affect are a trait with a real
   ONNX-through-Python implementation and a scripted one; every path through
   the engine is pinned down, and whether yolo-v8n finds a door is not.
+
+Found while building slice 7's panels:
+
+- **A camera declared itself a source and nothing armed it.** `webcam` and
+  `microphone` are `source: true` in the catalogue, so a graph holding one is
+  live — and `arm()` had a comment saying devices "belong with the rest of the
+  senses" and returned `None`. Door-watch went live, reported nothing armed,
+  and sat there. Every capture in the engine had a test and not one of them was
+  live, which is how a hole that size stayed invisible: the tests all ran the
+  camera as a step. A device now ticks at its frame rate and the tick puts the
+  block at the head of its own run, so the capture happens where every other
+  capture happens — with the run's scratch folder, its recording rule and its
+  preview.
+- **A missing camera was a flood, not an error.** With the camera armed, a
+  device that is not there fails on every tick: at 5 fps that is five identical
+  lines a second, forever, and the console becomes useless at the moment it is
+  most needed. SPEC §12.1 already says what to do — "a hardware fault *pauses*;
+  one click resumes" — and it was written for exactly this. The engine now holds
+  the graph itself, which needed a `held` event, because until now hold was
+  always the person's and the shell only knew because it had asked.
+- **One setting, two switches, one panel.** The Privacy section presents
+  `store` as "Record to disk"; the generated Settings list presented the same
+  setting as "Record frames" six rows below it. Which one is the real one is
+  not a question a panel should raise.
+- **A "store images" switch made an unconditional rule look like a default.**
+  §12.3 does not say images are off by default, it says faces are stored as
+  embeddings and never as images. Slice 1 read that as a switch defaulting off,
+  so the panel offered a control directly under a sentence saying it could not
+  happen. The switch is gone, the catalogue has the Match threshold the figure
+  actually shows, and the test asserts the property — that no setting on that
+  kind is about images — rather than a default.
+- **A switch that cannot move is a lie unless it says so.** "Frames never leave
+  this machine" is drawn as a switch in Figure 6 and is not a preference. It is
+  drawn as one, disabled, and its hint opens with "Not a setting."
+- **Prettier is not this project's formatter.** Running it on one file
+  reformatted 300 lines it had no business touching. There is no config and no
+  dependency; the house style is the style.
+
+Still not proven here:
+
+- **A custom block cannot call the perception models.** Door-watch's own code
+  — the body from Figure 10 — calls `detect(frame)`, and the Python driver
+  injects the type names but not the engine's `Perception`. The block fails
+  with `NameError: name 'detect' is not defined`, which the engine reports
+  correctly and carries on from, so the graph degrades the way it should. The
+  fix is a callback channel from the driver back to the engine: the driver
+  already speaks to the engine through a file, and this needs it to speak both
+  ways mid-call. That is a slice of its own, with its own thinking about what a
+  custom block is allowed to reach, rather than something to bolt onto the
+  panels.

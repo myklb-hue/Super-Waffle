@@ -56,7 +56,7 @@ blocks:
     settings:
       enrolment: false
       model: insightface
-      storeImages: false
+      threshold: 0.8
   - id: speech
     kind: speech-to-text
     position: [418, 484]

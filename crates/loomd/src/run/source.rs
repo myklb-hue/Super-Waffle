@@ -27,6 +27,17 @@ pub struct Fired {
     /// The port it came out of.
     pub port: String,
     pub value: Value,
+    /// Whether this firing is a request to *read* the block rather than a value
+    /// it already holds.
+    ///
+    /// A webhook arrives carrying its body and a folder arrives carrying the
+    /// path of the file that appeared; both hand a value over and the graph
+    /// runs downstream of them. A camera arrives carrying nothing, because a
+    /// frame is not something the tick has — it is what you get by asking the
+    /// device at the moment the tick says to. So the block itself joins the
+    /// steps and captures, which also keeps recording, the preview and the
+    /// scratch folder in the one place that already does them.
+    pub reads: bool,
     pub at: Instant,
 }
 
@@ -143,8 +154,53 @@ pub fn arm(block: &Block, root: &Path, out: Sender<Fired>) -> Result<Option<Arme
             )
         }
 
-        // Not a source: a webcam and a microphone are, but they are devices and
-        // belong with the rest of the senses.
+        // A camera and a microphone: sources that hold nothing until asked.
+        //
+        // The thread does not capture. It ticks, and the tick puts the block
+        // itself at the head of the steps, so the capture happens where every
+        // other capture happens — inside the run, with the run's scratch
+        // folder, its recording rule and its preview (SPEC §6.4, §12.3).
+        //
+        // A camera ticks faster than most graphs can run, and that is the
+        // arrangement the specification describes: "downstream blocks sample
+        // what they need". Nothing here throttles to match, because the
+        // overlap policy is the thing that decides what happens to a firing
+        // that arrives mid-run (§8.3), and answering the same question twice
+        // in two places is how the two answers come to disagree.
+        "webcam" | "microphone" => {
+            let camera = block.kind == "webcam";
+            let port = if camera { "frames" } else { "audio" };
+            let rate = super::blocks::number(block, "fps").unwrap_or(if camera {
+                DEFAULT_FPS
+            } else {
+                // A microphone is asked for a second of sound at a time, so
+                // asking once a second is asking as often as there is sound.
+                1.0
+            });
+            if rate <= 0.0 {
+                return Err(format!(
+                    "`{rate}` is not a frame rate: a camera that never looks is a camera that is off"
+                ));
+            }
+            let period = Duration::from_secs_f64(1.0 / rate);
+            let node = id.clone();
+            let name = port.to_owned();
+            (
+                // The rate alone: the chip beside it already says capturing,
+                // and it reads in the same family as `every 15m` and
+                // `listening on :8421`.
+                if camera {
+                    format!("{} fps", trim(rate))
+                } else {
+                    "listening".to_owned()
+                },
+                std::thread::Builder::new()
+                    .name(format!("loomd-device-{id}"))
+                    .spawn(move || device(&node, &name, period, &flag, &out))
+                    .map_err(|e| e.to_string())?,
+            )
+        }
+
         _ => return Ok(None),
     };
 
@@ -192,6 +248,42 @@ fn nap(total: Duration, stop: &AtomicBool) -> bool {
     !stop.load(Ordering::Relaxed)
 }
 
+/// What a camera does with no frame rate set: the rate a webcam offers.
+const DEFAULT_FPS: f64 = 30.0;
+
+/// A number the way a person writes it: `5`, not `5.0`, but `2.5` when it is.
+fn trim(rate: f64) -> String {
+    if rate.fract() == 0.0 {
+        format!("{rate:.0}")
+    } else {
+        format!("{rate}")
+    }
+}
+
+/// A device, asked for what it has every `period`.
+///
+/// It carries no value (see `Fired::reads`) — the tick is the whole message,
+/// and the block is read inside the run it starts.
+fn device(node: &str, port: &str, period: Duration, stop: &AtomicBool, out: &Sender<Fired>) {
+    loop {
+        if !nap(period, stop) {
+            return;
+        }
+        if out
+            .send(Fired {
+                node: node.to_owned(),
+                port: port.to_owned(),
+                value: Value::Null,
+                reads: true,
+                at: Instant::now(),
+            })
+            .is_err()
+        {
+            return;
+        }
+    }
+}
+
 fn schedule(
     node: &str,
     period: Duration,
@@ -222,6 +314,7 @@ fn schedule(
                 node: node.to_owned(),
                 port: "tick".into(),
                 value: Value::Null,
+                reads: false,
                 at: Instant::now(),
             })
             .is_err()
@@ -273,6 +366,7 @@ fn watch(
                     node: node.to_owned(),
                     port: "file".into(),
                     value: Value::File(path.display().to_string()),
+                    reads: false,
                     at: Instant::now(),
                 })
                 .is_err()
@@ -359,6 +453,7 @@ fn webhook(
                             node: node.to_owned(),
                             port: "event".into(),
                             value,
+                            reads: false,
                             at: Instant::now(),
                         })
                         .is_err()

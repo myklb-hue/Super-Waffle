@@ -213,6 +213,65 @@ pub fn keep(what: &Media, into: &Path) -> Result<Media, String> {
     })
 }
 
+/// How wide a preview is.
+///
+/// Small enough that a frame every 15th of a second is a few kilobytes rather
+/// than a megabyte, and large enough to see what the camera is pointed at.
+/// This is a *thumbnail* and the distinction is load-bearing: a full frame
+/// crossing the socket as base64 would make the protocol the bottleneck, which
+/// is exactly why a captured frame travels as a path (`run::value::Media`).
+pub const PREVIEW_WIDTH: u32 = 160;
+
+/// A small copy of a frame, as a data URI the shell can put in an `<img>`.
+///
+/// Figure 6's Live section shows what the camera sees, and there is no way to
+/// show it without the pixels reaching the window: a path is meaningless to a
+/// browser and a Tauri asset protocol would let the shell read any file the
+/// engine can. A thumbnail is the smallest thing that answers the question.
+pub fn preview(what: &Media) -> Result<String, String> {
+    let small = std::env::temp_dir().join(format!(
+        "cyberloom-preview-{}-{}.png",
+        std::process::id(),
+        NEXT_SCRATCH.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    ));
+    run_ffmpeg(
+        &[
+            "-i".to_owned(),
+            what.path.clone(),
+            "-vf".into(),
+            format!("scale={PREVIEW_WIDTH}:-1"),
+            "-y".into(),
+            small.display().to_string(),
+        ],
+        None,
+    )?;
+    let bytes = std::fs::read(&small).map_err(|e| format!("no preview was written: {e}"))?;
+    let _ = std::fs::remove_file(&small);
+    Ok(format!("data:image/png;base64,{}", base64(&bytes)))
+}
+
+/// Base64, because one function is cheaper than one dependency.
+fn base64(bytes: &[u8]) -> String {
+    const SET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let b = [
+            chunk[0],
+            *chunk.get(1).unwrap_or(&0),
+            *chunk.get(2).unwrap_or(&0),
+        ];
+        let n = (u32::from(b[0]) << 16) | (u32::from(b[1]) << 8) | u32::from(b[2]);
+        for i in 0..4 {
+            if i <= chunk.len() {
+                out.push(SET[((n >> (18 - i * 6)) & 63) as usize] as char);
+            } else {
+                out.push('=');
+            }
+        }
+    }
+    out
+}
+
 fn run_ffmpeg(args: &[String], input: Option<&Input>) -> Result<String, String> {
     let output = Command::new("ffmpeg")
         .arg("-hide_banner")
@@ -428,6 +487,48 @@ mod tests {
             Input::File(clip.display().to_string())
         );
         let _ = std::fs::remove_file(&clip);
+    }
+
+    /// A preview is small enough to send with every frame and still a picture.
+    #[test]
+    fn a_preview_is_a_thumbnail_the_shell_can_show() {
+        let scratch = Scratch::open("preview-test").unwrap();
+        let into = scratch.file("webcam", "png");
+        let media = frame(
+            &Input::Synthetic("testsrc=size=1280x720:rate=1".into()),
+            None,
+            &into,
+        )
+        .unwrap();
+
+        let uri = preview(&media).unwrap();
+        assert!(uri.starts_with("data:image/png;base64,"), "{}", &uri[..40]);
+        // A 1280x720 frame is tens of kilobytes; its thumbnail is a few.
+        let encoded = uri.len() - "data:image/png;base64,".len();
+        assert!(
+            encoded > 200,
+            "a preview of {encoded} characters is not a picture"
+        );
+        assert!(
+            encoded < media.bytes as usize,
+            "the preview ({encoded}) should be smaller than the frame ({})",
+            media.bytes
+        );
+    }
+
+    /// Base64 has to be right, and the awkward part is the padding: one, two
+    /// or no bytes left over at the end are three different endings.
+    #[test]
+    fn base64_pads_the_way_everyone_elses_does() {
+        assert_eq!(base64(b""), "");
+        assert_eq!(base64(b"f"), "Zg==");
+        assert_eq!(base64(b"fo"), "Zm8=");
+        assert_eq!(base64(b"foo"), "Zm9v");
+        assert_eq!(base64(b"foob"), "Zm9vYg==");
+        assert_eq!(base64(b"fooba"), "Zm9vYmE=");
+        assert_eq!(base64(b"foobar"), "Zm9vYmFy");
+        // And the bytes above 127 that a PNG is full of.
+        assert_eq!(base64(&[0xff, 0xfe, 0xfd]), "//79");
     }
 
     /// Two captures in one run never collide, however fast they come.

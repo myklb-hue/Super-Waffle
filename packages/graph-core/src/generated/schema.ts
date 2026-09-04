@@ -503,6 +503,19 @@ export type RunEvent = { event: "run.started"; data: {
 	detail: string | null,
 } } | 
 /**
+ *  What a camera is looking at, small enough to send often.
+ * 
+ *  A data URI rather than a path: a path means nothing to a window, and
+ *  the alternative — letting the shell read any file the engine can — is a
+ *  larger door than a preview is worth. It is a *thumbnail*; a captured
+ *  frame still travels as a path (`run::value::Media`).
+ */
+{ event: "block.preview"; data: {
+	run: string,
+	block: string,
+	image: string,
+} } | 
+/**
  *  A source is armed and what it is watching: `watching ~/inbox`,
  *  `listening on :8420/inbox`, `every 15m` (SPEC §8.2).
  * 
@@ -527,6 +540,18 @@ export type RunEvent = { event: "run.started"; data: {
 	of: number,
 	/**  One line describing the current item, or none before it starts. */
 	item: string | null,
+} } | 
+/**
+ *  The engine held the graph itself, or let it go again.
+ * 
+ *  Hold is normally the person's: they press it and the shell knows because
+ *  it asked. This is the other direction — a hardware fault pauses the graph
+ *  (SPEC §12.1) and the transport has to show held without having been the
+ *  one to do it, or Resume is a button nobody knows to press.
+ */
+{ event: "held"; data: {
+	run: string,
+	held: boolean,
 } } | 
 /**  A wire carried a value. The canvas animates it (SPEC §5.3). */
 { event: "wire.active"; data: {

@@ -242,14 +242,14 @@
         "default": "false"
       },
       {
-        "name": "storeImages",
-        "label": "Store images",
-        "kind": "bool",
+        "name": "threshold",
+        "label": "Match threshold",
+        "kind": "range",
         "options": [],
-        "min": null,
-        "max": null,
-        "hint": "Off. Turning this on writes frames to disk until you turn it off again.",
-        "default": "false"
+        "min": 0.0,
+        "max": 1.0,
+        "hint": null,
+        "default": "0.8"
       }
     ],
     "source": false,

@@ -962,6 +962,16 @@ impl<'a> Runner<'a> {
                     &into,
                 )?;
                 let frame = self.record_if_asked(block, frame, st)?;
+                // What the camera is looking at, for the panel's Live section
+                // (Figure 6). A preview that cannot be made is not an error —
+                // the frame is fine and the graph carries on without a picture.
+                if let Ok(image) = sense::preview(&frame) {
+                    (st.emit)(RunEvent::BlockPreview {
+                        run: self.run.clone(),
+                        block: block.id.clone(),
+                        image,
+                    });
+                }
                 let figure = format!("{} · {}", frame.mime, human(frame.bytes));
                 out.insert("frames".into(), Value::Image(frame));
                 return Ok((out, Some(figure)));

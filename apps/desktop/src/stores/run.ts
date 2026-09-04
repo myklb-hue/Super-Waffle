@@ -83,6 +83,8 @@ interface RunStore {
   blocks: Record<string, BlockRun>;
   /** What each source is watching, once it is armed (SPEC §8.2). */
   armed: Record<string, string>;
+  /** The last thing each camera saw, as a data URI (Figure 6). */
+  previews: Record<string, string>;
   frames: Record<string, FrameRun>;
   /** Whether the graph is holding: events queue, nothing runs (SPEC §8.1). */
   paused: boolean;
@@ -119,6 +121,7 @@ const EMPTY = {
   order: [],
   blocks: {},
   armed: {},
+  previews: {},
   frames: {},
   paused: false,
   recent: [],
@@ -207,6 +210,12 @@ export const useRun = create<RunStore>((set, get) => ({
         patch(event.data.block, { error: event.data.message, state: 'error' });
         break;
 
+      case 'block.preview':
+        set((s) => ({
+          previews: { ...s.previews, [event.data.block]: event.data.image },
+        }));
+        break;
+
       case 'source.armed':
         set((s) => ({ armed: { ...s.armed, [event.data.block]: event.data.state } }));
         break;
@@ -232,6 +241,13 @@ export const useRun = create<RunStore>((set, get) => ({
             ].slice(0, 20),
           }));
         }
+        break;
+
+      // The engine held the graph without being asked — a hardware fault
+      // (SPEC §12.1). The transport reads `paused`, so this is all it takes for
+      // the button to become Resume.
+      case 'held':
+        set({ paused: event.data.held });
         break;
 
       case 'wire.active':

@@ -251,22 +251,26 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
 
       {block.kind === 'custom' && <CustomSections block={block} />}
 
-      {kind && kind.settings.length > 0 && (
+      {kind && kind.settings.some((def) => !claimed(block).includes(def.name)) && (
         <Section title="Settings">
-          {kind.settings.map((def) => (
-            <SettingControl
-              key={def.name}
-              def={def}
-              value={block.settings[def.name]}
-              onChange={(v) => setSetting(block.id, def.name, v)}
-            />
-          ))}
+          {kind.settings
+            .filter((def) => !claimed(block).includes(def.name))
+            .map((def) => (
+              <SettingControl
+                key={def.name}
+                def={def}
+                value={block.settings[def.name]}
+                onChange={(v) => setSetting(block.id, def.name, v)}
+              />
+            ))}
         </Section>
       )}
 
       <Section title="Ports">
         <Ports graph={graph} block={block} />
       </Section>
+
+      <SenseSections block={block} />
 
       <Section title="On the canvas">
         <SwitchRow
@@ -276,6 +280,116 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
           onChange={() => toggleDisabled([block.id])}
         />
       </Section>
+    </>
+  );
+}
+
+/** The kinds that reach into the room: a camera and a microphone (SPEC §12.3). */
+const CAPTURES = ['webcam', 'microphone'];
+
+/**
+ * The settings a section of its own has already spent.
+ *
+ * `store` is the one Privacy presents, under the name the boundary gives it
+ * rather than the catalogue's. Left in both places a panel shows one setting
+ * twice — "Record to disk" in Privacy and "Record frames" below it — and a
+ * person reasonably wonders which of the two is the real one, or worse, whether
+ * turning one off leaves the other on. It is one switch; the copy of it beside
+ * the sentence saying what it costs is the one to keep.
+ */
+function claimed(block: Block): readonly string[] {
+  return CAPTURES.includes(block.kind) ? ['store'] : [];
+}
+
+/**
+ * The sections a block that reaches the world has (Figure 6).
+ *
+ * > Senses, memory and actuators — the panel leads with the boundary that
+ * > matters.
+ *
+ * For a camera and a microphone that boundary is privacy, and the two switches
+ * under it are the settings the engine actually reads: the sentence beneath
+ * them says what the engine actually does, which is that a capture nobody asked
+ * to keep lives in the run's folder and goes away with it (SPEC §12.3).
+ *
+ * For face recognition the boundary is what is stored, and §12.3 states it
+ * without a condition: embeddings, never images. So that section is prose. A
+ * switch there would have said the opposite — that it could be otherwise — and
+ * the catalogue no longer offers one.
+ *
+ * Both sit where the figure puts them, below Settings and Ports rather than at
+ * the top: what the block is comes first, what it costs comes with the detail,
+ * and Live comes last because it is only there while the graph is up.
+ */
+function SenseSections({ block }: { block: Block }) {
+  const preview = useRun((r) => r.previews[block.id]);
+  const live = useRun((r) => r.blocks[block.id]);
+  const armed = useRun((r) => r.armed[block.id]);
+  const captures = CAPTURES.includes(block.kind);
+  const faces = block.kind === 'face-recognition';
+  if (!captures && !faces) return null;
+  const frames = block.kind === 'webcam';
+
+  return (
+    <>
+      {captures && (
+        <Section title="Privacy" tint="err" right={<Chip label="local only" color="err" dot />}>
+          {/* On, and not movable: §12.3 states this without a condition, so a
+              switch that could be turned off would be offering something the
+              engine does not do. It is drawn as a switch because the figure
+              draws one, and disabled because it is a fact rather than a
+              preference — the hint says which. */}
+          <SwitchRow
+            label={frames ? 'Frames never leave this machine' : 'Audio never leaves this machine'}
+            hint="Not a setting. No block sends a capture anywhere; a model that reads one runs here, and the orchestrator gets what it reports."
+            on
+            disabled
+            color="err"
+            onChange={() => {}}
+          />
+          <SwitchRow
+            label={frames ? 'Record to disk' : 'Record audio'}
+            hint="Off: captures live in the run's folder and go with it. On: they are copied to the workspace, and the console says where."
+            color="err"
+            on={block.settings.store === true}
+            onChange={(on) => useDocument.getState().setSetting(block.id, 'store', on)}
+          />
+          <Label>Retention</Label>
+          <Field
+            value={
+              block.settings.store === true
+                ? 'kept until you delete them'
+                : `none · ${frames ? 'frames are' : 'audio is'} dropped after use`
+            }
+          />
+        </Section>
+      )}
+
+      {faces && (
+        <Section title="Stored as" tint="err">
+          <p className={s.prose}>
+            Embeddings only — 512 floats per person, never an image. Delete a person and every
+            sighting goes with them.
+          </p>
+          <p className={s.prose}>
+            A property of the program rather than a setting: nothing on a wire out of this block has
+            anywhere to put a picture.
+          </p>
+        </Section>
+      )}
+
+      {(armed || preview || live?.figure) && (
+        <Section
+          title="Live"
+          right={armed ? <Chip label="capturing" color="ok" dot /> : undefined}
+        >
+          {/* A thumbnail, not the frame. The engine sends one small enough to
+              send often, and the frame itself never crosses the socket. */}
+          {preview && <img className={s.preview} src={preview} alt="What the camera sees" />}
+          {armed && <div className={s.summary}>{armed}</div>}
+          {live?.figure && <div className={s.summary}>{live.figure}</div>}
+        </Section>
+      )}
     </>
   );
 }

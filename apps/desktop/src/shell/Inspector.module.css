@@ -158,3 +158,22 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* A statement about the program rather than a setting (Figure 6, "Stored as"). */
+.prose {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  color: var(--text-mid);
+}
+
+/* What the camera is looking at. A thumbnail: the frame itself never crosses
+ * the socket. */
+.preview {
+  display: block;
+  width: 100%;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--field);
+  margin-bottom: var(--sp-3);
+}

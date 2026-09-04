@@ -254,7 +254,7 @@ impl Live<'_> {
         emit: &mut dyn FnMut(RunEvent),
         ask: &mut dyn FnMut(&Warning) -> Decision,
     ) -> u32 {
-        let steps = plan.downstream_of(&event.node, &event.port);
+        let mut steps = plan.downstream_of(&event.node, &event.port);
         if steps.is_empty() {
             self.say(
                 emit,
@@ -277,7 +277,14 @@ impl Live<'_> {
         } else {
             HashMap::new()
         };
-        seeded.insert(Endpoint::new(&event.node, &event.port), event.value.clone());
+        if event.reads {
+            // A device hands nothing over: it goes at the head of its own run
+            // and is read there. Seeding its port instead would put a `null` on
+            // the wire and call it a frame.
+            steps.insert(0, event.node.clone());
+        } else {
+            seeded.insert(Endpoint::new(&event.node, &event.port), event.value.clone());
+        }
 
         let runner = Runner {
             graph: self.graph,
@@ -289,6 +296,39 @@ impl Live<'_> {
             eye: Arc::clone(&self.eye),
         };
         let summary = runner.execute_steps(&steps, seeded, emit, ask);
+
+        // "A hardware fault *pauses*; one click resumes" (SPEC §12.1). A camera
+        // that is not there fails on every tick, and at a camera's tick rate
+        // that is not an error report, it is a flood — the same sentence a few
+        // times a second until someone notices. Pausing says it once and stops,
+        // and Resume is the click: the source stays armed, so a camera plugged
+        // back in works from the next tick.
+        //
+        // The fault is the *device* failing to be read, not any error in the
+        // pass it started: a block downstream that throws is a program with a
+        // bug in it, and holding the graph over one would be holding it over
+        // something no amount of resuming fixes. So the test is whether the
+        // port the tick asked for came back with anything.
+        let could_not_read = event.reads
+            && !summary
+                .values
+                .contains_key(&Endpoint::new(&event.node, &event.port));
+        if could_not_read && !self.paused.load(Ordering::Relaxed) {
+            self.paused.store(true, Ordering::Relaxed);
+            self.say(
+                emit,
+                Some(&event.node),
+                Level::Warn,
+                format!(
+                    "{} could not be read, so the graph is held. Resume to try again.",
+                    event.node
+                ),
+            );
+            emit(RunEvent::Held {
+                run: self.run.clone(),
+                held: true,
+            });
+        }
 
         if self.graph.between.keep_state {
             // What the blocks produced is what they hold until the next event
@@ -325,6 +365,7 @@ mod tests {
             node: node.into(),
             port: "file".into(),
             value: Value::Null,
+            reads: false,
             at,
         }
     }
