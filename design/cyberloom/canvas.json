@@ -1,0 +1,262 @@
+{
+  "artboards": [
+    {
+      "file": "EmptyShell.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-1",
+      "title": "Empty shell"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 1680,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-1",
+      "title": "Wiring a block in"
+    },
+    {
+      "file": "Running.dc.html",
+      "x": 3360,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-1",
+      "title": "Graph running"
+    },
+    {
+      "file": "Inspector.dc.html",
+      "x": 0,
+      "y": 1080,
+      "w": 1800,
+      "h": 980,
+      "page": "page-1",
+      "title": "Inspector states"
+    },
+    {
+      "file": "Library.dc.html",
+      "x": 1920,
+      "y": 1080,
+      "w": 1470,
+      "h": 1250,
+      "page": "page-1",
+      "title": "Block library"
+    },
+    {
+      "file": "BlockAnatomy.dc.html",
+      "x": 3510,
+      "y": 1080,
+      "w": 1500,
+      "h": 760,
+      "page": "page-1",
+      "title": "Block anatomy"
+    },
+    {
+      "file": "Continuous.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-2",
+      "title": "Live graph"
+    },
+    {
+      "file": "RunModes.dc.html",
+      "x": 1680,
+      "y": 0,
+      "w": 1120,
+      "h": 980,
+      "page": "page-2",
+      "title": "Run modes"
+    },
+    {
+      "file": "Assistant.dc.html",
+      "x": 0,
+      "y": 1160,
+      "w": 1920,
+      "h": 1080,
+      "page": "page-2",
+      "title": "Home assistant"
+    },
+    {
+      "file": "SensePanels.dc.html",
+      "x": 2040,
+      "y": 1160,
+      "w": 1460,
+      "h": 1020,
+      "page": "page-2",
+      "title": "Embodied panels"
+    },
+    {
+      "file": "Avatar.dc.html",
+      "x": 3620,
+      "y": 1160,
+      "w": 1200,
+      "h": 1370,
+      "page": "page-2",
+      "title": "Avatar and rigs"
+    },
+    {
+      "file": "AssistantStage.dc.html",
+      "x": 0,
+      "y": 2400,
+      "w": 1920,
+      "h": 1080,
+      "page": "page-2",
+      "title": "Avatar staged"
+    },
+    {
+      "file": "CustomBlock.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-3",
+      "title": "Custom block"
+    },
+    {
+      "file": "CustomRules.dc.html",
+      "x": 1680,
+      "y": 0,
+      "w": 1400,
+      "h": 820,
+      "page": "page-3",
+      "title": "Code becomes a block"
+    },
+    {
+      "file": "CustomDrawer.dc.html",
+      "x": 0,
+      "y": 1080,
+      "w": 1560,
+      "h": 900,
+      "page": "page-3",
+      "title": "Big program, small block"
+    },
+    {
+      "file": "BlockViews.dc.html",
+      "x": 1680,
+      "y": 1080,
+      "w": 1400,
+      "h": 1040,
+      "page": "page-3",
+      "title": "Block views"
+    },
+    {
+      "file": "Interactive.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-4",
+      "title": "Clickable shell",
+      "is_interactive": true
+    }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 0,
+      "y": -186,
+      "w": 700,
+      "page": "page-1",
+      "text": "Cyberloom - a shell for wiring blocks into runnable graphs.\n\nLeft: the library, categorised by what a block does. Centre: an infinite node canvas. Right: an inspector that reshapes itself around whatever is selected.\n\nTop row is the same shell at three moments: nothing built, mid-wire, mid-run."
+    },
+    {
+      "id": "panel-note",
+      "x": 0,
+      "y": 940,
+      "w": 560,
+      "page": "page-1",
+      "text": "The right panel is the whole idea: five different selections, five different panels, one 328px column."
+    },
+    {
+      "id": "types-note",
+      "x": 1920,
+      "y": 940,
+      "w": 520,
+      "page": "page-1",
+      "text": "Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag. Ten types, nine categories plus Custom."
+    },
+    {
+      "id": "anatomy-note",
+      "x": 3510,
+      "y": 940,
+      "w": 560,
+      "page": "page-1",
+      "text": "One block, labelled, plus every run state - and the wiring rules. Handle wires (tools, memory) carry a two-way mark at the holder's end: the call goes out, the reply comes back."
+    },
+    {
+      "id": "live-note",
+      "x": 0,
+      "y": -200,
+      "w": 720,
+      "page": "page-2",
+      "text": "Continuous running.\n\nA graph with a source block (Senses: watch folder, webhook, schedule, webcam...) never finishes - it stays armed and every event runs downstream. The transport chip switches from Run to live, and the inspector with nothing selected becomes the run-mode panel.\n\nA Loop is a dashed frame on the canvas: blocks inside repeat once per item."
+    },
+    {
+      "id": "asst-note",
+      "x": 0,
+      "y": 1010,
+      "w": 760,
+      "page": "page-2",
+      "text": "The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model's text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that warns first and then runs. An Avatar gives it a face: lip sync from the speech audio, expression from an Affect model on its own words, gaze from face recognition.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator's context, and raises a fault on an exec port that pauses the Toolbox until you resume it.\n\nWarn, never block: the user owns their tools. A truly dangerous action gets a prompt; the prompt always has a Continue."
+    },
+    {
+      "id": "custom-note",
+      "x": 0,
+      "y": -170,
+      "w": 700,
+      "page": "page-3",
+      "text": "Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in.\n\nThe code is one view of the block, not the block: compact, summary or code, per block. A big program lives in the drawer under the canvas, or in your own editor, while the block on the canvas stays small."
+    },
+    {
+      "id": "avatar-note",
+      "x": 3620,
+      "y": 1010,
+      "w": 620,
+      "page": "page-2",
+      "text": "Avatar: the block that gives the assistant a presence. A rig is one aesthetic plus the expressions it supports; the vocabulary the model can call is generated from the rig. Lip sync comes from the speech audio, never from the model."
+    },
+    {
+      "id": "stage-note",
+      "x": 0,
+      "y": 2250,
+      "w": 700,
+      "page": "page-2",
+      "text": "The same graph with the Avatar in Stage view: the picture fills the block, the header is a strip, ports are dots on the edges at the same y as before. Drag the corner to resize; the rig keeps its aspect. Every block with a live picture has a Stage view."
+    },
+    {
+      "id": "proto-note",
+      "x": 0,
+      "y": -150,
+      "w": 620,
+      "page": "page-4",
+      "text": "Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports."
+    }
+  ],
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Screens"
+    },
+    {
+      "id": "page-2",
+      "name": "Live and embodied"
+    },
+    {
+      "id": "page-3",
+      "name": "Custom blocks"
+    },
+    {
+      "id": "page-4",
+      "name": "Clickable"
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-2"
+  }
+}

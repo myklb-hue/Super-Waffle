@@ -1,8 +1,8 @@
-# Block Canvas — Build Plan
+# Cyberloom — Build Plan
 
 **Draft for review · 4 September 2026 · derived from SPEC v1.0**
 
-This is the plan to build what `design/block-canvas/SPEC.md` describes.
+This is the plan to build what `design/cyberloom/SPEC.md` describes.
 It stops short of code: nothing here is scaffolded. Where the spec is
 the *what*, this is the *how* and the *in what order*. §7 lists every
 assumption I had to make; argue with those first.
@@ -22,15 +22,15 @@ reasoning, then everything below assumes it.
 | Styling | **CSS custom properties for tokens + CSS Modules**, no Tailwind | The spec's tokens are a small closed set (§16.1). Tailwind would mean expressing every 9.5 px mono label as a utility; modules keep component CSS next to the component and the tokens in one file. This is the one place I departed from the example stack in your brief; see §7. |
 | Client state | **Zustand** with `immer` and `zundo` (undo) | One document store per open graph, one UI store, one server-cache store. Small, no boilerplate, undo for free. |
 | Server cache | **TanStack Query** over Tauri commands and events | Runs, events, library, devices, models are engine-owned; Query gives caching, invalidation and subscriptions without a hand-written layer. |
-| Engine | **Rust crate `engine`**, run as a separate process `canvasd` | The graph runtime, block runtimes, device access, model clients. Separate from the shell from day one so Deploy-as-service (§15.1) is the engine without the shell. |
+| Engine | **Rust crate `engine`**, run as a separate process `loomd` | The graph runtime, block runtimes, device access, model clients. Separate from the shell from day one so Deploy-as-service (§15.1) is the engine without the shell. |
 | Shell ↔ engine | **Local Unix socket, JSON-RPC 2.0 with a subscription channel** | Tauri talks to it through a thin Rust client in the host process; the headless service is the same binary with no client attached. |
-| Types | **Rust is the source of truth**, TypeScript generated with `specta` / `tauri-specta` | The `.graph` schema, block manifests and RPC shapes are `serde` structs; the frontend never hand-writes a type the engine also owns. |
+| Types | **Rust is the source of truth**, TypeScript generated with `specta` / `tauri-specta` | The `.loom` schema, block manifests and RPC shapes are `serde` structs; the frontend never hand-writes a type the engine also owns. |
 | Block runtimes | Python via a `uv`-managed venv per workspace, subprocess with a JSON line protocol; TypeScript/JavaScript via Bun (type-stripping, fast start); shell via `/bin/sh` | §10.5 and §15.8. |
 | Models | **Ollama** HTTP for LLMs and embeddings; **whisper.cpp** for speech to text; **piper** for text to speech; **ONNX Runtime** for object detection (YOLOv8n) and affect; **insightface** via the Python runtime for faces | All local, all Linux-native, all with GPU paths on CachyOS. |
 | Devices | V4L2 via `nokhwa`; PipeWire via `cpal`; serial via `serialport`; GPIO via `gpio-cdev` | §15.11. |
-| Storage | `.graph` YAML files in the workspace folder; SQLite (`rusqlite`) + `sqlite-vec` for long-term memory; a per-workspace `.canvas/` folder for run logs and caches | §15.3, §9.2. |
+| Storage | `.loom` YAML files in the workspace folder; SQLite (`rusqlite`) + `sqlite-vec` for long-term memory; a per-workspace `.cyberloom/` folder for run logs and caches | §15.3, §9.2. |
 | Packaging | AppImage first; AUR `PKGBUILD` second (natural for CachyOS); Flatpak later if wanted | |
-| Tests | Vitest + Testing Library for components; Playwright for the shell; `cargo test` with fixture graphs for the engine; a golden-file test that a `.graph` round-trips byte-identically | |
+| Tests | Vitest + Testing Library for components; Playwright for the shell; `cargo test` with fixture graphs for the engine; a golden-file test that a `.loom` round-trips byte-identically | |
 
 **Constraints (proposed, non-negotiable unless you say otherwise)**
 
@@ -46,7 +46,7 @@ reasoning, then everything below assumes it.
 
 ## 1. Design tokens
 
-Extracted from `design/block-canvas/build.mjs` (the `C`, `T`, `CAT`
+Extracted from `design/cyberloom/build.mjs` (the `C`, `T`, `CAT`
 tables and the dimensions the artboards use). Values are what the
 mockups actually render. Where the mockups are inconsistent, the column
 on the right is what to standardise on; the token file is written to the
@@ -388,7 +388,7 @@ type PortType = 'text'|'tools'|'memory'|'data'|'stream'|'image'|'audio'|'file'|'
 type View = 'compact'|'summary'|'code'|'stage';
 type BlockState = 'idle'|'queued'|'running'|'done'|'error'|'disabled'|'breakpoint';
 
-interface Graph {                // one .graph file
+interface Graph {                // one .loom file
   version: 1;
   id: Id; name: string; description?: string;
   runMode: 'once'|'live'|'schedule';
@@ -460,14 +460,14 @@ anything that persists.**
 
 | State | Owner | Lives in | Persisted | Fetched / cached how |
 | --- | --- | --- | --- | --- |
-| **Document** — blocks, wires, frames, settings, views, sizes, viewport, run mode, local-only | Shell (document store) | Zustand + immer, one store per open graph, `zundo` for undo | `.graph` via engine `graph.save`, autosaved 300 ms after the last edit | Loaded once via `graph.open`; the engine validates and returns the canonical form; the shell never mutates a graph the engine has not accepted |
+| **Document** — blocks, wires, frames, settings, views, sizes, viewport, run mode, local-only | Shell (document store) | Zustand + immer, one store per open graph, `zundo` for undo | `.loom` via engine `graph.save`, autosaved 300 ms after the last edit | Loaded once via `graph.open`; the engine validates and returns the canonical form; the shell never mutates a graph the engine has not accepted |
 | **UI** — selection, hover, drag-in-progress, open drawer and tab, panel scroll, palette open, library search, pinned library | Shell (UI store) | Zustand, not undoable | Not persisted (except open tabs and drawer height in workspace settings) | — |
 | **Derived** — port positions, wire paths, type compatibility, dimmed/glow sets during a drag, block heights | Shell, computed | Pure functions in `packages/graph-core`, memoised per block | No | Recomputed from document + UI |
 | **Engine** — runs, events, block live state, inline previews, source-block counters, warnings, parsed custom-block interfaces, file-watch state | Engine | Rust; the shell holds a cache | Run logs to `.canvas/runs/<id>/`; nothing else | TanStack Query: `run.get` on open, `run.subscribe` streams `RunEvent`s over the socket into the query cache; previews throttled to 10 Hz by the engine |
 | **Library** — built-in kinds, custom blocks in the workspace, rigs | Engine (scans the workspace) | Cache | The files themselves | `library.list`, invalidated on the engine's `library.changed` event (file watcher) |
 | **Devices and models** — cameras, mics, serial ports, Ollama models, GPU | Engine | Cache | No | `devices.list`, `models.list`, refetched on focus and on `devices.changed` |
 | **Long-term memory** — people, places, episodes | Engine (SQLite) | — | `.canvas/memory.sqlite` | Read only through panels (`memory.people`, `memory.episodes`), paginated |
-| **App settings** — recent workspaces, window size, theme | Shell host | Tauri store plugin | `~/.config/block-canvas/` | Read at start |
+| **App settings** — recent workspaces, window size, theme | Shell host | Tauri store plugin | `~/.config/cyberloom/` | Read at start |
 | **Secrets** | OS keyring via the host | — | keyring | Never sent to the webview; the engine reads them by name |
 
 Two consequences worth stating:
@@ -480,10 +480,10 @@ Two consequences worth stating:
   `graph.open` the engine reports `runs.active`, and the shell resumes
   the subscription. This is also the whole of Deploy-as-service later.
 
-Fetching detail: the Tauri host process holds one socket to `canvasd`
+Fetching detail: the Tauri host process holds one socket to `loomd`
 and multiplexes it; the webview calls `invoke('rpc', {method, params})`
-and listens to `rpc:event`. If `canvasd` is not running the host starts
-it (`canvasd --workspace <path>`); the shell shows `engine: starting` in
+and listens to `rpc:event`. If `loomd` is not running the host starts
+it (`loomd --workspace <path>`); the shell shows `engine: starting` in
 the runtime chip and disables the transport until `ready`.
 
 ---
@@ -504,11 +504,11 @@ super-waffle/
         stores/              document.ts, ui.ts, queries.ts (TanStack), rpc.ts
         styles/              tokens.css, fonts/, globals.css
         generated/           types from specta — never edited
-      src-tauri/             Rust host: window, socket client to canvasd, keyring, settings
+      src-tauri/             Rust host: window, socket client to loomd, keyring, settings
   crates/
     engine/                  graph model, validation, scheduler, run loop, events
-    canvasd/                 the daemon binary: socket server, workspace watcher, wraps engine
-    graph-format/            .graph YAML read/write, round-trip tests
+    loomd/                   the daemon binary: socket server, workspace watcher, wraps engine
+    graph-format/            .loom YAML read/write, round-trip tests
     block-kinds/             built-in kind definitions (ports, settings) shared by engine and generated TS
     runtime-python/          subprocess protocol, signature parsing (via a bundled parser script)
     runtime-js/              Bun protocol
@@ -526,7 +526,7 @@ super-waffle/
   rigs/
     line/  robot/  orb/  pixel/     rig.yaml + one SVG per state
   fixtures/
-    graphs/                  customer-triage.graph, inbox-triage.graph, home-assistant.graph, door-watch.graph
+    graphs/                  customer-triage.loom, inbox-triage.loom, home-assistant.loom, door-watch.loom
   design/                    the mockups and SPEC.md (existing)
   docs/
     PLAN.md                  this document
@@ -544,7 +544,7 @@ super-waffle/
 - Rust: crates `kebab-case`, modules `snake_case`, one `mod.rs` per
   feature area, no `lib.rs` longer than the exports.
 - Generated types: `apps/desktop/src/generated/` is gitignored and
-  regenerated by `cargo run -p canvasd -- export-types` in the dev script.
+  regenerated by `cargo run -p loomd -- export-types` in the dev script.
 - Fixture graphs are named for their example in the spec (§13).
 - CSS tokens are `--kebab` with the prefixes in §1; no component defines
   a colour literal.
@@ -560,8 +560,8 @@ figure.
 | # | Slice | Depends on | Done when |
 | --- | --- | --- | --- |
 | 0 | **Tokens and primitives.** `tokens.css`, fonts bundled, every §2.1 primitive in Ladle with its states. Regenerate the mockups from the standardised tokens (§1) so spec and app agree. | — | Ladle shows every primitive; the artboards re-render with the 32 px header. |
-| 1 | **Graph format and types.** `graph-format` reads and writes `.graph`; `block-kinds` defines the 44 built-ins; `specta` exports TS; `graph-core` has geometry and compatibility with tests against the four fixture graphs. | 0 | `customer-triage.graph` round-trips byte-identical; `compat('data','text')` and friends match §4.1. |
-| 2 | **Static canvas.** Tauri window, `canvasd` starts and serves `graph.open`; xyflow renders blocks, ports and wires from a fixture with the spec's geometry; minimap, zoom pill, library panel (read-only), status bar. No editing. | 1 | Figure 1 and Figure 3's block layout (without the drag) pixel-match. |
+| 1 | **Graph format and types.** `graph-format` reads and writes `.loom`; `block-kinds` defines the 44 built-ins; `specta` exports TS; `graph-core` has geometry and compatibility with tests against the four fixture graphs. | 0 | `customer-triage.loom` round-trips byte-identical; `compat('data','text')` and friends match §4.1. |
+| 2 | **Static canvas.** Tauri window, `loomd` starts and serves `graph.open`; xyflow renders blocks, ports and wires from a fixture with the spec's geometry; minimap, zoom pill, library panel (read-only), status bar. No editing. | 1 | Figure 1 and Figure 3's block layout (without the drag) pixel-match. |
 | 3 | **Editing.** Drag from library, move, delete, wire drag with dim/glow/snap/tooltip, selection ring, graph and block inspectors for Input/LLM/Terminal/Toolbox, wire and multi panels, view toggle and grip, undo/redo, autosave. | 2 | Figure 3 including the drag; Figure 5 all five panels; a graph built by hand saves and reopens identically. |
 | 4 | **Engine v0 and running.** Scheduler for Once mode; LLM via Ollama with streaming; Terminal and Python runtimes; Toolbox bundling and tool calls; warnings with Continue; console drawer; Run panel; live wires and inline previews. | 3 | Figure 7; the customer-triage example runs end to end against a local model. |
 | 5 | **Custom blocks.** Python signature parsing, inline and file modes, reload rules, error rules, generated settings, Code view, code drawer, save to library; then TypeScript/JavaScript and shell. | 4 | Figures 10, 12, 13; `door_check` works. |
@@ -606,7 +606,7 @@ and expensive later.
    nearly free later and the shell surviving engine crashes. I think it
    is the right trade; it is the plan's biggest early cost.
 5. **Rust owns the types; TypeScript is generated.** Assumed to keep the
-   shell and engine from drifting on the `.graph` schema. The cost is a
+   shell and engine from drifting on the `.loom` schema. The cost is a
    codegen step in the dev loop.
 6. **Ollama is the only model provider in v1.** Remote providers are
    allowed by the Local-only switch (§15.4) but not built; the provider
@@ -628,7 +628,7 @@ and expensive later.
     port's RMS at 30 Hz. Viseme-level sync from the TTS engine's phoneme
     timings is a later improvement the port shape already allows.
 11. **Secrets live in the OS keyring**, referenced by name from
-    `.graph` (`env`), never by value, so graphs are safe to commit.
+    `.loom` (`env`), never by value, so graphs are safe to commit.
 12. **Workspace = folder, library per workspace.** A block saved to the
     library lands in `<workspace>/blocks/`. A global library shared
     between workspaces is not planned for v1.
@@ -641,11 +641,17 @@ and expensive later.
     Wayland; the Avatar output target's *always on top* is best-effort
     there and I have not verified it.
 
+Decided since this plan was written:
+
+- **Name: Cyberloom** (SPEC §15.12). Graph files are `.loom`, the engine
+  daemon is `loomd`, config lives in `~/.config/cyberloom/`, the
+  application id is `dev.cyberloom.app`, and the URI scheme is
+  `cyberloom://`. Free on crates.io and npm; three unrelated Cyberlooms
+  exist on the web, two of them IT services firms, so the name is clear
+  to use but will not own its search results.
+
 Things I could not decide and need from you before slice 0:
 
-- **Name.** "Block Canvas" is the working title throughout. If the
-  product name is different, slice 0 is the cheapest moment to change
-  the identifier (`canvasd`, `~/.config/block-canvas/`, `canvas://`).
 - **Tailwind or not** (assumption 3).
 - **Whether the engine may reach the network at all** for model
   downloads (Ollama pulls, whisper and piper model files) on first run,
