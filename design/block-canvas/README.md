@@ -1,9 +1,7 @@
 # Block Canvas — UI mockups
 
-Design working files for a node-based visual programming shell: drag blocks
-onto a canvas, wire their typed ports together, run the graph.
-
-Not part of the `tandem` crate. Nothing here is compiled or shipped.
+Design working files for Block Canvas: drag blocks onto a canvas, wire
+their typed ports together, run the graph.
 
 ## Master spec
 
