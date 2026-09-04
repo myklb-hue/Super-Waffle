@@ -63,7 +63,16 @@ pub enum Level {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
-#[serde(tag = "event", content = "data", rename_all = "camelCase")]
+// `rename_all` covers the variant names; `rename_all_fields` covers the fields
+// inside them, which is not the same attribute and not the same default. Without
+// the second, `tokens_in` would be the one snake_case name in a camelCase
+// protocol — invisible in Rust and a papercut in every shell that reads it.
+#[serde(
+    tag = "event",
+    content = "data",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum RunEvent {
     #[serde(rename = "run.started")]
     Started {

@@ -1,0 +1,188 @@
+.transport {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.run {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--control-h);
+  padding: 0 var(--sp-5);
+  border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  color: var(--ok);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.run:hover {
+  background: color-mix(in srgb, var(--ok) 22%, transparent);
+}
+
+/* The running transport is the same control, not a second one: one graph has
+ * one transport, and it reads as one thing (SPEC §8.1). */
+.running {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--control-h);
+  padding: 0 var(--sp-4) 0 var(--sp-5);
+  border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  color: var(--ok);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+  background: var(--ok);
+  animation: breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+
+.clock {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-hi);
+}
+
+.square {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--ok);
+}
+
+.last,
+.lastFailed {
+  font-size: var(--fs-sm);
+  color: var(--text-low);
+}
+
+.lastFailed {
+  color: var(--err);
+}
+
+.figures {
+  display: inline-flex;
+  gap: var(--sp-4);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+}
+
+.errors {
+  color: var(--err);
+}
+
+/* ------------------------------------------------------- warning prompt */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+}
+
+.prompt {
+  width: 420px;
+  padding: var(--sp-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--float);
+  box-shadow: var(--shadow-float);
+  font-family: var(--font-ui);
+}
+
+.promptHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+  font-family: var(--font-mono);
+  color: var(--text-low);
+}
+
+.action {
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-hi);
+  overflow-wrap: anywhere;
+}
+
+.reason {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  color: var(--text-mid);
+}
+
+.promptFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  margin-top: var(--sp-6);
+}
+
+.ghost,
+.primary {
+  height: var(--field-h);
+  padding: 0 var(--sp-5);
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  cursor: pointer;
+}
+
+.ghost {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-mid);
+}
+
+.ghost:hover {
+  color: var(--text-hi);
+  border-color: var(--line-strong);
+}
+
+.primary {
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.primary:hover {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+}

@@ -728,3 +728,41 @@ choice as the first option, which reads as a value the user chose. Nothing runs
 yet so nothing is wrong on disk — the file correctly says nothing — but the
 panel should distinguish "unset" from "set to the bottom of the range", and it
 cannot until the catalogue declares what each setting falls back to.
+
+Found while building slice 4:
+
+- **The play icon had been invisible since slice 0.** `Icon` hardcoded
+  `fill="none"`, and `play` is a solid triangle drawn with no stroke — so the
+  Run button had been showing its label and nothing else through three slices
+  of screenshots. A stroke width of zero now means filled.
+- **`SettingDef` still has no default** (carried over from slice 3), and it now
+  matters: the runner falls back to the block's own setting where there is one
+  and to nothing where there is not. Nothing guesses a temperature.
+- **A block's title could be squeezed out of existence** by a chip appearing
+  beside it. A truncated name is worse than no name only if there is one.
+- **Live figures may not change a block's size.** Growing a running block
+  nudges a graph whose layout was fine a second earlier; the figure hangs below
+  the block instead, and the block comes forward so it is not drawn behind a
+  neighbour. The z-index has to be set on the xyflow node, because every node
+  is its own stacking context and a rule inside one cannot lift it.
+- **`networkidle` is no longer a usable wait condition** in the screenshot
+  tests: the event stream is a connection that stays open on purpose.
+
+Two protocol details the generated TypeScript caught, both of which were
+invisible from Rust:
+
+- `rename_all` renames an enum's *variants*; `rename_all_fields` renames the
+  fields inside them. Without the second, `tokens_in` was the one snake_case
+  name in a camelCase protocol.
+- Two types called `Value` cannot both be exported. Rust told them apart by
+  module; TypeScript has one namespace for the whole schema.
+
+And one thing this environment cannot prove: **the last mile of slice 4's
+acceptance.** "Runs end to end against a local model" needs an Ollama, and the
+network policy here denies both `ollama.com` and `registry.ollama.ai`. The
+engine's side is covered against a scripted provider and against a stub server
+speaking Ollama's wire format — the plan, the tool loop, the streaming, the
+usage arithmetic, the event stream and the whole UI. What is untested is
+whether a real model, handed these tool definitions, chooses to call them.
+That is a question about the model rather than about this code, and it wants a
+run on the CachyOS machine.

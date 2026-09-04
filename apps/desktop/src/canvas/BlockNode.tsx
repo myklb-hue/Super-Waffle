@@ -9,9 +9,11 @@ import {
   thirdView,
   visiblePorts,
 } from '@cyberloom/graph-core';
-import type { Block, Port } from '@cyberloom/graph-core';
+import type { Block, BlockState, Port } from '@cyberloom/graph-core';
+import type { StatusState } from '@cyberloom/ui';
 import { Chip, Grip, Icon, StatusDot, ViewToggle, type IconName } from '@cyberloom/ui';
 import { useDocument } from '../stores/document';
+import { useRun, type BlockRun } from '../stores/run';
 import type { DragState } from './Canvas';
 import s from './BlockNode.module.css';
 
@@ -33,6 +35,11 @@ export interface BlockNodeData extends Record<string, unknown> {
  */
 export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData }) {
   const { block, wired, drag } = data;
+  // Subscribed per block rather than to the whole run: a chunk of a model's
+  // output arrives many times a second, and every block on the canvas
+  // re-rendering for each one is the difference between a live graph and a
+  // slideshow.
+  const live = useRun((r) => r.blocks[block.id]);
   const setView = useDocument((d) => d.setBlockView);
   const resize = useDocument((d) => d.resizeBlock);
   const kind = lookupKind(block.kind);
@@ -64,7 +71,14 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
 
   return (
     <div
-      className={`${s.block} ${selected ? s.selected : ''}`}
+      className={[
+        s.block,
+        selected && s.selected,
+        live?.state === 'running' && s.running,
+        reporting(live) && s.reporting,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       style={{ width, ['--cat' as string]: colour }}
       data-testid={`block-${block.id}`}
       data-kind={block.kind}
@@ -82,7 +96,10 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
             onChange={(view) => setView(block.id, view)}
           />
         </span>
-        <StatusDot state={block.disabled ? 'off' : 'idle'} />
+        {live?.state === 'running' && block.kind === 'llm' && (
+          <Chip label="streaming" color="ok" dot />
+        )}
+        <StatusDot state={block.disabled ? 'off' : dotFor(live?.state)} />
       </header>
 
       {/* The port zone comes before the body, so a label never overlays
@@ -112,6 +129,9 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
 
       {block.view !== 'compact' && <Body block={block} />}
 
+      {/* What the block is doing, while it is doing it (SPEC §3.2). */}
+      {live && <Figures live={live} />}
+
       {resizable && (
         <span className={`${s.gripSlot} ${showControls ? s.toggleShown : ''}`}>
           <Grip
@@ -127,6 +147,65 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
       )}
     </div>
   );
+}
+
+/** Whether this block has anything to say below itself. */
+function reporting(live: BlockRun | undefined): boolean {
+  return !!live && (live.state === 'running' || !!live.figure || !!live.error || !!live.output);
+}
+
+/** How the engine's block state draws as a dot.
+ *
+ *  The two vocabularies are nearly the same and deliberately not identical:
+ *  the engine says `done` and `disabled`, the canvas draws `ok` and `off`,
+ *  because a dot is about appearance and a state is about what happened. */
+function dotFor(state: BlockState | undefined): StatusState {
+  switch (state) {
+    case 'running':
+      return 'running';
+    case 'done':
+      return 'ok';
+    case 'error':
+      return 'error';
+    case 'queued':
+      return 'queued';
+    case 'ready':
+      return 'ready';
+    case 'disabled':
+      return 'off';
+    default:
+      return 'idle';
+  }
+}
+
+/** The live figures under a running block: what it produced, or how it failed.
+ *
+ *  Only while there is something to say. A canvas that has never been run shows
+ *  none of this, which is what keeps a graph at rest readable (SPEC §3.4). */
+function Figures({ live }: { live: BlockRun }) {
+  if (live.error) {
+    return (
+      <div className={`${s.figure} ${s.figureError}`} title={live.error}>
+        {live.error}
+      </div>
+    );
+  }
+  if (!live.figure && !live.output) return null;
+  return (
+    <div className={s.figure}>
+      {live.figure && <span className={s.figureText}>{live.figure}</span>}
+      {live.output && !live.figure && (
+        <span className={s.figureStream}>{tail(live.output, 48)}</span>
+      )}
+    </div>
+  );
+}
+
+/** The last of a stream, so a block shows what is arriving rather than what
+ *  arrived first and then stopped moving. */
+function tail(text: string, width: number): string {
+  const flat = text.replace(/\s+/g, ' ').trimEnd();
+  return flat.length <= width ? flat : `…${flat.slice(-width)}`;
 }
 
 /** One port: a dot on the edge, a label inside it. */

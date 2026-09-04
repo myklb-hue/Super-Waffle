@@ -3,9 +3,12 @@ import { ReactFlowProvider } from '@xyflow/react';
 import { CATEGORIES, KINDS, kindsIn, type PortType } from '@cyberloom/graph-core';
 import { Chip, Icon, StatusDot, TypeDots, type IconName } from '@cyberloom/ui';
 import { Canvas } from '../canvas/Canvas';
+import { Console } from './Console';
 import { Inspector } from './Inspector';
+import { RunFigures, Transport, WarningPrompt } from './Transport';
 import { useDocument } from '../stores/document';
 import { useAutosave } from '../stores/autosave';
+import { listenToRuns } from '../stores/run';
 import { useKeyboard } from './keyboard';
 import s from './Shell.module.css';
 
@@ -21,17 +24,27 @@ export function Shell({ engine }: ShellProps) {
   const save = useAutosave();
   useKeyboard();
 
+  // One subscription for the window. Every component reads the run store;
+  // nothing else listens to the engine.
+  useEffect(() => listenToRuns(), []);
+
   return (
     <div className={s.shell}>
       <TopBar saveState={save.state} />
       <div className={s.middle}>
         <Library />
-        <ReactFlowProvider>
-          <Canvas />
-        </ReactFlowProvider>
+        {/* The canvas and the console share a column: the drawer belongs to
+            the graph being watched, not to the window (SPEC §8.6). */}
+        <div className={s.centre}>
+          <ReactFlowProvider>
+            <Canvas />
+          </ReactFlowProvider>
+          <Console />
+        </div>
         <Inspector />
       </div>
       <StatusBar engine={engine} saveError={save.error} />
+      <WarningPrompt />
     </div>
   );
 }
@@ -55,10 +68,7 @@ function TopBar({ saveState }: { saveState: 'saved' | 'saving' | 'dirty' | 'fail
       <span className={saveState === 'failed' ? s.savedError : s.saved}>{label}</span>
 
       <div className={s.transport}>
-        <button type="button" className={s.run} disabled title="Running is slice 4">
-          <Icon name="play" size={11} strokeWidth={0} />
-          Run
-        </button>
+        <Transport />
         <Chip label={`local · ${graph.defaults.provider}`} color="ok" dot size="md" />
       </div>
 
@@ -204,6 +214,7 @@ function StatusBar({
       )}
       {saveError && <span className={s.statusError}>{saveError}</span>}
       <span className={s.statusRight}>
+        <RunFigures />
         <StatusDot state={engine.state === 'ready' ? 'ok' : engine.state === 'unreachable' ? 'error' : 'queued'} />
         engine: {engine.detail} · {KINDS.length} kinds
       </span>

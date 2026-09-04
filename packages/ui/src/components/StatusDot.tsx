@@ -8,6 +8,7 @@ const CLASS: Record<StatusState, string> = {
   ok: s.statusDotOk!,
   error: s.statusDotError!,
   off: s.statusDotOff!,
+  ready: s.statusDotReady!,
 };
 
 const TITLE: Record<StatusState, string> = {
@@ -17,6 +18,7 @@ const TITLE: Record<StatusState, string> = {
   ok: 'Finished',
   error: 'Error',
   off: 'Off',
+  ready: 'Ready',
 };
 
 export interface StatusDotProps {

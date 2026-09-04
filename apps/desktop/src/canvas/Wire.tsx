@@ -1,9 +1,12 @@
 import { BaseEdge, type EdgeProps } from '@xyflow/react';
 import { controlOffset, wirePoint } from '@cyberloom/graph-core';
 import type { PortType } from '@cyberloom/graph-core';
+import s from './Wire.module.css';
 
 export interface WireData extends Record<string, unknown> {
   type: PortType;
+  /** Whether this wire has carried a value in the current run (SPEC §5.3). */
+  live?: boolean;
 }
 
 /**
@@ -17,6 +20,11 @@ export interface WireData extends Record<string, unknown> {
  * A handle wire — `tools` or `memory` — is drawn heavier and carries a two-way
  * mark at the holder's end, because the call goes out and the reply comes back
  * on the same wire (SPEC §4.3). Everything else is a one-way flow.
+ *
+ * A wire that has carried a value this run animates: the dash travels from the
+ * producer towards the consumer, so the direction is legible without reading
+ * the graph (SPEC §5.3). Only flows animate — a handle never carries a value,
+ * so a moving dash on one would be a lie about what the wire does.
  */
 export function Wire({
   id,
@@ -29,6 +37,7 @@ export function Wire({
 }: EdgeProps & { data?: WireData }) {
   const type = data?.type ?? 'any';
   const handle = type === 'tools' || type === 'memory';
+  const live = !!data?.live && !handle;
   const colour = `var(--type-${type})`;
 
   const from = { x: sourceX, y: sourceY };
@@ -53,6 +62,7 @@ export function Wire({
       <BaseEdge
         id={id}
         path={path}
+        className={live ? s.live : undefined}
         style={{
           stroke: colour,
           strokeWidth: handle ? 2.2 : 1.9,

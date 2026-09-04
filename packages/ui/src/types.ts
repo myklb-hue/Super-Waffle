@@ -35,7 +35,7 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
-/** What a block or a connection is doing right now. */
+/** What a block or a connection is doing right now (SPEC §3.2). */
 export const STATUS_STATES = [
   'idle',
   'queued',
@@ -43,6 +43,15 @@ export const STATUS_STATES = [
   'ok',
   'error',
   'off',
+  /**
+   * Bound as a capability, waiting to be called.
+   *
+   * Not one of §3.2's seven, because those describe blocks that execute. A
+   * Terminal offered to a model through a Toolbox never runs on its own, and
+   * showing it as `ok` would claim it had produced a value when it had not
+   * been asked for one. Drawn as an unfilled ring: available, not finished.
+   */
+  'ready',
 ] as const;
 
 export type StatusState = (typeof STATUS_STATES)[number];

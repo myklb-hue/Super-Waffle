@@ -483,8 +483,8 @@ export type RunEvent = { event: "run.started"; data: {
 { event: "run.usage"; data: {
 	run: string,
 	block: string,
-	tokens_in: number,
-	tokens_out: number,
+	tokensIn: number,
+	tokensOut: number,
 	/**  Tokens per second, over the whole response. */
 	rate: number,
 	local: boolean,

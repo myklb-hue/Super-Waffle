@@ -21,6 +21,8 @@ import {
   type IconName,
 } from '@cyberloom/ui';
 import { portTypeOf, useDocument, type Selection } from '../stores/document';
+import { useRun } from '../stores/run';
+import { RunPanel } from './RunPanel';
 import s from './Inspector.module.css';
 
 /**
@@ -34,13 +36,34 @@ export function Inspector() {
   const graph = useDocument((d) => d.graph);
   const selection = useDocument((d) => d.selection);
   const problems = useDocument((d) => d.problems);
+  const phase = useRun((r) => r.phase);
+  // While a run is in flight the panel is the run's. The inspector has no
+  // identity of its own and shows what matters now (SPEC §7.1); what matters
+  // while a graph is running is the run, not what happens to be selected.
+  const running = phase === 'running';
 
   return (
     <aside className={`${s.inspector} cl-scroll`}>
-      <Head graph={graph} selection={selection} />
-      {problems.length > 0 && <Problems problems={problems} />}
-      <Body graph={graph} selection={selection} />
+      {running ? <RunHead /> : <Head graph={graph} selection={selection} />}
+      {!running && problems.length > 0 && <Problems problems={problems} />}
+      {running ? <RunPanel /> : <Body graph={graph} selection={selection} />}
     </aside>
+  );
+}
+
+function RunHead() {
+  const run = useRun((r) => r.run);
+  const usage = useRun((r) => r.usage);
+  return (
+    <header className={s.head} style={{ ['--c' as string]: 'var(--ok)' }}>
+      <span className={s.icon}>
+        <Icon name="play" size={12} color="ok" strokeWidth={0} />
+      </span>
+      <div className={s.titles}>
+        <div className={s.title}>{run ?? 'Run'}</div>
+        <div className={s.sub}>running · {usage?.local === false ? 'remote' : 'local'}</div>
+      </div>
+    </header>
   );
 }
 

@@ -29,7 +29,14 @@
 }
 
 .statusDotQueued {
-  --dot: var(--text-low);
+  /* Amber, per SPEC §3.2: waiting on an upstream block is a state worth
+   * seeing, and grey made it indistinguishable from never having run. */
+  --dot: var(--warn);
+}
+
+.statusDotReady {
+  --dot: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ok);
 }
 
 .statusDotRunning {

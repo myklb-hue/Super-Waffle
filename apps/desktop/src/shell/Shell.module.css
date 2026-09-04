@@ -14,6 +14,16 @@
   display: flex;
 }
 
+/* The canvas above, the console drawer below. `min-width: 0` so a wide console
+ * line cannot push the canvas out from under the inspector. */
+.centre {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ---------------------------------------------------------------- top bar */
 
 .topbar {

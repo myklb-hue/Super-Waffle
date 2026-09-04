@@ -1,0 +1,23 @@
+/* A wire carrying a value.
+ *
+ * The dash travels from producer to consumer, which is what makes the
+ * direction of a flow legible while a graph runs (SPEC §5.3). The path itself
+ * is drawn by Wire.tsx; all this adds is the movement. */
+.live {
+  stroke-dasharray: 6 5;
+  animation: flow 0.9s linear infinite;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -11;
+  }
+}
+
+/* Someone who has asked not to see motion gets the dashes without the travel:
+ * the wire still reads as active, it just does not move. */
+@media (prefers-reduced-motion: reduce) {
+  .live {
+    animation: none;
+  }
+}

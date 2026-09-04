@@ -23,8 +23,12 @@ export function Icon({ name, size = 14, color, strokeWidth = 1.6, style }: IconP
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="none"
-      stroke={colorVar(color)}
+      // A glyph drawn as a solid shape asks for no stroke, and until now that
+      // made it invisible: the fill was hardcoded to none, so `play` — the
+      // Run button's own triangle — rendered as nothing at all. A stroke width
+      // of zero means filled.
+      fill={strokeWidth === 0 ? colorVar(color) : 'none'}
+      stroke={strokeWidth === 0 ? 'none' : colorVar(color)}
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"

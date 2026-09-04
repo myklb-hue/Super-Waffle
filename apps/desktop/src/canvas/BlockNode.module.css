@@ -35,7 +35,10 @@
 
 .title {
   flex: 1;
-  min-width: 0;
+  /* Not `0`: a chip appearing beside the title — `streaming`, `42 lines` —
+   * would otherwise squeeze the name out of existence on a narrow block, and
+   * a block with no name is worse than a truncated one. */
+  min-width: 4ch;
   font-size: var(--fs-md);
   font-weight: 600;
   letter-spacing: var(--tr-title);
@@ -186,4 +189,62 @@
 
 .glowing .portLabel {
   color: var(--text-hi);
+}
+
+/* A block with something to report is drawn over its neighbours.
+ *
+ * The figure hangs below the block rather than growing it (see `.figure`), so
+ * on a graph laid out before it ever ran the figure would otherwise appear
+ * *behind* whatever block sits underneath. Coming forward is the whole fix;
+ * the layout is untouched. */
+.reporting {
+  z-index: 10;
+}
+
+.running {
+  border-color: color-mix(in srgb, var(--ok) 45%, var(--line));
+}
+
+/* ------------------------------------------------------- live run figures */
+
+/* What the block is doing right now: the exit code, the token count, the last
+ * of a stream. Only present while a run has something to say about this
+ * block, so a canvas at rest is unchanged (SPEC §3.2, §3.4). */
+.figure {
+  /* Hung below the block, not added to it.
+   *
+   * A figure that grew the block would change what the canvas looks like the
+   * moment a run started — blocks nudging into each other on a graph whose
+   * layout was fine a second earlier. Absolute keeps the block exactly the
+   * size the user laid out, and the figure appears in the gap under it. */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-mid);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.figureText {
+  color: var(--text-body);
+}
+
+/* A stream is the tail of what has arrived, so it reads as moving rather than
+ * as a value that stopped. */
+.figureStream {
+  color: var(--text-low);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.figureError {
+  color: var(--err);
+  text-overflow: ellipsis;
 }

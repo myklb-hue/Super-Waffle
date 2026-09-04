@@ -25,6 +25,7 @@ import { LoopFrame, type LoopFrameData } from './LoopFrame';
 import { Wire, type WireData } from './Wire';
 import { ZoomPill } from './ZoomPill';
 import { blockOfKind, portTypeOf, useDocument } from '../stores/document';
+import { useRun } from '../stores/run';
 import s from './Canvas.module.css';
 
 const nodeTypes = { block: BlockNode, frame: LoopFrame };
@@ -99,6 +100,8 @@ export function Canvas() {
     [selection],
   );
 
+  const running = useRun((r) => r.blocks);
+
   const nodes = useMemo<Node<BlockNodeData | LoopFrameData>[]>(() => {
     const frames: Node<LoopFrameData>[] = graph.frames.map((frame) => ({
       id: frame.id,
@@ -108,18 +111,31 @@ export function Canvas() {
       selected: selectedIds.has(frame.id),
       zIndex: -1,
     }));
-    const blocks: Node<BlockNodeData>[] = graph.blocks.map((block) => ({
-      id: block.id,
-      type: 'block',
-      position: block.position,
-      data: { block, wired: wired.get(block.id) ?? new Set(), drag },
-      selected: selectedIds.has(block.id),
-    }));
+    const blocks: Node<BlockNodeData>[] = graph.blocks.map((block) => {
+      // A block reporting live figures draws them below itself, over whatever
+      // is there. The z-index has to be on the node rather than in the CSS:
+      // xyflow gives every node its own stacking context, so a rule inside one
+      // cannot lift it above its neighbour.
+      const live = running[block.id];
+      const reporting =
+        !!live && (live.state === 'running' || !!live.figure || !!live.error || !!live.output);
+      return {
+        id: block.id,
+        type: 'block',
+        position: block.position,
+        data: { block, wired: wired.get(block.id) ?? new Set(), drag },
+        selected: selectedIds.has(block.id),
+        ...(reporting ? { zIndex: 10 } : {}),
+      };
+    });
     return [...frames, ...blocks].map((node) => {
       const size = measured.get(node.id);
       return size ? { ...node, measured: size } : node;
     });
-  }, [graph.frames, graph.blocks, wired, selectedIds, drag, measured]);
+  }, [graph.frames, graph.blocks, wired, selectedIds, drag, measured, running]);
+
+  const active = useRun((r) => r.active);
+  const activeWires = useMemo(() => new Set(active), [active]);
 
   const edges = useMemo<Edge<WireData>[]>(
     () =>
@@ -131,9 +147,12 @@ export function Canvas() {
         target: wire.to.node,
         targetHandle: wire.to.port,
         selected: selection.kind === 'wire' && selection.id === wire.id,
-        data: { type: portTypeOf(graph, wire.from.node, wire.from.port, 'out') ?? 'any' },
+        data: {
+          type: portTypeOf(graph, wire.from.node, wire.from.port, 'out') ?? 'any',
+          live: activeWires.has(wire.id),
+        },
       })),
-    [graph, selection],
+    [graph, selection, activeWires],
   );
 
   /**
