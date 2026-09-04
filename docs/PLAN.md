@@ -803,8 +803,18 @@ code:
   would fail on its first line. Providing them is what makes them the type
   system's names rather than a convention the parser happens to recognise.
 
-Still open from slice 3, and now overdue: **`SettingDef` has no default.** The
-generated settings a custom block produces *do* carry one, read from the code,
-and the difference is visible side by side in the same inspector — a custom
-block's threshold shows 0.6 because its code says so, while a built-in LLM's
-top-p shows 0 because nothing does.
+**`SettingDef` now carries a default**, closing the gap slice 3 opened. The
+rule, encoded in the catalogue's own tests: a default is declared when the
+control *cannot* be unset — a switch has no third position, a segmented choice
+always has something selected — or when the specification states one.
+Everything else stays genuinely unset, and the inspector shows `unset` rather
+than a number nobody chose. A temperature has none on purpose: the engine
+leaves it out of the request and the provider's own default applies, which is
+a better answer than one invented in a table here.
+
+Half of it was not cosmetic. `flag` read `false` for any switch the file did
+not mention, which made every safety switch off unless someone had turned it
+on — the opposite of what SPEC §12.2 says about shell commands and physical
+actions. A Terminal dropped on a canvas now warns before it runs, and a test
+in the protocol suite caught the change by parking twenty of them on a
+question nobody was answering.

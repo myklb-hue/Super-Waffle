@@ -62,7 +62,16 @@ impl Output {
     }
 }
 
-/// A setting as a string, or none when it was never set.
+/// What the kind says this setting falls back to, if anything.
+///
+/// The file holds only what the user chose; everything else comes from the
+/// catalogue. Reading the two in one place is what stops the engine and the
+/// inspector disagreeing about what a block is going to do.
+fn declared(block: &Block, name: &str) -> Option<&'static str> {
+    block_kinds::kind(&block.kind)?.setting(name)?.default
+}
+
+/// A setting as a string: what the user chose, or what the kind falls back to.
 ///
 /// The distinction matters: a setting the user left empty and a setting the
 /// user cleared are the same thing, and both mean "fall back", never "use an
@@ -70,22 +79,29 @@ impl Output {
 pub fn setting<'a>(block: &'a Block, name: &str) -> Option<&'a str> {
     match block.settings.get(name) {
         Some(graph_format::Setting::String(s)) if !s.trim().is_empty() => Some(s),
-        _ => None,
+        _ => declared(block, name),
     }
 }
 
+/// A switch, which always has a side (SPEC §7): the user's, or the kind's.
+///
+/// This used to read `false` for anything the file did not mention, which made
+/// every safety switch off unless someone had turned it on — the opposite of
+/// what SPEC §12.2 says about shell commands and physical actions. A
+/// `warnBefore` nobody has touched now warns, because that is what the
+/// catalogue declares.
 pub fn flag(block: &Block, name: &str) -> bool {
-    matches!(
-        block.settings.get(name),
-        Some(graph_format::Setting::Bool(true))
-    )
+    match block.settings.get(name) {
+        Some(graph_format::Setting::Bool(b)) => *b,
+        _ => declared(block, name) == Some("true"),
+    }
 }
 
 pub fn number(block: &Block, name: &str) -> Option<f64> {
     match block.settings.get(name) {
         Some(graph_format::Setting::Int(i)) => Some(f64::from(*i)),
         Some(graph_format::Setting::Float(f)) => Some(*f),
-        _ => None,
+        _ => declared(block, name).and_then(|d| d.parse().ok()),
     }
 }
 
@@ -382,6 +398,41 @@ mod tests {
     fn an_unimplemented_kind_says_which_one() {
         let err = pure_step(&block("webcam", &[]), &Outputs::new()).unwrap_err();
         assert!(err.contains("webcam"), "{err}");
+    }
+
+    /// The half of a default that is not cosmetic.
+    ///
+    /// Before the catalogue carried defaults, `flag` read `false` for anything
+    /// the file did not mention — so a Terminal dropped on a canvas ran shell
+    /// commands without asking, which is the opposite of SPEC §12.2. A file
+    /// that says nothing now gets the catalogue's answer.
+    #[test]
+    fn a_safety_switch_is_on_until_someone_turns_it_off() {
+        let bare = block("terminal", &[]);
+        assert!(flag(&bare, "warnBefore"), "a Terminal warns by default");
+
+        let off = block(
+            "terminal",
+            &[("warnBefore", graph_format::Setting::Bool(false))],
+        );
+        assert!(!flag(&off, "warnBefore"), "and the user can turn it off");
+
+        // A switch the catalogue declares off stays off: §12.3 says frames are
+        // not recorded unless someone turns recording on.
+        assert!(!flag(&block("webcam", &[]), "store"));
+    }
+
+    /// A setting nobody chose reads as what the kind says it is, and a setting
+    /// the kind says nothing about reads as nothing.
+    #[test]
+    fn a_declared_default_fills_in_and_an_undeclared_one_does_not() {
+        let llm = block("llm", &[]);
+        assert_eq!(setting(&llm, "role"), Some("assistant"));
+        // A temperature has no default on purpose: the request leaves it out
+        // and the provider's own applies.
+        assert_eq!(number(&llm, "temperature"), None);
+        // SPEC §8.3: two items in parallel per loop frame.
+        assert_eq!(number(&block("loop", &[]), "parallel"), Some(2.0));
     }
 
     #[test]

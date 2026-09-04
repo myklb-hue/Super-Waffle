@@ -641,6 +641,25 @@ export type SettingDef = {
 	 *  in plain words (SPEC §12).
 	 */
 	hint: string | null,
+	/**
+	 *  What the setting is when the user has not chosen (SPEC §7).
+	 * 
+	 *  Held as the text it would be written as, which is the same shape a
+	 *  custom block's generated settings use (`block_source::Generated`), so
+	 *  the inspector reads a built-in default and a derived one the same way.
+	 * 
+	 *  `None` means genuinely unset, and the inspector shows nothing rather
+	 *  than a number nobody chose. The rule for when there is one:
+	 * 
+	 *  - a control that *cannot* be unset always has one — a switch has no
+	 *    third position, and a segmented choice always has something selected;
+	 *  - anything else has one only where the specification states it.
+	 * 
+	 *  A temperature has none, and that is not an oversight: the engine leaves
+	 *  it out of the request, the provider's own default applies, and a number
+	 *  invented here would be a worse answer than the one the model ships with.
+	 */
+	default: string | null,
 };
 
 /**  What kind of control the inspector draws for a setting. */

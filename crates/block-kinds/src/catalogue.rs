@@ -69,11 +69,11 @@ pub static KINDS: &[BlockKind] = &[
         settings: &[
             setting("model", "Model", SettingKind::Text),
             hinted(
-                setting("enrolment", "Enrolment", SettingKind::Bool),
+                switch("enrolment", "Enrolment", false),
                 "Off by default. Adding a person stores 512 floats, never a picture.",
             ),
             hinted(
-                setting("storeImages", "Store images", SettingKind::Bool),
+                switch("storeImages", "Store images", false),
                 "Off. Turning this on writes frames to disk until you turn it off again.",
             ),
         ],
@@ -160,11 +160,7 @@ pub static KINDS: &[BlockKind] = &[
         settings: &[
             select("toolChoice", "Tool choice", &["auto", "required", "none"]),
             hinted(
-                setting(
-                    "warnBefore",
-                    "Warn before dangerous calls",
-                    SettingKind::Bool,
-                ),
+                switch("warnBefore", "Warn before dangerous calls", true),
                 "A prompt with a Continue. It never blocks the graph.",
             ),
         ],
@@ -238,7 +234,7 @@ pub static KINDS: &[BlockKind] = &[
             setting("command", "Command", SettingKind::Text),
             setting("cwd", "Working directory", SettingKind::Path),
             hinted(
-                setting("warnBefore", "Warn before running", SettingKind::Bool),
+                switch("warnBefore", "Warn before running", true),
                 "A shell command is a dangerous action. The prompt always has a Continue.",
             ),
         ],
@@ -316,7 +312,7 @@ pub static KINDS: &[BlockKind] = &[
             setting("resolution", "Resolution", SettingKind::Text),
             setting("fps", "Frame rate", SettingKind::Number),
             hinted(
-                setting("store", "Record frames", SettingKind::Bool),
+                switch("store", "Record frames", false),
                 "Off. Frames never leave the machine and are not written to disk.",
             ),
         ],
@@ -332,9 +328,9 @@ pub static KINDS: &[BlockKind] = &[
         ports: &[port("audio", Audio, Out)],
         settings: &[
             setting("device", "Device", SettingKind::Text),
-            setting("vad", "Voice activity", SettingKind::Bool),
+            switch("vad", "Voice activity", true),
             hinted(
-                setting("store", "Record audio", SettingKind::Bool),
+                switch("store", "Record audio", false),
                 "Off. Audio never leaves the machine and is not written to disk.",
             ),
         ],
@@ -392,7 +388,7 @@ pub static KINDS: &[BlockKind] = &[
         stage: false,
         ports: &[port("event", Data, Out)],
         settings: &[
-            select("method", "Method", &["GET", "POST"]),
+            falls_back_to(select("method", "Method", &["GET", "POST"]), "POST"),
             setting("path", "Path", SettingKind::Text),
             setting("port", "Port", SettingKind::Number),
         ],
@@ -442,7 +438,7 @@ pub static KINDS: &[BlockKind] = &[
         ports: &[port("memory", Memory, Out)],
         settings: &[
             setting("path", "Database", SettingKind::Path),
-            setting("vectors", "Vectors", SettingKind::Bool),
+            switch("vectors", "Vectors", true),
             hinted(
                 setting("retention", "Retention", SettingKind::Text),
                 "What is kept, and for how long. Deleting a person deletes every sighting.",
@@ -520,7 +516,7 @@ pub static KINDS: &[BlockKind] = &[
             setting("panLimit", "Pan limit", SettingKind::Number),
             setting("tiltLimit", "Tilt limit", SettingKind::Number),
             hinted(
-                setting("warnBeforeMove", "Warn before moving", SettingKind::Bool),
+                switch("warnBeforeMove", "Warn before moving", true),
                 "A move is a dangerous action. The prompt always has a Continue.",
             ),
         ],
@@ -554,18 +550,14 @@ pub static KINDS: &[BlockKind] = &[
         settings: &[
             select("rig", "Rig", &["line", "robot", "orb", "pixel"]),
             hinted(
-                setting(
-                    "autoAffectFromSpeech",
-                    "Auto-affect from speech",
-                    SettingKind::Bool,
-                ),
+                switch("autoAffectFromSpeech", "Auto-affect from speech", true),
                 "Off: an Affect block feeds express instead.",
             ),
             setting("blink", "Blink", SettingKind::Text),
             setting("breathePerMin", "Breathe", SettingKind::Number),
             setting("settleSec", "Settle to neutral after", SettingKind::Number),
             setting("sleepAfterMin", "Sleep after", SettingKind::Number),
-            setting("keepAspect", "Keep aspect", SettingKind::Bool),
+            switch("keepAspect", "Keep aspect", true),
         ],
     },
     BlockKind {
@@ -693,9 +685,9 @@ pub static KINDS: &[BlockKind] = &[
         ],
         settings: &[
             setting("as", "Item name", SettingKind::Text),
-            setting("parallel", "Parallel", SettingKind::Number),
+            falls_back_to(setting("parallel", "Parallel", SettingKind::Number), "2"),
             setting("max", "Max items", SettingKind::Number),
-            setting("continueOnError", "Continue on error", SettingKind::Bool),
+            switch("continueOnError", "Continue on error", true),
         ],
     },
     BlockKind {
@@ -947,6 +939,153 @@ mod tests {
     }
 
     /// A range setting without bounds would draw a slider with no ends.
+    /// A switch has no unset position, so leaving one without a default would
+    /// make the inspector pick a side on its own — which is the whole defect
+    /// this field exists to fix.
+    #[test]
+    fn every_switch_says_which_way_it_starts() {
+        for k in KINDS {
+            for s in k.settings {
+                if s.kind == SettingKind::Bool {
+                    assert!(
+                        matches!(s.default, Some("true" | "false")),
+                        "{}.{} is a switch with no side: {:?}",
+                        k.id,
+                        s.name,
+                        s.default
+                    );
+                }
+            }
+        }
+    }
+
+    /// A segmented control always shows something selected, so its default has
+    /// to be one of the things it can show.
+    #[test]
+    fn every_choice_defaults_to_one_of_its_own_options() {
+        for k in KINDS {
+            for s in k.settings {
+                if s.kind == SettingKind::Select {
+                    let default = s.default.unwrap_or_else(|| {
+                        panic!("{}.{} is a choice with no default", k.id, s.name)
+                    });
+                    assert!(
+                        s.options.contains(&default),
+                        "{}.{} falls back to `{default}`, which is not one of {:?}",
+                        k.id,
+                        s.name,
+                        s.options
+                    );
+                }
+            }
+        }
+    }
+
+    /// A default outside a slider's own range would put the handle off the end
+    /// of the track.
+    #[test]
+    fn a_slider_default_is_inside_its_bounds() {
+        for k in KINDS {
+            for s in k.settings {
+                let (Some(default), Some(min), Some(max)) = (s.default, s.min, s.max) else {
+                    continue;
+                };
+                let value: f64 = default.parse().unwrap_or_else(|_| {
+                    panic!(
+                        "{}.{} falls back to `{default}`, which is not a number",
+                        k.id, s.name
+                    )
+                });
+                assert!(
+                    (min..=max).contains(&value),
+                    "{}.{} falls back to {value}, outside {min}..{max}",
+                    k.id,
+                    s.name
+                );
+            }
+        }
+    }
+
+    /// A number's default has to be a number, or the field shows text where a
+    /// figure belongs.
+    #[test]
+    fn a_number_default_is_a_number() {
+        for k in KINDS {
+            for s in k.settings {
+                if s.kind == SettingKind::Number
+                    && let Some(default) = s.default
+                {
+                    assert!(
+                        default.parse::<f64>().is_ok(),
+                        "{}.{} falls back to `{default}`",
+                        k.id,
+                        s.name
+                    );
+                }
+            }
+        }
+    }
+
+    /// Nothing invents a default for a control that can be left alone. A
+    /// temperature has none on purpose: the engine leaves it out of the
+    /// request and the provider's own default applies, which is a better
+    /// answer than a number chosen here.
+    #[test]
+    fn a_setting_that_can_be_unset_is_left_unset() {
+        let llm = kind("llm").unwrap();
+        assert_eq!(llm.setting("temperature").unwrap().default, None);
+        assert_eq!(llm.setting("topP").unwrap().default, None);
+        assert_eq!(llm.setting("systemPrompt").unwrap().default, None);
+        // But its role is a choice, so it has one.
+        assert_eq!(llm.setting("role").unwrap().default, Some("assistant"));
+    }
+
+    /// The defaults SPEC states, checked against the specification rather than
+    /// against whatever the table happens to say.
+    #[test]
+    fn the_defaults_the_specification_states() {
+        // §6.1: "enrolment is off by default".
+        let face = kind("face-recognition").unwrap();
+        assert_eq!(face.setting("enrolment").unwrap().default, Some("false"));
+        // §12.3: faces are stored as embeddings, never images.
+        assert_eq!(face.setting("storeImages").unwrap().default, Some("false"));
+        // §12.3: frames and audio are not recorded unless the user turns it on.
+        assert_eq!(
+            kind("webcam").unwrap().setting("store").unwrap().default,
+            Some("false")
+        );
+        assert_eq!(
+            kind("microphone")
+                .unwrap()
+                .setting("store")
+                .unwrap()
+                .default,
+            Some("false")
+        );
+        // §12.2: a shell command and a physical action both warrant a warning.
+        assert_eq!(
+            kind("terminal")
+                .unwrap()
+                .setting("warnBefore")
+                .unwrap()
+                .default,
+            Some("true")
+        );
+        assert_eq!(
+            kind("motors")
+                .unwrap()
+                .setting("warnBeforeMove")
+                .unwrap()
+                .default,
+            Some("true")
+        );
+        // §8.3: two items in parallel per loop frame.
+        assert_eq!(
+            kind("loop").unwrap().setting("parallel").unwrap().default,
+            Some("2")
+        );
+    }
+
     #[test]
     fn range_settings_have_bounds() {
         for k in KINDS {

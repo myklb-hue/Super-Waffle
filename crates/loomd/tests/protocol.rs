@@ -275,7 +275,10 @@ fn replies_and_events_never_interleave() {
                 serde_json::json!({
                     "id": format!("t{i}"), "kind": "terminal",
                     "position": [0, 0], "view": "summary",
-                    "settings": { "command": "echo hello" },
+                    // Explicitly off: a Terminal warns by default now
+                    // (SPEC §12.2), and twenty blocks all parking on a
+                    // question nobody answers is not what this measures.
+                    "settings": { "command": "echo hello", "warnBefore": false },
                     "ports": [], "disabled": false, "breakpoint": false
                 })
             })

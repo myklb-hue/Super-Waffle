@@ -10,6 +10,15 @@ export interface SliderProps {
   max: number;
   step?: number;
   unit?: string;
+  /**
+   * What to show instead of the number.
+   *
+   * A slider whose setting has never been chosen sits at its floor, and a
+   * readout of `0` there reads as a deliberate zero rather than as nothing.
+   * Passing `unset` says which it is; the handle still shows where a change
+   * would start from.
+   */
+  display?: string;
   color?: ColorToken;
   disabled?: boolean;
   onChange: (value: number) => void;
@@ -23,6 +32,7 @@ export function Slider({
   max,
   step = 1,
   unit,
+  display,
   color = 'accent',
   disabled = false,
   onChange,
@@ -35,9 +45,8 @@ export function Slider({
     >
       <span className={s.sliderHead}>
         <Label>{label}</Label>
-        <span className={s.sliderValue}>
-          {value}
-          {unit ? ` ${unit}` : ''}
+        <span className={display ? s.sliderUnset : s.sliderValue}>
+          {display ?? `${value}${unit ? ` ${unit}` : ''}`}
         </span>
       </span>
       <input

@@ -457,8 +457,17 @@ function GeneratedControl({
   );
 }
 
-/** One control per setting, chosen by the kind's declaration rather than by a
- *  hand-written panel per block. */
+/**
+ * One control per setting, chosen by the kind's declaration rather than by a
+ * hand-written panel per block.
+ *
+ * A setting the user has not touched shows the kind's declared default, and a
+ * setting with no declared default shows nothing at all. Until the catalogue
+ * carried defaults this panel filled the gap itself — a slider sat at its
+ * minimum and a choice showed its first option — which read as a value someone
+ * had chosen when nobody had. A control that is empty because nothing has been
+ * decided should look empty.
+ */
 function SettingControl({
   def,
   value,
@@ -469,21 +478,30 @@ function SettingControl({
   onChange: (value: unknown) => void;
 }) {
   if (def.kind === 'bool') {
+    // A switch has no unset position, so the catalogue always declares one
+    // (`every_switch_says_which_way_it_starts`).
+    const on = value === undefined || value === null ? def.default === 'true' : value === true;
     return (
       <SwitchRow
         label={def.label}
         hint={def.hint ?? undefined}
-        on={value === true}
+        on={on}
         color={def.hint ? 'err' : 'accent'}
         onChange={onChange}
       />
     );
   }
+
   if (def.kind === 'range') {
+    const fallback = def.default === null ? null : Number(def.default);
+    const chosen = typeof value === 'number' ? value : fallback;
     return (
       <Slider
         label={def.label}
-        value={typeof value === 'number' ? value : (def.min ?? 0)}
+        // A slider with nothing behind it sits at its floor and says so, rather
+        // than reading as a deliberate zero.
+        value={chosen ?? (def.min ?? 0)}
+        display={chosen === null ? 'unset' : undefined}
         min={def.min ?? 0}
         max={def.max ?? 1}
         step={(def.max ?? 1) - (def.min ?? 0) > 4 ? 1 : 0.01}
@@ -491,36 +509,43 @@ function SettingControl({
       />
     );
   }
+
   if (def.kind === 'select') {
     return (
       <>
         <Label>{def.label}</Label>
         <Segmented
           options={[...def.options]}
-          value={typeof value === 'string' ? value : (def.options[0] ?? '')}
+          value={typeof value === 'string' ? value : (def.default ?? def.options[0] ?? '')}
           label={def.label}
           onChange={onChange}
         />
       </>
     );
   }
+
   if (def.kind === 'multiline') {
     return (
       <>
         <Label>{def.label}</Label>
         <TextBox
           value={typeof value === 'string' ? value : ''}
+          placeholder={def.default ?? undefined}
           mono
           onChange={onChange}
         />
       </>
     );
   }
+
   return (
     <>
       <Label>{def.label}</Label>
       <Field
         value={value === undefined || value === null ? '' : String(value)}
+        // The declared default as a placeholder: what the block will use, shown
+        // in the shape of something nobody typed.
+        placeholder={def.default ?? undefined}
         mono={def.kind === 'path' || def.kind === 'number'}
         onChange={(v) => onChange(def.kind === 'number' ? Number(v) || 0 : v)}
       />
