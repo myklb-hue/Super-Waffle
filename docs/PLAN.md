@@ -1,8 +1,8 @@
-# Block Canvas — Build Plan
+# Cyberloom — Build Plan
 
 **Draft for review · 4 September 2026 · derived from SPEC v1.0**
 
-This is the plan to build what `design/block-canvas/SPEC.md` describes.
+This is the plan to build what `design/cyberloom/SPEC.md` describes.
 It stops short of code: nothing here is scaffolded. Where the spec is
 the *what*, this is the *how* and the *in what order*. §7 lists every
 assumption I had to make; argue with those first.
@@ -22,15 +22,15 @@ reasoning, then everything below assumes it.
 | Styling | **CSS custom properties for tokens + CSS Modules**, no Tailwind | The spec's tokens are a small closed set (§16.1). Tailwind would mean expressing every 9.5 px mono label as a utility; modules keep component CSS next to the component and the tokens in one file. This is the one place I departed from the example stack in your brief; see §7. |
 | Client state | **Zustand** with `immer` and `zundo` (undo) | One document store per open graph, one UI store, one server-cache store. Small, no boilerplate, undo for free. |
 | Server cache | **TanStack Query** over Tauri commands and events | Runs, events, library, devices, models are engine-owned; Query gives caching, invalidation and subscriptions without a hand-written layer. |
-| Engine | **Rust crate `engine`**, run as a separate process `canvasd` | The graph runtime, block runtimes, device access, model clients. Separate from the shell from day one so Deploy-as-service (§15.1) is the engine without the shell. |
+| Engine | **Rust crate `engine`**, run as a separate process `loomd` | The graph runtime, block runtimes, device access, model clients. Separate from the shell from day one so Deploy-as-service (§15.1) is the engine without the shell. |
 | Shell ↔ engine | **Local Unix socket, JSON-RPC 2.0 with a subscription channel** | Tauri talks to it through a thin Rust client in the host process; the headless service is the same binary with no client attached. |
-| Types | **Rust is the source of truth**, TypeScript generated with `specta` / `tauri-specta` | The `.graph` schema, block manifests and RPC shapes are `serde` structs; the frontend never hand-writes a type the engine also owns. |
+| Types | **Rust is the source of truth**, TypeScript generated with `specta` / `tauri-specta` | The `.loom` schema, block manifests and RPC shapes are `serde` structs; the frontend never hand-writes a type the engine also owns. |
 | Block runtimes | Python via a `uv`-managed venv per workspace, subprocess with a JSON line protocol; TypeScript/JavaScript via Bun (type-stripping, fast start); shell via `/bin/sh` | §10.5 and §15.8. |
 | Models | **Ollama** HTTP for LLMs and embeddings; **whisper.cpp** for speech to text; **piper** for text to speech; **ONNX Runtime** for object detection (YOLOv8n) and affect; **insightface** via the Python runtime for faces | All local, all Linux-native, all with GPU paths on CachyOS. |
 | Devices | V4L2 via `nokhwa`; PipeWire via `cpal`; serial via `serialport`; GPIO via `gpio-cdev` | §15.11. |
-| Storage | `.graph` YAML files in the workspace folder; SQLite (`rusqlite`) + `sqlite-vec` for long-term memory; a per-workspace `.canvas/` folder for run logs and caches | §15.3, §9.2. |
+| Storage | `.loom` YAML files in the workspace folder; SQLite (`rusqlite`) + `sqlite-vec` for long-term memory; a per-workspace `.cyberloom/` folder for run logs and caches | §15.3, §9.2. |
 | Packaging | AppImage first; AUR `PKGBUILD` second (natural for CachyOS); Flatpak later if wanted | |
-| Tests | Vitest + Testing Library for components; Playwright for the shell; `cargo test` with fixture graphs for the engine; a golden-file test that a `.graph` round-trips byte-identically | |
+| Tests | Vitest + Testing Library for components; Playwright for the shell; `cargo test` with fixture graphs for the engine; a golden-file test that a `.loom` round-trips byte-identically | |
 
 **Constraints (proposed, non-negotiable unless you say otherwise)**
 
@@ -46,7 +46,7 @@ reasoning, then everything below assumes it.
 
 ## 1. Design tokens
 
-Extracted from `design/block-canvas/build.mjs` (the `C`, `T`, `CAT`
+Extracted from `design/cyberloom/build.mjs` (the `C`, `T`, `CAT`
 tables and the dimensions the artboards use). Values are what the
 mockups actually render. Where the mockups are inconsistent, the column
 on the right is what to standardise on; the token file is written to the
@@ -96,7 +96,7 @@ ports.
 
 | Where | Mockup | Standardise on |
 | --- | --- | --- |
-| `file` type `#7f93c9` vs `memory` type `#7e9ff0` | Two blues 10° apart; distinguishable side by side, not at a glance on a wire | Keep `memory` `#7e9ff0`; move `file` to a slate-teal `#6fa3a8` so no two types share a hue family. Affects Library and RunModes artboards only. |
+| `file` type `#7f93c9` vs `memory` type `#7e9ff0` | Two blues 2° apart in hue; distinguishable side by side, never on a wire | Keep `memory` `#7e9ff0`; move `file` to `#93c76b`, the one colour in the yellow-green gap between `audio` and `stream` and 44° from each. A first attempt at slate-teal `#6fa3a8` was rejected in slice 0: it landed 2° from `text`, trading one same-hue collision for another. |
 | Console log text `#b3bcc7`, code text `#c3cad4`, panel prose `#c3cad4` | Three near-identical off-whites | One `--text-body` `#c3cad4`. |
 | Terminal-thoughts background `#07080a` vs `--field` `#0b0d11` | Ad hoc darker field | Use `--field`; the terminal is not darker than the code editor. |
 | Zoom pill / drag tooltip backgrounds `rgba(#12161c,.92)` and `.96` | Ad hoc floating surface | One `--float` `#12161c` at `.94`. |
@@ -231,7 +231,7 @@ graphs, blocks or the engine.
 
 | Component | Props | States |
 | --- | --- | --- |
-| `Icon` | `name: IconName; size?: 10\|12\|14\|18; color?: token; strokeWidth?` | — |
+| `Icon` | `name: IconName; size?: 10\|11\|12\|13\|14\|18; color?: token; strokeWidth?` | — |
 | `StatusDot` | `state: 'idle'\|'queued'\|'running'\|'ok'\|'error'\|'off'` | — (the state *is* the prop) |
 | `Chip` | `label; color: token; dot?; solid?; size?: 'sm'\|'md'` | — |
 | `TypeDot` / `TypeDots` | `kind: PortType` / `kinds: PortType[]` | — |
@@ -388,7 +388,7 @@ type PortType = 'text'|'tools'|'memory'|'data'|'stream'|'image'|'audio'|'file'|'
 type View = 'compact'|'summary'|'code'|'stage';
 type BlockState = 'idle'|'queued'|'running'|'done'|'error'|'disabled'|'breakpoint';
 
-interface Graph {                // one .graph file
+interface Graph {                // one .loom file
   version: 1;
   id: Id; name: string; description?: string;
   runMode: 'once'|'live'|'schedule';
@@ -460,14 +460,14 @@ anything that persists.**
 
 | State | Owner | Lives in | Persisted | Fetched / cached how |
 | --- | --- | --- | --- | --- |
-| **Document** — blocks, wires, frames, settings, views, sizes, viewport, run mode, local-only | Shell (document store) | Zustand + immer, one store per open graph, `zundo` for undo | `.graph` via engine `graph.save`, autosaved 300 ms after the last edit | Loaded once via `graph.open`; the engine validates and returns the canonical form; the shell never mutates a graph the engine has not accepted |
+| **Document** — blocks, wires, frames, settings, views, sizes, viewport, run mode, local-only | Shell (document store) | Zustand + immer, one store per open graph, `zundo` for undo | `.loom` via engine `graph.save`, autosaved 300 ms after the last edit | Loaded once via `graph.open`; the engine validates and returns the canonical form; the shell never mutates a graph the engine has not accepted |
 | **UI** — selection, hover, drag-in-progress, open drawer and tab, panel scroll, palette open, library search, pinned library | Shell (UI store) | Zustand, not undoable | Not persisted (except open tabs and drawer height in workspace settings) | — |
 | **Derived** — port positions, wire paths, type compatibility, dimmed/glow sets during a drag, block heights | Shell, computed | Pure functions in `packages/graph-core`, memoised per block | No | Recomputed from document + UI |
 | **Engine** — runs, events, block live state, inline previews, source-block counters, warnings, parsed custom-block interfaces, file-watch state | Engine | Rust; the shell holds a cache | Run logs to `.canvas/runs/<id>/`; nothing else | TanStack Query: `run.get` on open, `run.subscribe` streams `RunEvent`s over the socket into the query cache; previews throttled to 10 Hz by the engine |
 | **Library** — built-in kinds, custom blocks in the workspace, rigs | Engine (scans the workspace) | Cache | The files themselves | `library.list`, invalidated on the engine's `library.changed` event (file watcher) |
 | **Devices and models** — cameras, mics, serial ports, Ollama models, GPU | Engine | Cache | No | `devices.list`, `models.list`, refetched on focus and on `devices.changed` |
 | **Long-term memory** — people, places, episodes | Engine (SQLite) | — | `.canvas/memory.sqlite` | Read only through panels (`memory.people`, `memory.episodes`), paginated |
-| **App settings** — recent workspaces, window size, theme | Shell host | Tauri store plugin | `~/.config/block-canvas/` | Read at start |
+| **App settings** — recent workspaces, window size, theme | Shell host | Tauri store plugin | `~/.config/cyberloom/` | Read at start |
 | **Secrets** | OS keyring via the host | — | keyring | Never sent to the webview; the engine reads them by name |
 
 Two consequences worth stating:
@@ -480,10 +480,10 @@ Two consequences worth stating:
   `graph.open` the engine reports `runs.active`, and the shell resumes
   the subscription. This is also the whole of Deploy-as-service later.
 
-Fetching detail: the Tauri host process holds one socket to `canvasd`
+Fetching detail: the Tauri host process holds one socket to `loomd`
 and multiplexes it; the webview calls `invoke('rpc', {method, params})`
-and listens to `rpc:event`. If `canvasd` is not running the host starts
-it (`canvasd --workspace <path>`); the shell shows `engine: starting` in
+and listens to `rpc:event`. If `loomd` is not running the host starts
+it (`loomd --workspace <path>`); the shell shows `engine: starting` in
 the runtime chip and disables the transport until `ready`.
 
 ---
@@ -504,11 +504,11 @@ super-waffle/
         stores/              document.ts, ui.ts, queries.ts (TanStack), rpc.ts
         styles/              tokens.css, fonts/, globals.css
         generated/           types from specta — never edited
-      src-tauri/             Rust host: window, socket client to canvasd, keyring, settings
+      src-tauri/             Rust host: window, socket client to loomd, keyring, settings
   crates/
     engine/                  graph model, validation, scheduler, run loop, events
-    canvasd/                 the daemon binary: socket server, workspace watcher, wraps engine
-    graph-format/            .graph YAML read/write, round-trip tests
+    loomd/                   the daemon binary: socket server, workspace watcher, wraps engine
+    graph-format/            .loom YAML read/write, round-trip tests
     block-kinds/             built-in kind definitions (ports, settings) shared by engine and generated TS
     runtime-python/          subprocess protocol, signature parsing (via a bundled parser script)
     runtime-js/              Bun protocol
@@ -526,7 +526,7 @@ super-waffle/
   rigs/
     line/  robot/  orb/  pixel/     rig.yaml + one SVG per state
   fixtures/
-    graphs/                  customer-triage.graph, inbox-triage.graph, home-assistant.graph, door-watch.graph
+    graphs/                  customer-triage.loom, inbox-triage.loom, home-assistant.loom, door-watch.loom
   design/                    the mockups and SPEC.md (existing)
   docs/
     PLAN.md                  this document
@@ -535,8 +535,12 @@ super-waffle/
 
 **Naming**
 
-- React components: `PascalCase.tsx`, one exported component per file,
-  colocated `PascalCase.module.css` and `PascalCase.test.tsx`.
+- React components: `PascalCase.tsx`, one exported component per file, with
+  `PascalCase.test.tsx` beside it. Styles are colocated per *set* rather than
+  per file: the primitives share `packages/ui/src/components/ui.module.css`
+  because they are atoms over the same dozen tokens, while a component with
+  real internal layout (a canvas node, an inspector panel) gets its own
+  `PascalCase.module.css`. CSS Modules scopes the names either way.
 - Hooks `useThing.ts`; stores `thing.ts` exporting `useThingStore`;
   pure modules `kebab-case.ts`.
 - Block kinds: `packages/blocks/src/kinds/<kind>.tsx` exporting
@@ -544,7 +548,7 @@ super-waffle/
 - Rust: crates `kebab-case`, modules `snake_case`, one `mod.rs` per
   feature area, no `lib.rs` longer than the exports.
 - Generated types: `apps/desktop/src/generated/` is gitignored and
-  regenerated by `cargo run -p canvasd -- export-types` in the dev script.
+  regenerated by `cargo run -p loomd -- export-types` in the dev script.
 - Fixture graphs are named for their example in the spec (§13).
 - CSS tokens are `--kebab` with the prefixes in §1; no component defines
   a colour literal.
@@ -560,8 +564,8 @@ figure.
 | # | Slice | Depends on | Done when |
 | --- | --- | --- | --- |
 | 0 | **Tokens and primitives.** `tokens.css`, fonts bundled, every §2.1 primitive in Ladle with its states. Regenerate the mockups from the standardised tokens (§1) so spec and app agree. | — | Ladle shows every primitive; the artboards re-render with the 32 px header. |
-| 1 | **Graph format and types.** `graph-format` reads and writes `.graph`; `block-kinds` defines the 44 built-ins; `specta` exports TS; `graph-core` has geometry and compatibility with tests against the four fixture graphs. | 0 | `customer-triage.graph` round-trips byte-identical; `compat('data','text')` and friends match §4.1. |
-| 2 | **Static canvas.** Tauri window, `canvasd` starts and serves `graph.open`; xyflow renders blocks, ports and wires from a fixture with the spec's geometry; minimap, zoom pill, library panel (read-only), status bar. No editing. | 1 | Figure 1 and Figure 3's block layout (without the drag) pixel-match. |
+| 1 | **Graph format and types.** `graph-format` reads and writes `.loom`; `block-kinds` defines the 49 built-ins; `specta` exports TS; `graph-core` has geometry and compatibility with tests against the four fixture graphs. | 0 | `customer-triage.loom` round-trips byte-identical; `compat('data','text')` and friends match §4.1. |
+| 2 | **Static canvas.** Tauri window, `loomd` starts and serves `graph.open`; xyflow renders blocks, ports and wires from a fixture with the spec's geometry; minimap, zoom pill, library panel (read-only), status bar. No editing. | 1 | Figure 1 and Figure 3's block layout (without the drag) pixel-match. |
 | 3 | **Editing.** Drag from library, move, delete, wire drag with dim/glow/snap/tooltip, selection ring, graph and block inspectors for Input/LLM/Terminal/Toolbox, wire and multi panels, view toggle and grip, undo/redo, autosave. | 2 | Figure 3 including the drag; Figure 5 all five panels; a graph built by hand saves and reopens identically. |
 | 4 | **Engine v0 and running.** Scheduler for Once mode; LLM via Ollama with streaming; Terminal and Python runtimes; Toolbox bundling and tool calls; warnings with Continue; console drawer; Run panel; live wires and inline previews. | 3 | Figure 7; the customer-triage example runs end to end against a local model. |
 | 5 | **Custom blocks.** Python signature parsing, inline and file modes, reload rules, error rules, generated settings, Code view, code drawer, save to library; then TypeScript/JavaScript and shell. | 4 | Figures 10, 12, 13; `door_check` works. |
@@ -571,7 +575,7 @@ figure.
 | 9 | **Actuators and feedback.** Serial and motors, `state` and `fault` ports, Toolbox `pause`, warn-before-move, motors panel. | 4 | Figure 9's motor chain; a fault pauses the Toolbox and one click resumes. |
 | 10 | **Avatar.** Rig loader (SVG states + `rig.yaml`), the four rigs with seven expressions, expression state machine, idle behaviours, lip sync from the speech audio, gaze from `look`, Stage view and resize, Avatar panel and Rigs tab, Status light and Sound cue. | 7, 9 | Figures 9, 15, 16; the home-assistant fixture runs with a face. |
 | 11 | **Workspace.** Workspace picker, graph tabs, per-workspace library, settings screen, Local-only switch and the remote-model warning, Convert-on-wire insert. | 3 | Two graphs open as tabs; a remote model warns once. |
-| 12 | **Packaging.** AppImage, then AUR; Wayland and X11 checked on CachyOS; first-run experience (engine, Ollama, Python env detection with clear messages). | 2 | A fresh CachyOS install runs the assistant fixture from the AppImage. |
+| 12 | **Packaging.** AppImage, then AUR; Wayland and X11 checked on CachyOS; first-run experience (engine, Ollama, Python env detection with clear messages; model downloads explicit and resumable, offline a supported state). | 2 | A fresh CachyOS install runs the assistant fixture from the AppImage. |
 | — | **Backlog** in the spec's order: Deploy (§15.1), Subgraphs (§15.2), Snapshots (§15.7), compiled blocks (§15.8), Presence view (§15.9), rig editor and Rive (§15.10), Convert panel (§15.5), library management screen, clickable prototype parity. | | |
 
 Slices 7, 8 and 9 are independent of each other after 4 and can run in
@@ -585,11 +589,21 @@ before 7 and 9 exist, because the Avatar's inputs come from them.
 Things I decided so the plan could be written. Each is reversible now
 and expensive later.
 
-1. **Tauri over Electron.** Assumed because the target is Linux only,
-   the host needs device access that is easier from Rust, and the engine
-   is Rust anyway. The cost is WebKitGTK: older than Chromium, and its
-   CSS and canvas performance need checking early. Slice 2 is where this
-   proves out or fails; an Electron fallback keeps every other decision.
+1. **Tauri over Electron. Settled in slice 2: it works.** The shell was
+   built and then run twice, once in Chromium and once in a real Tauri
+   window under WebKitGTK 2.52, and the two were compared pixel by pixel.
+   WebKitGTK renders all of it with no fallbacks: CSS Modules, custom
+   properties, `color-mix`, the bundled WOFF2 faces, the SVG wires, the
+   dashed loop frame and the whole xyflow canvas. Over the canvas region
+   0.79% of pixels differ, which is text antialiasing; the block and port
+   geometry is identical. The inspector and library differ more (8.7% and
+   4.7%) because line boxes round differently between the two font
+   rasterisers, so panel text drifts by a few pixels down a long column.
+   That is worth knowing for one reason: *pixel-matching an artboard can
+   only ever be true on one engine*, and the engine that matters is
+   WebKitGTK. What is **not** settled is performance: this was software
+   rendering under Xvfb with no GPU, so frame times mean nothing yet.
+   Measure that on real hardware before the canvas gets heavier.
 2. **xyflow over a hand-rolled canvas.** Assumed because writing pan,
    zoom, drag, selection, minimap and hit-testing is weeks of work that
    xyflow has already done. The spec's geometry rules are all expressible
@@ -606,7 +620,7 @@ and expensive later.
    nearly free later and the shell surviving engine crashes. I think it
    is the right trade; it is the plan's biggest early cost.
 5. **Rust owns the types; TypeScript is generated.** Assumed to keep the
-   shell and engine from drifting on the `.graph` schema. The cost is a
+   shell and engine from drifting on the `.loom` schema. The cost is a
    codegen step in the dev loop.
 6. **Ollama is the only model provider in v1.** Remote providers are
    allowed by the Local-only switch (§15.4) but not built; the provider
@@ -628,7 +642,7 @@ and expensive later.
     port's RMS at 30 Hz. Viseme-level sync from the TTS engine's phoneme
     timings is a later improvement the port shape already allows.
 11. **Secrets live in the OS keyring**, referenced by name from
-    `.graph` (`env`), never by value, so graphs are safe to commit.
+    `.loom` (`env`), never by value, so graphs are safe to commit.
 12. **Workspace = folder, library per workspace.** A block saved to the
     library lands in `<workspace>/blocks/`. A global library shared
     between workspaces is not planned for v1.
@@ -641,13 +655,156 @@ and expensive later.
     Wayland; the Avatar output target's *always on top* is best-effort
     there and I have not verified it.
 
-Things I could not decide and need from you before slice 0:
+Decided since this plan was written:
 
-- **Name.** "Block Canvas" is the working title throughout. If the
-  product name is different, slice 0 is the cheapest moment to change
-  the identifier (`canvasd`, `~/.config/block-canvas/`, `canvas://`).
-- **Tailwind or not** (assumption 3).
-- **Whether the engine may reach the network at all** for model
-  downloads (Ollama pulls, whisper and piper model files) on first run,
-  or whether those are pre-provisioned by the packaging step. This is a
-  privacy-defaults question (§12.3) more than a technical one.
+- **Name: Cyberloom** (SPEC §15.12). Graph files are `.loom`, the engine
+  daemon is `loomd`, config lives in `~/.config/cyberloom/`, the
+  application id is `dev.cyberloom.app`, and the URI scheme is
+  `cyberloom://`. Free on crates.io and npm; three unrelated Cyberlooms
+  exist on the web, two of them IT services firms, so the name is clear
+  to use but will not own its search results.
+- **Styling: CSS Modules, not Tailwind** (assumption 3 stands). Tailwind
+  was in the brief only as an example. Its advantage is velocity for a
+  team sharing one vocabulary, which is not this project; its cost here
+  is that the canvas needs exact pixel geometry that reads badly as
+  utility strings.
+- **Model provisioning: the network is allowed on first run** (SPEC
+  §15.13). Downloads are explicit, visible and weights-only; offline is a
+  supported state rather than a failure; the per-graph Local only switch
+  is unaffected and stays on by default. Slice 12 owns the first-run
+  flow, so the installer stays small and the model choice is not frozen
+  at build time.
+
+Nothing is left blocking slice 0.
+
+Corrected while building slice 1, from implementing the specification rather
+than reading it:
+
+- **A wire endpoint names a node, not a block.** A loop is a frame with ports
+  of its own, and wires land on it. `Endpoint` says `node`.
+- **The Loop needs an `item` output.** SPEC §6.8 omitted it; §13.2's wire table
+  uses it, and a loop cannot pass the current item to the blocks inside the
+  frame without one. Added to §6.8.
+- **`tools`, `memory` and `exec` are closed types.** §4.1 said `any` "accepts
+  every type" while each of those rows listed only its own kind. A handle is
+  not a value and neither is a trigger, so the narrower reading wins; §4.1 now
+  says so directly rather than leaving the two rows to contradict each other.
+- **§4.1 still described the transform §15.5 removed.** Fixed to point at the
+  Convert block.
+- **The Data shelf was missing Convert**, which §15.5 added. Now in §6.7 and in
+  the catalogue.
+- **The built-in count is 49, not 44.** §6 lists 48 rows and §15.5 adds Convert.
+- **§13.4's door_check example has a type error**: the block returns `Data` and
+  Notify's `text` port takes `text`. The fixture inserts a Convert block, which
+  is what §15.5 exists for.
+
+Found while building slice 3, all of them in the seam between the store and
+the canvas library rather than in the specification:
+
+- **Autosave was costing an undo press.** The engine answers `graph.save` with
+  its own canonical graph, which the store installs. That is a new object, so
+  the history middleware recorded it as a step and one undo landed on the
+  moment *after* the edit. `markSaved` now pauses the history around the swap.
+  A save is not an edit.
+- **Undo did not reach the file.** Time travel restores the graph and knows
+  nothing about `dirty`, so an undone edit stayed on screen and never went
+  back to disk. The keyboard map marks the document dirty after every undo
+  and redo.
+- **Shift-click did not multi-select.** xyflow's multi-select key is Ctrl on
+  Linux and Cmd on macOS; SPEC §2.4 promises Shift. All three are accepted
+  now, so the platform habit and the documented gesture both work.
+- **The minimap drew nothing.** The nodes are rebuilt from the graph on every
+  render, which threw away the size xyflow had measured, and the minimap draws
+  from the node objects rather than from xyflow's own copy. The canvas keeps
+  the measurements and hands them back.
+- **The minimap was also being cropped.** xyflow reads its width and height off
+  the inline `style` to work out its scale; given only CSS it drew a 200×150
+  map inside a 138×88 box. That one size lives in the component, not in the
+  stylesheet, and says why.
+
+One gap left for slice 4, when settings start being read: **`SettingDef` has no
+default.** The inspector shows an unset range at its minimum and an unset
+choice as the first option, which reads as a value the user chose. Nothing runs
+yet so nothing is wrong on disk — the file correctly says nothing — but the
+panel should distinguish "unset" from "set to the bottom of the range", and it
+cannot until the catalogue declares what each setting falls back to.
+
+Found while building slice 4:
+
+- **The play icon had been invisible since slice 0.** `Icon` hardcoded
+  `fill="none"`, and `play` is a solid triangle drawn with no stroke — so the
+  Run button had been showing its label and nothing else through three slices
+  of screenshots. A stroke width of zero now means filled.
+- **`SettingDef` still has no default** (carried over from slice 3), and it now
+  matters: the runner falls back to the block's own setting where there is one
+  and to nothing where there is not. Nothing guesses a temperature.
+- **A block's title could be squeezed out of existence** by a chip appearing
+  beside it. A truncated name is worse than no name only if there is one.
+- **Live figures may not change a block's size.** Growing a running block
+  nudges a graph whose layout was fine a second earlier; the figure hangs below
+  the block instead, and the block comes forward so it is not drawn behind a
+  neighbour. The z-index has to be set on the xyflow node, because every node
+  is its own stacking context and a rule inside one cannot lift it.
+- **`networkidle` is no longer a usable wait condition** in the screenshot
+  tests: the event stream is a connection that stays open on purpose.
+
+Two protocol details the generated TypeScript caught, both of which were
+invisible from Rust:
+
+- `rename_all` renames an enum's *variants*; `rename_all_fields` renames the
+  fields inside them. Without the second, `tokens_in` was the one snake_case
+  name in a camelCase protocol.
+- Two types called `Value` cannot both be exported. Rust told them apart by
+  module; TypeScript has one namespace for the whole schema.
+
+And one thing this environment cannot prove: **the last mile of slice 4's
+acceptance.** "Runs end to end against a local model" needs an Ollama, and the
+network policy here denies both `ollama.com` and `registry.ollama.ai`. The
+engine's side is covered against a scripted provider and against a stub server
+speaking Ollama's wire format — the plan, the tool loop, the streaming, the
+usage arithmetic, the event stream and the whole UI. What is untested is
+whether a real model, handed these tool definitions, chooses to call them.
+That is a question about the model rather than about this code, and it wants a
+run on the CachyOS machine.
+
+Found while building slice 5:
+
+- **Double-clicking a block header did nothing.** SPEC §2.4 promises it cycles
+  the views; only the toggle button did. Wired now, which is also how a custom
+  block reaches its Code view.
+- **A code change had to remember to re-parse.** The editors called `schedule`
+  themselves, which made the reparse a thing every caller had to remember —
+  and the first one that forgot (a paste, a format, an undo) would leave the
+  block's interface quietly describing code that is no longer there. The
+  source store subscribes to the document instead, so the change itself is the
+  trigger.
+- **The scratch file name collided.** Pid and block id are not enough: two runs
+  of one graph, or two windows, overwrite each other's driver halfway through
+  reading it.
+- **Every input was coerced with `as_data`**, which reads text that happens to
+  be JSON as the record it describes. Right for a `data` port, wrong
+  everywhere else. The port's declared type decides the coercion now.
+- **The screenshot scripts were writing to the real fixtures.** Autosave does
+  exactly what it should; the scripts were pointed at the workspace under
+  version control. They run against a copy now
+  (`CYBERLOOM_WORKSPACE=/tmp/cl-ws`), which is worth keeping for every future
+  run rather than relying on remembering to restore a file.
+
+Two decisions the specification implies without stating, both recorded at the
+code:
+
+- **A float default between zero and one is a proportion**, and a slider is the
+  right control for one — this is what makes §13.4's threshold a slider. A
+  float outside that range is a quantity and gets a number field, because a
+  slider needs bounds the code never gave.
+- **The runtime provides the type names.** §10.1 writes annotations as `Image`,
+  `Data`, `Text`; Python has never heard of them and evaluates annotations when
+  the `def` runs, so a block written exactly as the specification writes it
+  would fail on its first line. Providing them is what makes them the type
+  system's names rather than a convention the parser happens to recognise.
+
+Still open from slice 3, and now overdue: **`SettingDef` has no default.** The
+generated settings a custom block produces *do* carry one, read from the code,
+and the difference is visible side by side in the same inspector — a custom
+block's threshold shows 0.6 because its code says so, while a built-in LLM's
+top-p shows 0 because nothing does.

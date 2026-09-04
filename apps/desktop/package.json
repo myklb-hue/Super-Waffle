@@ -1,0 +1,32 @@
+{
+  "name": "@cyberloom/desktop",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cyberloom/graph-core": "*",
+    "@cyberloom/ui": "*",
+    "@tauri-apps/api": "^2.11.1",
+    "@xyflow/react": "^12.8.6",
+    "immer": "^11.1.18",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zundo": "^2.3.0",
+    "zustand": "^4.5.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.0.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9",
+    "vitest": "^3.2.7"
+  }
+}

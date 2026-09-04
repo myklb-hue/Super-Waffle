@@ -1,0 +1,87 @@
+/* A loop frame: dashed, behind the blocks, and transparent to the pointer
+ * except at its own header and ports, so clicking inside it selects the block
+ * there rather than the frame. */
+
+.frame {
+  border: 1.5px dashed color-mix(in srgb, var(--cat-control) 55%, transparent);
+  border-radius: var(--r-xl);
+  background: color-mix(in srgb, var(--cat-control) 4%, transparent);
+  pointer-events: none;
+}
+
+.selected {
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--block-header-h);
+  padding: 0 var(--sp-5);
+  border-bottom: 1px dashed color-mix(in srgb, var(--cat-control) 35%, transparent);
+  pointer-events: auto;
+}
+
+.title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-mid);
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portIn,
+.portOut {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--port-row);
+  translate: 0 -50%;
+  pointer-events: auto;
+}
+
+.portIn {
+  left: var(--sp-4);
+}
+
+.portOut {
+  right: var(--sp-4);
+  flex-direction: row-reverse;
+}
+
+.portLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tr-port);
+  color: var(--text-low);
+}
+
+.dot.dot {
+  position: absolute;
+  width: var(--port-dot);
+  height: var(--port-dot);
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--ty);
+  box-shadow: 0 0 0 var(--port-halo) color-mix(in srgb, var(--ty) var(--a-wire-halo), transparent);
+  min-width: 0;
+  min-height: 0;
+}
+
+.portIn .dot.dot {
+  left: calc(var(--sp-4) * -1 - var(--port-dot) / 2);
+}
+
+.portOut .dot.dot {
+  right: calc(var(--sp-4) * -1 - var(--port-dot) / 2);
+}

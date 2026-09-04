@@ -1,0 +1,602 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin:0; background:#08090b; color:#e8ebf0; font-family:'Space Grotesk','Helvetica Neue',Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#56c7d6; text-decoration:none; }
+    a:hover { color:#93dde8; }
+    @keyframes flow { to { stroke-dashoffset:-28; } }
+    @keyframes breathe { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  </style>
+</helmet>
+<div style="width:1470px;height:1250px;box-sizing:border-box;padding:30px 32px;background:#08090b;font-family:'Space Grotesk','Helvetica Neue',Arial,sans-serif;display:flex;flex-direction:column;gap:22px;overflow:hidden;">
+  <div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:#56c7d6;margin-bottom:7px;">Left panel</div>
+    <div style="font-size:19px;font-weight:600;letter-spacing:-.02em;color:#e8ebf0;">Nine categories plus yours, one type system</div>
+  </div>
+  <div style="display:flex;gap:26px;align-items:flex-start;">
+  <div style="width:264px;flex:none;height:748px;border:1px solid #242932;border-radius:12px;overflow:hidden;display:flex;"><div style="width:264px;flex:none;display:flex;flex-direction:column;background:#111419;border-right:1px solid #242932;min-height:0;">
+  <div style="padding:12px 12px 10px;border-bottom:1px solid #1a1e25;">
+    <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20"/></svg>
+      <span style="flex:1;font-size:11.5px;color:#39414c;">Search blocks</span>
+      <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;border:1px solid #242932;border-radius:3px;padding:1px 4px;">&#8984;K</span>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:8px 10px;"><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(90deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#56c7d6;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Models</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">8</span>
+</div><div style="display:flex;flex-direction:column;gap:1px;padding:2px 0 8px;"><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3l1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">LLM</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#7e9ff0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Object detection</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#d77bd0;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Face recognition</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#d77bd0;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Speech to text</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#dcc65b;"></span><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h4"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Text to speech</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#dcc65b;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7.5" cy="7.5" r="1.7"/><circle cx="16.5" cy="7.5" r="1.7"/><circle cx="7.5" cy="16.5" r="1.7"/><circle cx="16.5" cy="16.5" r="1.7"/><path d="M9 8.5l6 7"/><path d="M15 8.5l-6 7"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Embedding</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3.5l7.5 3v5.5c0 4.6-3.2 7.7-7.5 9.3-4.3-1.6-7.5-4.7-7.5-9.3V6.5z"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Classifier</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10.2" r="1.1" fill="currentColor" stroke="none"/><path d="M8.5 14.3c1 1.4 2.2 2.1 3.5 2.1s2.5-.7 3.5-2.1"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Affect</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div></div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(90deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#e0a458;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Capabilities</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">4</span>
+</div><div style="display:flex;flex-direction:column;gap:1px;padding:2px 0 8px;"><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6.5A2.5 2.5 0 0 1 10.5 4h3A2.5 2.5 0 0 1 16 6.5V8"/><path d="M3 13h18"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Toolbox</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Web Search</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M3.5 6.5h6l2 2.2h9V19a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">File System</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#93c76b;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M8.5 3v5"/><path d="M15.5 3v5"/><path d="M6 8h12v3.5a6 6 0 0 1-12 0z"/><path d="M12 17.5V21"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">MCP Server</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span></span>
+</div></div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(90deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#6fc98a;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Runtimes</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">5</span>
+</div><div style="display:flex;flex-direction:column;gap:1px;padding:2px 0 8px;"><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 10l2.6 2-2.6 2"/><path d="M13 14h4"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Terminal</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#6fc98a;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 8L5.5 12 9 16"/><path d="M15 8l3.5 4-3.5 4"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Python</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M13.5 3L5.5 13.5H11L10.5 21l8-10.5H13z"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">Node</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6"/><path d="M5 12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">SQL</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid transparent;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M4 12h16"/><ellipse cx="12" cy="12" rx="3.6" ry="8"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;letter-spacing:-.005em;">HTTP Request</span>
+  <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+</div></div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(0deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#dcc65b;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Senses</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">6</span>
+</div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(0deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#7e9ff0;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Memory</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">4</span>
+</div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(0deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#e8865a;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Actuators</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">8</span>
+</div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(0deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#a78bd0;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Data</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">5</span>
+</div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(0deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#8a93a3;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Control</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">5</span>
+</div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(0deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#d97f8f;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Human</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">3</span>
+</div><div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
+  <span style="transform:rotate(0deg);opacity:.7;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  <span style="width:6px;height:6px;border-radius:2px;background:#c3ccd8;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#98a2ae;">Custom</span>
+  <span style="flex:1;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">1</span>
+</div></div>
+  <div style="flex:none;padding:10px 12px;border-top:1px solid #1a1e25;display:flex;align-items:center;gap:7px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    <span style="font-size:11px;color:#98a2ae;">New custom block</span>
+  </div>
+</div></div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:18px;align-content:start;">
+    <div style="display:flex;flex-direction:column;gap:18px;"><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(86,199,214,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#56c7d6;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#56c7d6;">Models</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">8</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3l1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9z"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">LLM</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text, tools, mem &rarr; text</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#7e9ff0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Object detection</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">image &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#d77bd0;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Face recognition</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">image &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#d77bd0;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Speech to text</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">audio &rarr; text</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#dcc65b;"></span><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h4"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Text to speech</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; audio</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#dcc65b;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7.5" cy="7.5" r="1.7"/><circle cx="16.5" cy="7.5" r="1.7"/><circle cx="7.5" cy="16.5" r="1.7"/><circle cx="16.5" cy="16.5" r="1.7"/><path d="M9 8.5l6 7"/><path d="M15 8.5l-6 7"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Embedding</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3.5l7.5 3v5.5c0 4.6-3.2 7.7-7.5 9.3-4.3-1.6-7.5-4.7-7.5-9.3V6.5z"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Classifier</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56c7d6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10.2" r="1.1" fill="currentColor" stroke="none"/><path d="M8.5 14.3c1 1.4 2.2 2.1 3.5 2.1s2.5-.7 3.5-2.1"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Affect</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div>
+  </div>
+</div><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(220,198,91,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#dcc65b;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#dcc65b;">Senses</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">6</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Webcam</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; image</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#d77bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Microphone</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; audio</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#dcc65b;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h4"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Keyboard</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; text</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 1.8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Schedule</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; exec</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M3.5 6.5h6l2 2.2h9V19a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Watch folder</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; file</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#93c76b;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M4 12h16"/><ellipse cx="12" cy="12" rx="3.6" ry="8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Webhook</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div>
+  </div>
+</div><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(217,127,143,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#d97f8f;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#d97f8f;">Human</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">3</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97f8f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Approval</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">any &rarr; any | halt</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97f8f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h4"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Form</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97f8f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Notify</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr;</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span></span>
+    </div>
+  </div>
+</div><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(195,204,216,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#c3ccd8;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#c3ccd8;">Custom</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">1</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c3ccd8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3.5l7.5 3v5.5c0 4.6-3.2 7.7-7.5 9.3-4.3-1.6-7.5-4.7-7.5-9.3V6.5z"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">door_check</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">image &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#d77bd0;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div>
+  </div>
+</div></div>
+    <div style="display:flex;flex-direction:column;gap:18px;"><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(224,164,88,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#e0a458;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#e0a458;">Capabilities</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">4</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6.5A2.5 2.5 0 0 1 10.5 4h3A2.5 2.5 0 0 1 16 6.5V8"/><path d="M3 13h18"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Toolbox</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">tools[] &rarr; tools</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="11" cy="11" r="6"/><path d="M15.5 15.5L20 20"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Web Search</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M3.5 6.5h6l2 2.2h9V19a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">File System</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; file</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#93c76b;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e0a458" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M8.5 3v5"/><path d="M15.5 3v5"/><path d="M6 8h12v3.5a6 6 0 0 1-12 0z"/><path d="M12 17.5V21"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">MCP Server</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; tools</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span></span>
+    </div>
+  </div>
+</div><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(126,159,240,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#7e9ff0;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#7e9ff0;">Memory</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">4</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7" cy="19" r="2"/><circle cx="17" cy="5" r="2"/><path d="M7 17V11a4 4 0 0 1 4-4h4"/><path d="M13 4.5L15.5 7 13 9.5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Memory hub</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">memory[] &rarr; memory</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#7e9ff0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9.5 4c-2.5 0-2 5.5-4 8 2 2.5 1.5 8 4 8"/><path d="M14.5 4c2.5 0 2 5.5 4 8-2 2.5-1.5 8-4 8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Working memory</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; memory</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#7e9ff0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6"/><path d="M5 12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Long-term memory</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; memory</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#7e9ff0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7e9ff0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3.5" y="5" width="17" height="4" rx="1.2"/><rect x="3.5" y="15" width="17" height="4" rx="1.2"/><path d="M8 11.5h8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Episode log</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">data &rarr; memory</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span><span style="width:5px;height:5px;border-radius:50%;background:#7e9ff0;"></span></span>
+    </div>
+  </div>
+</div><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(138,147,163,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#8a93a3;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#8a93a3;">Control</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">5</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a93a3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4.5 10a7.5 7.5 0 0 1 12.8-3.5"/><path d="M19.5 14a7.5 7.5 0 0 1-12.8 3.5"/><path d="M17.5 3v4h-4"/><path d="M6.5 21v-4h4"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Loop</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">any &rarr; data, exec</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#8a93a3;"></span><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a93a3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7" cy="5.5" r="2"/><circle cx="7" cy="18.5" r="2"/><circle cx="17" cy="9" r="2"/><path d="M7 7.5v9"/><path d="M9 5.5h3a3 3 0 0 1 3 3v.5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Branch</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">any &rarr; a | b</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a93a3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7" cy="19" r="2"/><circle cx="17" cy="5" r="2"/><path d="M7 17V11a4 4 0 0 1 4-4h4"/><path d="M13 4.5L15.5 7 13 9.5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Merge</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">any[] &rarr; any</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a93a3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3.5l7.5 3v5.5c0 4.6-3.2 7.7-7.5 9.3-4.3-1.6-7.5-4.7-7.5-9.3V6.5z"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Gate</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">any &rarr; any</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a93a3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 1.8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Delay</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">any &rarr; any</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span></span>
+    </div>
+  </div>
+</div></div>
+    <div style="display:flex;flex-direction:column;gap:18px;"><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(111,201,138,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#6fc98a;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#6fc98a;">Runtimes</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">5</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 10l2.6 2-2.6 2"/><path d="M13 14h4"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Terminal</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; tools, stream</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#6fc98a;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 8L5.5 12 9 16"/><path d="M15 8l3.5 4-3.5 4"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Python</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; tools, data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M13.5 3L5.5 13.5H11L10.5 21l8-10.5H13z"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Node</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; tools, data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6"/><path d="M5 12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">SQL</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6fc98a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M4 12h16"/><ellipse cx="12" cy="12" rx="3.6" ry="8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">HTTP Request</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; data</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div>
+  </div>
+</div><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(232,134,90,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#e8865a;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#e8865a;">Actuators</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">8</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h4"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Display</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr;</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8"/><path d="M8 13h6"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Speaker</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">audio &rarr;</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#dcc65b;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M8.5 3v5"/><path d="M15.5 3v5"/><path d="M6 8h12v3.5a6 6 0 0 1-12 0z"/><path d="M12 17.5V21"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">USB device</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; tools</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4.5 10a7.5 7.5 0 0 1 12.8-3.5"/><path d="M19.5 14a7.5 7.5 0 0 1-12.8 3.5"/><path d="M17.5 3v4h-4"/><path d="M6.5 21v-4h4"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Motors</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; tools</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M13.5 3L5.5 13.5H11L10.5 21l8-10.5H13z"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">GPIO</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; tools</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10.2" r="1.1" fill="currentColor" stroke="none"/><path d="M8.5 14.3c1 1.4 2.2 2.1 3.5 2.1s2.5-.7 3.5-2.1"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Avatar</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">audio, data &rarr; tools, stream</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#dcc65b;"></span><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span><span style="width:5px;height:5px;border-radius:50%;background:#e0a458;"></span><span style="width:5px;height:5px;border-radius:50%;background:#6fc98a;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M12 3a6 6 0 0 0-3.4 10.9c.6.5.9 1.2.9 2.1h5c0-.9.3-1.6.9-2.1A6 6 0 0 0 12 3z"/><path d="M9.5 19h5"/><path d="M10.5 21.5h3"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Status light</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">data &rarr;</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8865a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Sound cue</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">data &rarr;</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span></span>
+    </div>
+  </div>
+</div><div style="background:#111419;border:1px solid #242932;border-radius:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid #1a1e25;background:rgba(167,139,208,0.07);">
+    <span style="width:7px;height:7px;border-radius:2px;background:#a78bd0;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#a78bd0;">Data</span>
+    <span style="flex:1;"></span>
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">5</span>
+  </div>
+  <div style="padding:5px 8px 8px;">
+    <div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bd0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4 12h11"/><path d="M11.5 8.5L15 12l-3.5 3.5"/><path d="M19 4.5v15"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Input</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; any</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#8a93a3;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bd0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M5 4.5v15"/><path d="M9 12h11"/><path d="M16.5 8.5L20 12l-3.5 3.5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Output</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">any &rarr;</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#8a93a3;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bd0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9.5 4c-2.5 0-2 5.5-4 8 2 2.5 1.5 8 4 8"/><path d="M14.5 4c2.5 0 2 5.5 4 8-2 2.5-1.5 8-4 8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Variable</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">any &rarr; any</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#8a93a3;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bd0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="3.5" y="5" width="17" height="4" rx="1.2"/><rect x="3.5" y="15" width="17" height="4" rx="1.2"/><path d="M8 11.5h8"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Chunker</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">text &rarr; text</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span></span>
+    </div><div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bd0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="8" cy="12" r="3.5"/><path d="M11.5 12H20"/><path d="M17 12v3.5"/><path d="M14 12v2.5"/></svg>
+      <span style="width:118px;flex:none;font-size:11.5px;color:#e8ebf0;">Secret</span>
+      <span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#5f6875;">&rarr; text</span>
+      <span style="display:flex;align-items:center;gap:3px;flex:none;"><span style="width:5px;height:5px;border-radius:50%;background:#56c7d6;"></span></span>
+    </div>
+  </div>
+</div></div>
+  </div>
+</div>
+<div style="background:#111419;border:1px solid #242932;border-radius:12px;padding:15px 18px;">
+  <div style="display:flex;align-items:center;gap:9px;margin-bottom:13px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#98a2ae;">Port types</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="font-size:10.5px;color:#5f6875;">a wire is legal when its source type is accepted by the target port</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:16px 14px;">
+    <div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#56c7d6;box-shadow:0 0 0 3px rgba(86,199,214,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#56c7d6;">text</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">prompts, stdout, any string</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; text &middot; any</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 3px rgba(224,164,88,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#e0a458;">tools</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">one callable, or a bundle of them</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; llm.tools &middot; toolbox</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#7e9ff0;box-shadow:0 0 0 3px rgba(126,159,240,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#7e9ff0;">memory</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">a store the model reads and writes</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; llm.memory &middot; hub</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#a78bd0;box-shadow:0 0 0 3px rgba(167,139,208,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#a78bd0;">data</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">structured json or a record</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; data &middot; any</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#6fc98a;box-shadow:0 0 0 3px rgba(111,201,138,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#6fc98a;">stream</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">output arriving incrementally</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; text &middot; data</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#d77bd0;box-shadow:0 0 0 3px rgba(215,123,208,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#d77bd0;">image</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">frames from a camera or a file</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; image &middot; any</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#dcc65b;box-shadow:0 0 0 3px rgba(220,198,91,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#dcc65b;">audio</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">samples from a microphone</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; audio &middot; any</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#93c76b;box-shadow:0 0 0 3px rgba(147,199,107,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#93c76b;">file</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">a path or blob on disk</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; file &middot; any</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#e8ebf0;box-shadow:0 0 0 3px rgba(232,235,240,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#e8ebf0;">exec</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">a trigger or control flow, never a value</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; exec</div>
+    </div><div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#8a93a3;box-shadow:0 0 0 3px rgba(138,147,163,0.14);flex:none;"></span>
+        <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#8a93a3;">any</span>
+      </div>
+      <div style="font-size:10.5px;line-height:1.5;color:#98a2ae;margin-bottom:5px;">accepts every type</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#39414c;">&rarr; everything</div>
+    </div>
+  </div>
+</div>
+</div>
+</x-dc>
+
+</body>
+</html>

@@ -1,0 +1,2378 @@
+[
+  {
+    "id": "llm",
+    "title": "LLM",
+    "category": "models",
+    "icon": "llm",
+    "ports": [
+      {
+        "name": "trigger",
+        "type": "exec",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "prompt",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "context",
+        "type": "data",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "tools",
+        "type": "tools",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "memory",
+        "type": "memory",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "text",
+        "type": "text",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "thoughts",
+        "type": "text",
+        "side": "out",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "calls",
+        "type": "data",
+        "side": "out",
+        "optional": true,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "provider",
+        "label": "Provider",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "model",
+        "label": "Model",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "endpoint",
+        "label": "Endpoint",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "role",
+        "label": "Role",
+        "kind": "select",
+        "options": [
+          "assistant",
+          "orchestrator",
+          "classifier"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "temperature",
+        "label": "Temperature",
+        "kind": "range",
+        "options": [],
+        "min": 0.0,
+        "max": 2.0,
+        "hint": null
+      },
+      {
+        "name": "topP",
+        "label": "Top-p",
+        "kind": "range",
+        "options": [],
+        "min": 0.0,
+        "max": 1.0,
+        "hint": null
+      },
+      {
+        "name": "maxTokens",
+        "label": "Max tokens",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "systemPrompt",
+        "label": "System prompt",
+        "kind": "multiline",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Any local or remote chat model"
+  },
+  {
+    "id": "object-detection",
+    "title": "Object detection",
+    "category": "models",
+    "icon": "eye",
+    "ports": [
+      {
+        "name": "image",
+        "type": "image",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "objects",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "model",
+        "label": "Model",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "confidence",
+        "label": "Confidence",
+        "kind": "range",
+        "options": [],
+        "min": 0.0,
+        "max": 1.0,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": true,
+    "summary": "Labels, confidences and boxes"
+  },
+  {
+    "id": "face-recognition",
+    "title": "Face recognition",
+    "category": "models",
+    "icon": "approve",
+    "ports": [
+      {
+        "name": "image",
+        "type": "image",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "person",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "model",
+        "label": "Model",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "enrolment",
+        "label": "Enrolment",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "Off by default. Adding a person stores 512 floats, never a picture."
+      },
+      {
+        "name": "storeImages",
+        "label": "Store images",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "Off. Turning this on writes frames to disk until you turn it off again."
+      }
+    ],
+    "source": false,
+    "stage": true,
+    "summary": "Embeddings only, never images"
+  },
+  {
+    "id": "speech-to-text",
+    "title": "Speech to text",
+    "category": "models",
+    "icon": "note",
+    "ports": [
+      {
+        "name": "audio",
+        "type": "audio",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "text",
+        "type": "text",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "model",
+        "label": "Model",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "language",
+        "label": "Language",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Streaming transcription, with a lag figure"
+  },
+  {
+    "id": "text-to-speech",
+    "title": "Text to speech",
+    "category": "models",
+    "icon": "note",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "audio",
+        "type": "audio",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "voice",
+        "label": "Voice",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "rate",
+        "label": "Rate",
+        "kind": "range",
+        "options": [],
+        "min": 0.5,
+        "max": 2.0,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A voice for what the model says"
+  },
+  {
+    "id": "embedding",
+    "title": "Embedding",
+    "category": "models",
+    "icon": "embed",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "data",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "model",
+        "label": "Model",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Text as a vector"
+  },
+  {
+    "id": "classifier",
+    "title": "Classifier",
+    "category": "models",
+    "icon": "shield",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "data",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "model",
+        "label": "Model",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "labels",
+        "label": "Labels",
+        "kind": "list",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A label with a confidence"
+  },
+  {
+    "id": "affect",
+    "title": "Affect",
+    "category": "models",
+    "icon": "face",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "affect",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "model",
+        "label": "Model",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Valence and arousal read from a stream of text"
+  },
+  {
+    "id": "toolbox",
+    "title": "Toolbox",
+    "category": "capabilities",
+    "icon": "toolbox",
+    "ports": [
+      {
+        "name": "tools",
+        "type": "tools",
+        "side": "in",
+        "optional": false,
+        "dynamic": true
+      },
+      {
+        "name": "pause",
+        "type": "exec",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "tools",
+        "type": "tools",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "toolChoice",
+        "label": "Tool choice",
+        "kind": "select",
+        "options": [
+          "auto",
+          "required",
+          "none"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "warnBefore",
+        "label": "Warn before dangerous calls",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "A prompt with a Continue. It never blocks the graph."
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "One slot per connected tool, one bundle out"
+  },
+  {
+    "id": "web-search",
+    "title": "Web Search",
+    "category": "capabilities",
+    "icon": "search",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "data",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "provider",
+        "label": "Provider",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "results",
+        "label": "Results",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Search the web and return results"
+  },
+  {
+    "id": "file-system",
+    "title": "File System",
+    "category": "capabilities",
+    "icon": "folder",
+    "ports": [
+      {
+        "name": "trigger",
+        "type": "exec",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "file",
+        "type": "file",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "action",
+        "label": "Action",
+        "kind": "select",
+        "options": [
+          "read",
+          "write",
+          "move",
+          "delete"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "root",
+        "label": "Root",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "to",
+        "label": "Destination",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Read, write and move files"
+  },
+  {
+    "id": "mcp-server",
+    "title": "MCP Server",
+    "category": "capabilities",
+    "icon": "plug",
+    "ports": [
+      {
+        "name": "tools",
+        "type": "tools",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "command",
+        "label": "Command",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "args",
+        "label": "Arguments",
+        "kind": "list",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "An MCP server's tools as one bundle"
+  },
+  {
+    "id": "terminal",
+    "title": "Terminal",
+    "category": "runtimes",
+    "icon": "terminal",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "stdout",
+        "type": "stream",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "command",
+        "label": "Command",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "cwd",
+        "label": "Working directory",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "warnBefore",
+        "label": "Warn before running",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "A shell command is a dangerous action. The prompt always has a Continue."
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Runs a command; offered to a model as terminal.run"
+  },
+  {
+    "id": "python",
+    "title": "Python",
+    "category": "runtimes",
+    "icon": "python",
+    "ports": [
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "value",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "source",
+        "label": "Source",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "venv",
+        "label": "Environment",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "python.exec, in the workspace environment"
+  },
+  {
+    "id": "node",
+    "title": "Node",
+    "category": "runtimes",
+    "icon": "bolt",
+    "ports": [
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "value",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "source",
+        "label": "Source",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "JavaScript and TypeScript, run by Bun"
+  },
+  {
+    "id": "sql",
+    "title": "SQL",
+    "category": "runtimes",
+    "icon": "db",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "data",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "database",
+        "label": "Database",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "query",
+        "label": "Query",
+        "kind": "multiline",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A query against a database file"
+  },
+  {
+    "id": "http-request",
+    "title": "HTTP Request",
+    "category": "runtimes",
+    "icon": "http",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "data",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "method",
+        "label": "Method",
+        "kind": "select",
+        "options": [
+          "GET",
+          "POST",
+          "PUT",
+          "PATCH",
+          "DELETE"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "url",
+        "label": "URL",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "headers",
+        "label": "Headers",
+        "kind": "multiline",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "One request, one response"
+  },
+  {
+    "id": "webcam",
+    "title": "Webcam",
+    "category": "senses",
+    "icon": "eye",
+    "ports": [
+      {
+        "name": "frames",
+        "type": "image",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "device",
+        "label": "Device",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "resolution",
+        "label": "Resolution",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "fps",
+        "label": "Frame rate",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "store",
+        "label": "Record frames",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "Off. Frames never leave the machine and are not written to disk."
+      }
+    ],
+    "source": true,
+    "stage": true,
+    "summary": "Frames from a camera; downstream blocks sample"
+  },
+  {
+    "id": "microphone",
+    "title": "Microphone",
+    "category": "senses",
+    "icon": "note",
+    "ports": [
+      {
+        "name": "audio",
+        "type": "audio",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "device",
+        "label": "Device",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "vad",
+        "label": "Voice activity",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "store",
+        "label": "Record audio",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "Off. Audio never leaves the machine and is not written to disk."
+      }
+    ],
+    "source": true,
+    "stage": false,
+    "summary": "Samples, with a level meter and a voice-activity state"
+  },
+  {
+    "id": "keyboard",
+    "title": "Keyboard",
+    "category": "senses",
+    "icon": "form",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "placeholder",
+        "label": "Placeholder",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": true,
+    "stage": false,
+    "summary": "A line of typed input"
+  },
+  {
+    "id": "schedule",
+    "title": "Schedule",
+    "category": "senses",
+    "icon": "clock",
+    "ports": [
+      {
+        "name": "tick",
+        "type": "exec",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "every",
+        "label": "Every",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "cron",
+        "label": "Cron",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "jitter",
+        "label": "Jitter",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "catchUp",
+        "label": "Catch up",
+        "kind": "select",
+        "options": [
+          "skip",
+          "run-once",
+          "run-all"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": true,
+    "stage": false,
+    "summary": "Every, cron, or once at"
+  },
+  {
+    "id": "watch-folder",
+    "title": "Watch folder",
+    "category": "senses",
+    "icon": "folder",
+    "ports": [
+      {
+        "name": "file",
+        "type": "file",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "path",
+        "label": "Path",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "pattern",
+        "label": "Pattern",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "events",
+        "label": "Events",
+        "kind": "list",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "debounce",
+        "label": "Debounce",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": true,
+    "stage": false,
+    "summary": "A path, a pattern and a debounce"
+  },
+  {
+    "id": "webhook",
+    "title": "Webhook",
+    "category": "senses",
+    "icon": "http",
+    "ports": [
+      {
+        "name": "event",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "method",
+        "label": "Method",
+        "kind": "select",
+        "options": [
+          "GET",
+          "POST"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "path",
+        "label": "Path",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "port",
+        "label": "Port",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": true,
+    "stage": false,
+    "summary": "A method, a path and a port"
+  },
+  {
+    "id": "memory-hub",
+    "title": "Memory hub",
+    "category": "memory",
+    "icon": "merge",
+    "ports": [
+      {
+        "name": "memory",
+        "type": "memory",
+        "side": "in",
+        "optional": false,
+        "dynamic": true
+      },
+      {
+        "name": "memory",
+        "type": "memory",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "recall",
+        "label": "Recall order",
+        "kind": "select",
+        "options": [
+          "recent-first",
+          "relevance",
+          "mixed"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "consolidateEvery",
+        "label": "Consolidate every",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "retention",
+        "label": "Retention",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "One slot per store, one handle out"
+  },
+  {
+    "id": "working-memory",
+    "title": "Working memory",
+    "category": "memory",
+    "icon": "braces",
+    "ports": [
+      {
+        "name": "memory",
+        "type": "memory",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "items",
+        "label": "Items",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "window",
+        "label": "Window",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "In process, fast, windowed"
+  },
+  {
+    "id": "long-term-memory",
+    "title": "Long-term memory",
+    "category": "memory",
+    "icon": "db",
+    "ports": [
+      {
+        "name": "memory",
+        "type": "memory",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "path",
+        "label": "Database",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "vectors",
+        "label": "Vectors",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "retention",
+        "label": "Retention",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "What is kept, and for how long. Deleting a person deletes every sighting."
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "SQLite and vectors: people, places, episodes"
+  },
+  {
+    "id": "episode-log",
+    "title": "Episode log",
+    "category": "memory",
+    "icon": "chunk",
+    "ports": [
+      {
+        "name": "data",
+        "type": "data",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "memory",
+        "type": "memory",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "path",
+        "label": "File",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "An append-only record of what happened"
+  },
+  {
+    "id": "display",
+    "title": "Display",
+    "category": "actuators",
+    "icon": "note",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "target",
+        "label": "Target",
+        "kind": "select",
+        "options": [
+          "window",
+          "overlay"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": true,
+    "summary": "A screen or an overlay"
+  },
+  {
+    "id": "speaker",
+    "title": "Speaker",
+    "category": "actuators",
+    "icon": "note",
+    "ports": [
+      {
+        "name": "audio",
+        "type": "audio",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "device",
+        "label": "Device",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "volume",
+        "label": "Volume",
+        "kind": "range",
+        "options": [],
+        "min": 0.0,
+        "max": 1.0,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Plays what it is given"
+  },
+  {
+    "id": "usb-device",
+    "title": "USB device",
+    "category": "actuators",
+    "icon": "plug",
+    "ports": [
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "read",
+        "type": "stream",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "port",
+        "label": "Port",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "baud",
+        "label": "Baud",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A serial device: usb.send, usb.read"
+  },
+  {
+    "id": "motors",
+    "title": "Motors",
+    "category": "actuators",
+    "icon": "bolt",
+    "ports": [
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "state",
+        "type": "stream",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "fault",
+        "type": "exec",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "port",
+        "label": "Port",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "panLimit",
+        "label": "Pan limit",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "tiltLimit",
+        "label": "Tilt limit",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "warnBeforeMove",
+        "label": "Warn before moving",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "A move is a dangerous action. The prompt always has a Continue."
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A servo controller: motor.move, motor.home"
+  },
+  {
+    "id": "gpio",
+    "title": "GPIO",
+    "category": "actuators",
+    "icon": "plug",
+    "ports": [
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "pins",
+        "type": "stream",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "chip",
+        "label": "Chip",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Pins in and out"
+  },
+  {
+    "id": "avatar",
+    "title": "Avatar",
+    "category": "actuators",
+    "icon": "face",
+    "ports": [
+      {
+        "name": "speech",
+        "type": "audio",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "express",
+        "type": "data",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "look",
+        "type": "data",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "state",
+        "type": "stream",
+        "side": "out",
+        "optional": true,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "rig",
+        "label": "Rig",
+        "kind": "select",
+        "options": [
+          "line",
+          "robot",
+          "orb",
+          "pixel"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "autoAffectFromSpeech",
+        "label": "Auto-affect from speech",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "Off: an Affect block feeds express instead."
+      },
+      {
+        "name": "blink",
+        "label": "Blink",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "breathePerMin",
+        "label": "Breathe",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "settleSec",
+        "label": "Settle to neutral after",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "sleepAfterMin",
+        "label": "Sleep after",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "keepAspect",
+        "label": "Keep aspect",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": true,
+    "summary": "The assistant's presence: a rig, a vocabulary and a face"
+  },
+  {
+    "id": "status-light",
+    "title": "Status light",
+    "category": "actuators",
+    "icon": "lamp",
+    "ports": [
+      {
+        "name": "express",
+        "type": "data",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": true,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "device",
+        "label": "Device",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A lamp that breathes a colour on the same vocabulary"
+  },
+  {
+    "id": "sound-cue",
+    "title": "Sound cue",
+    "category": "actuators",
+    "icon": "bell",
+    "ports": [
+      {
+        "name": "express",
+        "type": "data",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "tool",
+        "type": "tools",
+        "side": "out",
+        "optional": true,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "pack",
+        "label": "Sound pack",
+        "kind": "path",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A chime per expression"
+  },
+  {
+    "id": "input",
+    "title": "Input",
+    "category": "data",
+    "icon": "input",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "value",
+        "label": "Value",
+        "kind": "multiline",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "The graph's entry value"
+  },
+  {
+    "id": "output",
+    "title": "Output",
+    "category": "data",
+    "icon": "output",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "name",
+        "label": "Name",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A named result"
+  },
+  {
+    "id": "variable",
+    "title": "Variable",
+    "category": "data",
+    "icon": "braces",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "value",
+        "type": "any",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "name",
+        "label": "Name",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Holds a value between events"
+  },
+  {
+    "id": "chunker",
+    "title": "Chunker",
+    "category": "data",
+    "icon": "chunk",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "text",
+        "type": "text",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "size",
+        "label": "Size",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "overlap",
+        "label": "Overlap",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Splits text into pieces"
+  },
+  {
+    "id": "secret",
+    "title": "Secret",
+    "category": "data",
+    "icon": "key",
+    "ports": [
+      {
+        "name": "text",
+        "type": "text",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "name",
+        "label": "Name",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "The name of a secret in the OS keyring. The value is never written to the file."
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Bound from the graph's env by name, never by value"
+  },
+  {
+    "id": "convert",
+    "title": "Convert",
+    "category": "data",
+    "icon": "merge",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "value",
+        "type": "any",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "to",
+        "label": "To",
+        "kind": "select",
+        "options": [
+          "text",
+          "data",
+          "file",
+          "image",
+          "audio"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Makes one type into another, visibly"
+  },
+  {
+    "id": "loop",
+    "title": "Loop",
+    "category": "control",
+    "icon": "loop",
+    "ports": [
+      {
+        "name": "items",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "item",
+        "type": "any",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "results",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "done",
+        "type": "exec",
+        "side": "out",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "errors",
+        "type": "data",
+        "side": "out",
+        "optional": true,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "as",
+        "label": "Item name",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "parallel",
+        "label": "Parallel",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "max",
+        "label": "Max items",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "continueOnError",
+        "label": "Continue on error",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A frame, not a card: blocks inside repeat per item"
+  },
+  {
+    "id": "branch",
+    "title": "Branch",
+    "category": "control",
+    "icon": "branch",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "a",
+        "type": "exec",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "b",
+        "type": "exec",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "condition",
+        "label": "Condition",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A condition on the input"
+  },
+  {
+    "id": "merge",
+    "title": "Merge",
+    "category": "control",
+    "icon": "merge",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": true
+      },
+      {
+        "name": "value",
+        "type": "any",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "mode",
+        "label": "Mode",
+        "kind": "select",
+        "options": [
+          "first",
+          "all",
+          "concat"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Several inputs, one output"
+  },
+  {
+    "id": "gate",
+    "title": "Gate",
+    "category": "control",
+    "icon": "shield",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "open",
+        "type": "exec",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "value",
+        "type": "any",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [],
+    "source": false,
+    "stage": false,
+    "summary": "Holds a value until it is opened"
+  },
+  {
+    "id": "delay",
+    "title": "Delay",
+    "category": "control",
+    "icon": "clock",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "value",
+        "type": "any",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "ms",
+        "label": "Delay",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Passes a value on, later"
+  },
+  {
+    "id": "approval",
+    "title": "Approval",
+    "category": "human",
+    "icon": "approve",
+    "ports": [
+      {
+        "name": "value",
+        "type": "any",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "value",
+        "type": "any",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      },
+      {
+        "name": "halt",
+        "type": "exec",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "prompt",
+        "label": "Prompt",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "This block is a choice, not a gate the application imposes (SPEC 12)."
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "A human step the user chose to place"
+  },
+  {
+    "id": "form",
+    "title": "Form",
+    "category": "human",
+    "icon": "form",
+    "ports": [
+      {
+        "name": "data",
+        "type": "data",
+        "side": "out",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "fields",
+        "label": "Fields",
+        "kind": "list",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Asks for fields and returns a record"
+  },
+  {
+    "id": "notify",
+    "title": "Notify",
+    "category": "human",
+    "icon": "bell",
+    "ports": [
+      {
+        "name": "send",
+        "type": "exec",
+        "side": "in",
+        "optional": true,
+        "dynamic": false
+      },
+      {
+        "name": "text",
+        "type": "text",
+        "side": "in",
+        "optional": false,
+        "dynamic": false
+      }
+    ],
+    "settings": [
+      {
+        "name": "target",
+        "label": "Target",
+        "kind": "select",
+        "options": [
+          "desktop",
+          "slack",
+          "email"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "channel",
+        "label": "Channel",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      },
+      {
+        "name": "to",
+        "label": "To",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null
+      }
+    ],
+    "source": false,
+    "stage": false,
+    "summary": "Slack, email or desktop"
+  },
+  {
+    "id": "custom",
+    "title": "Custom",
+    "category": "custom",
+    "icon": "code",
+    "ports": [],
+    "settings": [],
+    "source": false,
+    "stage": false,
+    "summary": "Your own code; its signature is its interface"
+  }
+]

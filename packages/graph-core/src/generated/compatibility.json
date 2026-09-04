@@ -1,0 +1,502 @@
+[
+  {
+    "accepted": true,
+    "from": "text",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "text",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "text",
+    "to": "memory"
+  },
+  {
+    "accepted": false,
+    "from": "text",
+    "to": "data"
+  },
+  {
+    "accepted": false,
+    "from": "text",
+    "to": "stream"
+  },
+  {
+    "accepted": false,
+    "from": "text",
+    "to": "image"
+  },
+  {
+    "accepted": false,
+    "from": "text",
+    "to": "audio"
+  },
+  {
+    "accepted": false,
+    "from": "text",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "text",
+    "to": "exec"
+  },
+  {
+    "accepted": true,
+    "from": "text",
+    "to": "any"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "text"
+  },
+  {
+    "accepted": true,
+    "from": "tools",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "memory"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "data"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "stream"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "image"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "audio"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "exec"
+  },
+  {
+    "accepted": false,
+    "from": "tools",
+    "to": "any"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "tools"
+  },
+  {
+    "accepted": true,
+    "from": "memory",
+    "to": "memory"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "data"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "stream"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "image"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "audio"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "exec"
+  },
+  {
+    "accepted": false,
+    "from": "memory",
+    "to": "any"
+  },
+  {
+    "accepted": false,
+    "from": "data",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "data",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "data",
+    "to": "memory"
+  },
+  {
+    "accepted": true,
+    "from": "data",
+    "to": "data"
+  },
+  {
+    "accepted": false,
+    "from": "data",
+    "to": "stream"
+  },
+  {
+    "accepted": false,
+    "from": "data",
+    "to": "image"
+  },
+  {
+    "accepted": false,
+    "from": "data",
+    "to": "audio"
+  },
+  {
+    "accepted": false,
+    "from": "data",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "data",
+    "to": "exec"
+  },
+  {
+    "accepted": true,
+    "from": "data",
+    "to": "any"
+  },
+  {
+    "accepted": true,
+    "from": "stream",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "stream",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "stream",
+    "to": "memory"
+  },
+  {
+    "accepted": true,
+    "from": "stream",
+    "to": "data"
+  },
+  {
+    "accepted": true,
+    "from": "stream",
+    "to": "stream"
+  },
+  {
+    "accepted": false,
+    "from": "stream",
+    "to": "image"
+  },
+  {
+    "accepted": false,
+    "from": "stream",
+    "to": "audio"
+  },
+  {
+    "accepted": false,
+    "from": "stream",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "stream",
+    "to": "exec"
+  },
+  {
+    "accepted": true,
+    "from": "stream",
+    "to": "any"
+  },
+  {
+    "accepted": false,
+    "from": "image",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "image",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "image",
+    "to": "memory"
+  },
+  {
+    "accepted": false,
+    "from": "image",
+    "to": "data"
+  },
+  {
+    "accepted": false,
+    "from": "image",
+    "to": "stream"
+  },
+  {
+    "accepted": true,
+    "from": "image",
+    "to": "image"
+  },
+  {
+    "accepted": false,
+    "from": "image",
+    "to": "audio"
+  },
+  {
+    "accepted": false,
+    "from": "image",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "image",
+    "to": "exec"
+  },
+  {
+    "accepted": true,
+    "from": "image",
+    "to": "any"
+  },
+  {
+    "accepted": false,
+    "from": "audio",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "audio",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "audio",
+    "to": "memory"
+  },
+  {
+    "accepted": false,
+    "from": "audio",
+    "to": "data"
+  },
+  {
+    "accepted": false,
+    "from": "audio",
+    "to": "stream"
+  },
+  {
+    "accepted": false,
+    "from": "audio",
+    "to": "image"
+  },
+  {
+    "accepted": true,
+    "from": "audio",
+    "to": "audio"
+  },
+  {
+    "accepted": false,
+    "from": "audio",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "audio",
+    "to": "exec"
+  },
+  {
+    "accepted": true,
+    "from": "audio",
+    "to": "any"
+  },
+  {
+    "accepted": false,
+    "from": "file",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "file",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "file",
+    "to": "memory"
+  },
+  {
+    "accepted": false,
+    "from": "file",
+    "to": "data"
+  },
+  {
+    "accepted": false,
+    "from": "file",
+    "to": "stream"
+  },
+  {
+    "accepted": false,
+    "from": "file",
+    "to": "image"
+  },
+  {
+    "accepted": false,
+    "from": "file",
+    "to": "audio"
+  },
+  {
+    "accepted": true,
+    "from": "file",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "file",
+    "to": "exec"
+  },
+  {
+    "accepted": true,
+    "from": "file",
+    "to": "any"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "memory"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "data"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "stream"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "image"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "audio"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "file"
+  },
+  {
+    "accepted": true,
+    "from": "exec",
+    "to": "exec"
+  },
+  {
+    "accepted": false,
+    "from": "exec",
+    "to": "any"
+  },
+  {
+    "accepted": true,
+    "from": "any",
+    "to": "text"
+  },
+  {
+    "accepted": false,
+    "from": "any",
+    "to": "tools"
+  },
+  {
+    "accepted": false,
+    "from": "any",
+    "to": "memory"
+  },
+  {
+    "accepted": true,
+    "from": "any",
+    "to": "data"
+  },
+  {
+    "accepted": true,
+    "from": "any",
+    "to": "stream"
+  },
+  {
+    "accepted": true,
+    "from": "any",
+    "to": "image"
+  },
+  {
+    "accepted": true,
+    "from": "any",
+    "to": "audio"
+  },
+  {
+    "accepted": true,
+    "from": "any",
+    "to": "file"
+  },
+  {
+    "accepted": false,
+    "from": "any",
+    "to": "exec"
+  },
+  {
+    "accepted": true,
+    "from": "any",
+    "to": "any"
+  }
+]

@@ -1,0 +1,81 @@
+version: 1
+id: customer-triage
+name: Customer triage
+description: The smallest complete program. An Input, an LLM, and two runtimes offered to it through a Toolbox.
+runMode: once
+localOnly: true
+execution:
+  runtime: local
+  concurrency: 4
+  timeoutSec: 120
+defaults:
+  provider: ollama
+  model: llama3.2:3b
+overlap:
+  policy: queue
+  maxQueue: 100
+  coalesceMs: 0
+  loopParallel: 2
+between:
+  keepState: true
+  restartOnCrash: false
+blocks:
+  - id: input
+    kind: input
+    position: [286, 154]
+    view: summary
+    settings:
+      value: "triage ticket #4192"
+  - id: terminal
+    kind: terminal
+    position: [286, 462]
+    view: summary
+    settings:
+      command: cargo build
+      warnBefore: true
+  - id: python
+    kind: python
+    position: [286, 616]
+    view: summary
+    settings:
+      source: analyse.py
+  - id: toolbox
+    kind: toolbox
+    position: [506, 484]
+    view: summary
+  - id: llm
+    kind: llm
+    position: [814, 154]
+    view: summary
+    settings:
+      model: llama3.2:3b
+      provider: ollama
+      role: assistant
+      systemPrompt: |
+        You triage build failures. Read the error, run the smallest command
+        that confirms the cause, then answer.
+      temperature: 0.7
+  - id: report
+    kind: output
+    position: [1122, 154]
+    view: compact
+    settings:
+      name: report
+wires:
+  - id: w1
+    from: input.value
+    to: llm.prompt
+  - id: w2
+    from: terminal.tool
+    to: toolbox.tools
+  - id: w3
+    from: python.tool
+    to: toolbox.tools
+  - id: w4
+    from: toolbox.tools
+    to: llm.tools
+  - id: w5
+    from: llm.text
+    to: report.value
+ui:
+  viewport: [0, 0, 1]

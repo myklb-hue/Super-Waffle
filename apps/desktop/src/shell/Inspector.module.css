@@ -1,0 +1,136 @@
+/* The 328px column, whatever is in it. */
+
+.inspector {
+  width: var(--inspector-w);
+  flex: none;
+  padding: var(--sp-5);
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-5);
+  color: var(--c);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  flex: none;
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--c) var(--a-well), transparent);
+}
+
+.titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tr-title);
+  color: var(--text-hi);
+}
+
+.sub {
+  margin-top: var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.problems {
+  margin-bottom: var(--sp-5);
+  white-space: pre-line;
+}
+
+.summary {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-prose);
+  color: var(--text-low);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.ports {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.portRow,
+.endpoint {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+}
+
+.endpoint + .endpoint {
+  margin-top: var(--sp-2);
+}
+
+.portName {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-hi);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portMeta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  white-space: nowrap;
+}
+
+/* A row of the Interface section: what the signature produced (SPEC §10.1). */
+.derived {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--row-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  margin-bottom: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+.derivedSide {
+  color: var(--text-faint);
+  width: 22px;
+}
+
+.derivedName {
+  flex: 1;
+  color: var(--text-body);
+}
+
+.derivedType {
+  color: var(--text-low);
+  font-size: var(--fs-xs);
+}

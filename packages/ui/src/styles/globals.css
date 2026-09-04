@@ -1,0 +1,87 @@
+/* Base rules every Cyberloom surface starts from. Import after tokens.css
+ * and fonts.css. Deliberately short: this file resets, it does not style. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--ground);
+  color: var(--text-hi);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  line-height: var(--lh-prose);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* The shell is an app, not a document: inner panels own their scrolling. */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* The UA paints buttons with a grey face and sets Arial on form controls;
+ * neither is wanted anywhere in this application. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+/* A visible focus ring is the only accessibility affordance the dark shell
+ * cannot do without; components must not remove it. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Thin overlay scrollbars for panels that opt in. */
+.cl-scroll {
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.cl-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.cl-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cl-scroll::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: var(--r-full);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

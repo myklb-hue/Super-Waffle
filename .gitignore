@@ -1,2 +1,12 @@
-design/block-canvas/block-canvas.html
-design/block-canvas/spec.html
+design/cyberloom/cyberloom.html
+design/cyberloom/spec.html
+
+# node
+node_modules/
+packages/*/build/
+.ladle/build/
+
+# rust
+/target/
+apps/desktop/dist/
+apps/desktop/src-tauri/gen/

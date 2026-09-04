@@ -1,0 +1,77 @@
+version: 1
+id: door-watch
+name: Door watch
+description: A custom Python block between a Webcam and a Notify. Its signature is its interface.
+runMode: live
+localOnly: true
+execution:
+  runtime: local
+  concurrency: 2
+  timeoutSec: 60
+defaults:
+  provider: ollama
+  model: llama3.2:3b
+overlap:
+  policy: dropOldest
+  maxQueue: 10
+  coalesceMs: 500
+  loopParallel: 1
+between:
+  keepState: true
+  restartOnCrash: true
+blocks:
+  - id: webcam
+    kind: webcam
+    position: [176, 220]
+    view: summary
+    settings:
+      device: /dev/video0
+      fps: 5
+      resolution: 640x480
+      store: false
+  - id: door-check
+    kind: custom
+    title: door_check
+    position: [506, 220]
+    size: [308]
+    view: summary
+    settings:
+      threshold: 0.6
+    ports:
+      - { name: frame, type: image, side: in }
+      - { name: memory, type: memory, side: in, optional: true }
+      - { name: result, type: data, side: out }
+    source:
+      mode: inline
+      language: python
+      code: |
+        def door_check(frame: Image, threshold: float = 0.6) -> Data:
+            """Is the front door open?"""
+            # A parameter without a default is an input port; one with a
+            # default is a setting; the return annotation is the output.
+            score = detect(frame)
+            return {"open": score > threshold}
+  - id: to-text
+    kind: convert
+    position: [880, 220]
+    view: compact
+    settings:
+      to: text
+  - id: notify
+    kind: notify
+    position: [1078, 220]
+    view: summary
+    settings:
+      target: desktop
+wires:
+  - id: w1
+    from: webcam.frames
+    to: door-check.frame
+  - id: w2
+    from: door-check.result
+    to: to-text.value
+  - id: w3
+    from: to-text.value
+    to: notify.text
+ui:
+  viewport: [0, 0, 1]

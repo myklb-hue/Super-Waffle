@@ -1,0 +1,218 @@
+version: 1
+id: home-assistant
+name: Home assistant
+description: Senses feed specialist models, which feed an orchestrator. Memory bundles through a hub, actions go to motors as a warned tool call, and an Avatar gives it a face.
+runMode: live
+localOnly: true
+execution:
+  runtime: local
+  concurrency: 6
+  timeoutSec: 120
+defaults:
+  provider: ollama
+  model: llama3.2:3b
+overlap:
+  policy: coalesce
+  maxQueue: 40
+  coalesceMs: 250
+  loopParallel: 2
+between:
+  keepState: true
+  restartOnCrash: true
+blocks:
+  - id: webcam
+    kind: webcam
+    position: [110, 176]
+    size: [220, 154]
+    view: stage
+    settings:
+      device: /dev/video0
+      fps: 30
+      resolution: 1280x720
+      store: false
+  - id: microphone
+    kind: microphone
+    position: [110, 484]
+    view: summary
+    settings:
+      device: default
+      store: false
+      vad: true
+  - id: keyboard
+    kind: keyboard
+    position: [110, 682]
+    view: compact
+  - id: objects
+    kind: object-detection
+    position: [418, 132]
+    view: summary
+    settings:
+      confidence: 0.5
+      model: yolov8n
+  - id: faces
+    kind: face-recognition
+    position: [418, 286]
+    view: summary
+    settings:
+      enrolment: false
+      model: insightface
+      storeImages: false
+  - id: speech
+    kind: speech-to-text
+    position: [418, 484]
+    view: summary
+    settings:
+      language: en
+      model: whisper-small
+  - id: orchestrator
+    kind: llm
+    position: [770, 264]
+    view: summary
+    settings:
+      model: llama3.2:3b
+      role: orchestrator
+      systemPrompt: |
+        You watch the house. Report what you see in one line, keep what
+        matters, and only move something when it is the smallest step that
+        answers the question.
+  - id: working-memory
+    kind: working-memory
+    position: [418, 748]
+    view: compact
+    settings:
+      items: 128
+      window: 5m
+  - id: long-term-memory
+    kind: long-term-memory
+    position: [418, 858]
+    view: compact
+    settings:
+      path: memory.sqlite
+      vectors: true
+  - id: memory-hub
+    kind: memory-hub
+    position: [638, 792]
+    view: summary
+    settings:
+      consolidateEvery: 10m
+      recall: recent-first
+  - id: toolbox
+    kind: toolbox
+    position: [638, 594]
+    view: summary
+  - id: motors
+    kind: motors
+    position: [352, 594]
+    view: summary
+    settings:
+      panLimit: 90
+      port: /dev/ttyUSB0
+      tiltLimit: 30
+      warnBeforeMove: true
+  - id: display
+    kind: display
+    position: [1078, 132]
+    view: compact
+  - id: tts
+    kind: text-to-speech
+    position: [1078, 264]
+    view: compact
+    settings:
+      voice: piper-en-gb
+  - id: speaker
+    kind: speaker
+    position: [1364, 264]
+    view: compact
+  - id: terminal
+    kind: terminal
+    title: Thoughts
+    position: [1078, 550]
+    view: summary
+  - id: affect
+    kind: affect
+    position: [1078, 682]
+    view: compact
+    settings:
+      model: affect-small
+  - id: avatar
+    kind: avatar
+    position: [1364, 682]
+    size: [240, 240]
+    view: stage
+    settings:
+      autoAffectFromSpeech: false
+      blink: 3-6s
+      breathePerMin: 12
+      keepAspect: true
+      rig: line
+      settleSec: 4
+      sleepAfterMin: 10
+wires:
+  - id: w1
+    from: webcam.frames
+    to: objects.image
+  - id: w2
+    from: webcam.frames
+    to: faces.image
+  - id: w3
+    from: microphone.audio
+    to: speech.audio
+  - id: w4
+    from: keyboard.text
+    to: orchestrator.prompt
+  - id: w5
+    from: speech.text
+    to: orchestrator.prompt
+  - id: w6
+    from: objects.objects
+    to: orchestrator.context
+  - id: w7
+    from: faces.person
+    to: orchestrator.context
+  - id: w8
+    from: motors.tool
+    to: toolbox.tools
+  - id: w9
+    from: motors.state
+    to: orchestrator.context
+  - id: w10
+    from: motors.fault
+    to: toolbox.pause
+  - id: w11
+    from: toolbox.tools
+    to: orchestrator.tools
+  - id: w12
+    from: working-memory.memory
+    to: memory-hub.memory
+  - id: w13
+    from: long-term-memory.memory
+    to: memory-hub.memory
+  - id: w14
+    from: memory-hub.memory
+    to: orchestrator.memory
+  - id: w15
+    from: orchestrator.text
+    to: display.text
+  - id: w16
+    from: orchestrator.text
+    to: tts.text
+  - id: w17
+    from: tts.audio
+    to: speaker.audio
+  - id: w18
+    from: orchestrator.thoughts
+    to: terminal.text
+  - id: w19
+    from: orchestrator.text
+    to: affect.text
+  - id: w20
+    from: affect.affect
+    to: avatar.express
+  - id: w21
+    from: tts.audio
+    to: avatar.speech
+  - id: w22
+    from: faces.person
+    to: avatar.look
+ui:
+  viewport: [0, 0, 1]

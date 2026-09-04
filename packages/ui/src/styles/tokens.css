@@ -1,0 +1,190 @@
+/* Cyberloom design tokens.
+ *
+ * The single source of truth for colour, type, spacing, radii, elevation and
+ * the geometry the wire router depends on. No component may write a colour
+ * literal; everything resolves through a token here.
+ *
+ * Values follow docs/PLAN.md section 1, which took what the mockups actually
+ * render and standardised where they disagreed. Where a value differs from an
+ * artboard, the artboard was regenerated to match this file, not the reverse.
+ *
+ * One theme. The shell is dark and does not follow the system preference:
+ * the canvas, the wire colours and the port palette were designed against
+ * this ground and do not have a light equivalent.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Surfaces ------------------------------------------------------- */
+  --ground: #08090b;      /* window background */
+  --canvas: #0d0f13;      /* the node canvas */
+  --panel: #111419;       /* library, inspector, drawers */
+  --bar: #0f1217;         /* top bar */
+  --block: #191d24;       /* block body */
+  --field: #0b0d11;       /* inputs, code, rows, stage background */
+  --float: #12161c;       /* zoom pill, minimap, drag tooltip; used at 94% */
+  --line: #242932;        /* borders */
+  --line-soft: #1a1e25;   /* hairlines inside panels, block header rule */
+
+  /* The canvas dot grid. One place, because the grid unit is also the snap. */
+  --grid-dot: rgba(255, 255, 255, 0.055);
+
+  /* ---- Text ----------------------------------------------------------- */
+  /* A four-step ramp plus one body tone. --text-body is the standardisation
+   * of three near-identical off-whites the mockups used for console output,
+   * code and panel prose. */
+  --text-hi: #e8ebf0;
+  --text-body: #c3cad4;
+  --text-mid: #98a2ae;
+  --text-low: #5f6875;
+  --text-faint: #39414c;
+
+  /* ---- Accent and status ---------------------------------------------- */
+  --accent: #56c7d6;      /* selection ring, primary button, active tab */
+  --ok: #6fc98a;
+  --warn: #e0a458;
+  --err: #e0685f;         /* status, and the tint on safety and privacy sections */
+
+  /* ---- Port types ------------------------------------------------------
+   * The grammar of the whole application: a wire is coloured by its type and
+   * the type is what makes a connection legal. Ten types, all distinct at a
+   * glance. --type-file was moved off #7f93c9, which sat two degrees from
+   * --type-memory in hue; it is now the one colour in the yellow-green gap
+   * between --type-audio and --type-stream, 44 degrees from each. */
+  --type-text: #56c7d6;
+  --type-tools: #e0a458;
+  --type-memory: #7e9ff0;
+  --type-data: #a78bd0;
+  --type-stream: #6fc98a;
+  --type-image: #d77bd0;
+  --type-audio: #dcc65b;
+  --type-file: #93c76b;
+  --type-exec: #e8ebf0;
+  --type-any: #8a93a3;
+
+  /* ---- Block categories ------------------------------------------------
+   * Five deliberately share a value with a port type: a models block is the
+   * text colour because that is what it emits. The repetition is the point. */
+  --cat-models: #56c7d6;
+  --cat-capabilities: #e0a458;
+  --cat-runtimes: #6fc98a;
+  --cat-senses: #dcc65b;
+  --cat-memory: #7e9ff0;
+  --cat-actuators: #e8865a;
+  --cat-data: #a78bd0;
+  --cat-control: #8a93a3;
+  --cat-human: #d97f8f;
+  --cat-custom: #c3ccd8;
+
+  /* ---- Derived alphas --------------------------------------------------
+   * Tints are always derived from a colour, never stored as their own token,
+   * so a category or type colour can change in one place. Components use
+   * these as the alpha argument to color-mix against the live colour. */
+  --a-chip: 12%;          /* chip fill */
+  --a-well: 14%;          /* icon well */
+  --a-header-from: 13%;   /* block header gradient start */
+  --a-header-to: 2%;      /* block header gradient end */
+  --a-wire-halo: 9%;
+  --a-live-halo: 16%;
+  --a-dim: 30%;           /* a port the current drag cannot reach */
+
+  /* ---- Type ------------------------------------------------------------ */
+  --font-ui: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Five steps. The mockups used sixteen sizes; these are the survivors. */
+  --fs-xs: 10px;   /* mono port labels, chips, section labels, timestamps */
+  --fs-sm: 11px;   /* mono values, console, code, panel hints, list meta */
+  --fs-md: 12px;   /* block titles, panel body, fields, library rows, tabs */
+  --fs-lg: 13px;   /* panel titles */
+  --fs-xl: 20px;   /* design-document titles; not used in the app */
+
+  --lh-prose: 1.45;
+  --lh-mono: 1.6;
+  --lh-code: 19px;        /* fixed, so gutters and markers line up */
+
+  --tr-caps: 0.12em;      /* uppercase mono section labels */
+  --tr-port: 0.03em;      /* port labels */
+  --tr-title: -0.01em;
+
+  /* ---- Spacing --------------------------------------------------------- */
+  --sp-1: 2px;
+  --sp-2: 4px;
+  --sp-3: 6px;
+  --sp-4: 8px;
+  --sp-5: 12px;
+  --sp-6: 16px;
+  --sp-7: 24px;
+  --sp-8: 32px;
+  --sp-9: 48px;
+
+  /* ---- Radii ----------------------------------------------------------- */
+  --r-xs: 3px;            /* keycaps, small squares */
+  --r-sm: 4px;            /* chips, view toggle, icon buttons */
+  --r-md: 6px;            /* fields, buttons, connection rows, list rows */
+  --r-lg: 9px;            /* blocks */
+  --r-xl: 12px;           /* loop frames, sheet cards, empty-state drop zone */
+  --r-full: 999px;        /* pills and dots */
+
+  /* ---- Elevation ------------------------------------------------------- */
+  --shadow-block: 0 10px 26px rgba(0, 0, 0, 0.45);
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-selected:
+    0 0 0 1px var(--accent),
+    0 0 0 5px rgba(86, 199, 214, 0.15),
+    0 16px 38px rgba(0, 0, 0, 0.6);
+  --shadow-running:
+    0 0 0 4px rgba(111, 201, 138, 0.09),
+    0 12px 30px rgba(0, 0, 0, 0.5);
+
+  /* ---- Geometry --------------------------------------------------------
+   * Load-bearing. The wire router reads --port-row and --port-first: row i is
+   * centred at --port-first + i * --port-row from the block's top. Changing
+   * either moves every wire endpoint in the application. */
+  --topbar-h: 46px;
+  --statusbar-h: 28px;
+  --library-w: 264px;
+  --rail-w: 48px;
+  --inspector-w: 328px;
+  --inspector-narrow-w: 300px;
+  --console-h: 176px;
+  --code-drawer-h: 300px;
+
+  --block-header-h: 32px;         /* was 31 in the mockups: 30 plus a border */
+  --block-header-stage-h: 24px;
+  --block-min-w: 168px;
+  --port-row: 24px;
+  --port-first: 52px;             /* follows the 32px header */
+  --port-dot: 11px;
+  --port-halo: 3px;
+
+  --wire-core: 1.9px;
+  --wire-handle: 2.2px;
+  --wire-halo: 5px;
+
+  --grid: 22px;
+  --grip: 12px;
+  --grip-inset: 3px;
+
+  /* Two control heights, not three. Fields match the header rhythm. */
+  --control-h: 28px;              /* buttons, icon buttons */
+  --field-h: 32px;                /* fields, segmented controls */
+  --tabs-h: 32px;
+  --chip-h: 20px;
+  --row-h: 24px;                  /* interface strips, drag tooltip */
+  --library-row-h: 28px;
+  --category-row-h: 24px;
+
+  --avatar-stage: 240px;
+}
+
+/* The glow on a port that can accept the drag in flight is the one piece of
+ * elevation that takes an argument, so it is a class rather than a token.
+ * Set --ring on the element to the port's own colour and one rule serves all
+ * ten types. */
+.ring-glow {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--ring, var(--accent)) 30%, transparent),
+    0 0 16px color-mix(in srgb, var(--ring, var(--accent)) 60%, transparent);
+}

@@ -1,0 +1,133 @@
+version: 1
+id: inbox-triage
+name: Inbox triage
+description: The same idea that never finishes. Three sources keep the graph armed and a Loop repeats a region per item.
+runMode: live
+localOnly: true
+execution:
+  runtime: local
+  concurrency: 4
+  timeoutSec: 120
+defaults:
+  provider: ollama
+  model: llama3.2:3b
+overlap:
+  policy: queue
+  maxQueue: 100
+  coalesceMs: 0
+  loopParallel: 2
+between:
+  keepState: true
+  restartOnCrash: true
+blocks:
+  - id: webhook
+    kind: webhook
+    position: [264, 154]
+    view: summary
+    settings:
+      method: POST
+      path: /inbox
+      port: 8420
+  - id: watch
+    kind: watch-folder
+    position: [264, 330]
+    view: summary
+    settings:
+      debounce: 250
+      events:
+        - created
+        - moved
+      path: ~/inbox
+      pattern: "*.eml"
+  - id: schedule
+    kind: schedule
+    position: [264, 726]
+    view: summary
+    settings:
+      catchUp: skip
+      every: 15m
+      jitter: 30
+  - id: classify
+    kind: llm
+    position: [660, 220]
+    view: summary
+    frame: loop-items
+    settings:
+      model: llama3.2:3b
+      role: classifier
+      systemPrompt: Label each message urgent, routine or noise. Answer with the label only.
+  - id: branch
+    kind: branch
+    position: [946, 220]
+    view: compact
+    frame: loop-items
+    settings:
+      condition: label == "urgent"
+  - id: notify-slack
+    kind: notify
+    position: [1210, 154]
+    view: summary
+    frame: loop-items
+    settings:
+      channel: "#ops"
+      target: slack
+  - id: archive
+    kind: file-system
+    position: [1210, 308]
+    view: compact
+    frame: loop-items
+    settings:
+      action: move
+      to: ~/inbox/archived
+  - id: digest
+    kind: llm
+    position: [660, 726]
+    view: summary
+    settings:
+      model: llama3.2:3b
+      role: assistant
+      systemPrompt: Summarise the last quarter hour in five lines or fewer.
+  - id: notify-email
+    kind: notify
+    position: [1210, 726]
+    view: summary
+    settings:
+      target: email
+      to: mykl@example.com
+frames:
+  - id: loop-items
+    kind: loop
+    position: [594, 132]
+    size: [880, 352]
+    over: watch.file
+    as: item
+    parallel: 2
+    max: 200
+    continueOnError: true
+wires:
+  - id: w1
+    from: webhook.event
+    to: loop-items.items
+  - id: w2
+    from: watch.file
+    to: loop-items.items
+  - id: w3
+    from: loop-items.item
+    to: classify.prompt
+  - id: w4
+    from: classify.text
+    to: branch.value
+  - id: w5
+    from: branch.a
+    to: notify-slack.send
+  - id: w6
+    from: branch.b
+    to: archive.trigger
+  - id: w7
+    from: schedule.tick
+    to: digest.trigger
+  - id: w8
+    from: digest.text
+    to: notify-email.text
+ui:
+  viewport: [0, 0, 1]

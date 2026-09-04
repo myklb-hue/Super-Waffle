@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Cyberloom",
+  "version": "0.1.0",
+  "identifier": "dev.cyberloom.app",
+  "build": {
+    "beforeDevCommand": "npm run dev -w @cyberloom/desktop",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build -w @cyberloom/desktop",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Cyberloom",
+        "width": 1560,
+        "height": 900,
+        "minWidth": 1280,
+        "minHeight": 800,
+        "resizable": true,
+        "theme": "Dark"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["appimage"],
+    "icon": ["icons/icon.png"]
+  }
+}

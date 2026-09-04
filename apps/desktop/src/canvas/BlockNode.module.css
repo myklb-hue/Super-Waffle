@@ -1,0 +1,353 @@
+/* A block on the canvas. Every number here is a token: the header height and
+ * the port rows are what the wire router reads, so they cannot be local. */
+
+.block {
+  background: var(--block);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-block);
+  min-width: var(--block-min-w);
+  font-family: var(--font-ui);
+  /* Ports hang off both edges, so nothing may clip them. */
+  overflow: visible;
+}
+
+.selected {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-selected);
+}
+
+/* Code that will not parse (SPEC §10.4). The border is the whole signal: the
+ * ports, the wires and the interface strip are all still the last good read,
+ * because the graph keeps running around a block someone is mid-edit on. */
+.broken.broken {
+  border-color: var(--err);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--err) 40%, transparent);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--block-header-h);
+  padding: 0 var(--sp-4);
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px) 0 0;
+  color: var(--cat);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cat) var(--a-header-from), transparent),
+    color-mix(in srgb, var(--cat) var(--a-header-to), transparent)
+  );
+}
+
+.title {
+  flex: 1;
+  /* Not `0`: a chip appearing beside the title — `streaming`, `42 lines` —
+   * would otherwise squeeze the name out of existence on a narrow block, and
+   * a block with no name is worse than a truncated one. */
+  min-width: 4ch;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tr-title);
+  color: var(--text-hi);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The port zone. Rows are absolutely placed so their centres come from
+ * graph-core's portY and not from however the box model happens to stack. */
+.ports {
+  position: relative;
+}
+
+.portIn,
+.portOut {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--port-row);
+  translate: 0 -50%;
+}
+
+.portIn {
+  left: 0;
+  padding-left: var(--sp-4);
+}
+
+.portOut {
+  right: 0;
+  padding-right: var(--sp-4);
+  flex-direction: row-reverse;
+}
+
+.portLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: var(--tr-port);
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+
+/* The dot is the wire's endpoint. xyflow positions the handle itself; the
+ * halo is a shadow so it never affects layout. */
+.dot.dot {
+  position: absolute;
+  width: var(--port-dot);
+  height: var(--port-dot);
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--ty);
+  box-shadow: 0 0 0 var(--port-halo) color-mix(in srgb, var(--ty) var(--a-wire-halo), transparent);
+  min-width: 0;
+  min-height: 0;
+}
+
+.portIn .dot.dot {
+  left: calc(var(--port-dot) / -2);
+}
+
+.portOut .dot.dot {
+  right: calc(var(--port-dot) / -2);
+}
+
+.body {
+  padding: var(--sp-2) var(--sp-5) var(--sp-5);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  margin-bottom: var(--sp-2);
+}
+
+.value {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-mono);
+  color: var(--text-body);
+  overflow: hidden;
+  white-space: pre;
+}
+
+.more {
+  margin-top: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* ---------------------------------------------- controls and drag feedback */
+
+/* The view toggle and the grip appear on hover or selection, so a canvas at
+ * rest is not covered in controls (SPEC §3.4). */
+.toggle,
+.gripSlot {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.block:hover .toggle,
+.block:hover .gripSlot,
+.toggleShown {
+  opacity: 1;
+}
+
+.gripSlot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--grip);
+  height: var(--grip);
+}
+
+/* Mid-drag: a port that cannot accept the wire recedes, and one that can is
+ * ringed in its own colour. Between them they say what the grammar allows
+ * without a word of explanation (SPEC §4.1, §5.2). */
+.dimmed {
+  opacity: var(--a-dim);
+}
+
+.glowing .dot.dot {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--ty) 30%, transparent),
+    0 0 16px color-mix(in srgb, var(--ty) 60%, transparent);
+}
+
+.glowing .portLabel {
+  color: var(--text-hi);
+}
+
+/* A block with something to report is drawn over its neighbours.
+ *
+ * The figure hangs below the block rather than growing it (see `.figure`), so
+ * on a graph laid out before it ever ran the figure would otherwise appear
+ * *behind* whatever block sits underneath. Coming forward is the whole fix;
+ * the layout is untouched. */
+.reporting {
+  z-index: 10;
+}
+
+.running {
+  border-color: color-mix(in srgb, var(--ok) 45%, var(--line));
+}
+
+/* ------------------------------------------------------- live run figures */
+
+/* What the block is doing right now: the exit code, the token count, the last
+ * of a stream. Only present while a run has something to say about this
+ * block, so a canvas at rest is unchanged (SPEC §3.2, §3.4). */
+.figure {
+  /* Hung below the block, not added to it.
+   *
+   * A figure that grew the block would change what the canvas looks like the
+   * moment a run started — blocks nudging into each other on a graph whose
+   * layout was fine a second earlier. Absolute keeps the block exactly the
+   * size the user laid out, and the figure appears in the gap under it. */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-mid);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.figureText {
+  color: var(--text-body);
+}
+
+/* A stream is the tail of what has arrived, so it reads as moving rather than
+ * as a value that stopped. */
+.figureStream {
+  color: var(--text-low);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.figureError {
+  color: var(--err);
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------- a custom block's code */
+
+.codeBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  min-height: 0;
+}
+
+.codeBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.modes {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.mode {
+  border: 0;
+  background: transparent;
+  padding: 0 var(--sp-3);
+  height: 20px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  cursor: pointer;
+}
+
+.modeOn {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.codeEditor {
+  max-height: 320px;
+}
+
+.tooBig {
+  padding: var(--sp-4);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--text-low);
+}
+
+/* What the signature produced, under the block (SPEC §10.1). */
+.interface {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.interfaceLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tr-port);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.chipRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 1px var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+.chipSide {
+  color: var(--text-faint);
+}
+
+.chipName {
+  color: var(--text-body);
+}
+
+.note {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--ok);
+}

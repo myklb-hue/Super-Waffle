@@ -1,4 +1,4 @@
-# Block Canvas
+# Cyberloom
 
 A desktop application for building programs by dragging typed blocks onto
 a canvas and wiring them together. A block is a model, a runtime, a sense,
@@ -11,11 +11,11 @@ tools and the data.
 
 ## Where things are
 
-- **[`design/block-canvas/SPEC.md`](design/block-canvas/SPEC.md)** — the
+- **[`design/cyberloom/SPEC.md`](design/cyberloom/SPEC.md)** — the
   master specification (draft 0.1, for approval). Every design decision,
   the full block catalogue, the type system, the run modes, custom
   blocks, worked examples, and the open questions.
-- `design/block-canvas/` — the mockups as working files, a build script
+- `design/cyberloom/` — the mockups as working files, a build script
   that generates them from shared tokens, and the rendered figures. See
   its README for how to regenerate.
 

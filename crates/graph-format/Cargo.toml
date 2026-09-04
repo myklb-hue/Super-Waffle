@@ -1,0 +1,13 @@
+[package]
+name = "graph-format"
+description = "Reads and writes the .loom graph file: one readable YAML document with a canonical form."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+specta.workspace = true
+saphyr.workspace = true
+thiserror.workspace = true

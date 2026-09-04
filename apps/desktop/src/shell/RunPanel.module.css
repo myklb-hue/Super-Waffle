@@ -1,0 +1,87 @@
+.progress {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--row-h);
+  font-size: var(--fs-md);
+}
+
+.stepName {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepMs {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The model's answer as it is written. Capped and scrolled, so a long reply
+ * does not push the usage figures off the panel. */
+.live {
+  max-height: 148px;
+  overflow-y: auto;
+  padding: var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-mono);
+  color: var(--text-body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.result {
+  padding: var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-mono);
+  color: var(--text-body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.failure {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  color: var(--err);
+}
+
+.stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  width: 100%;
+  height: var(--field-h);
+  margin-top: var(--sp-5);
+  border: 1px solid color-mix(in srgb, var(--err) 45%, transparent);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--err) 12%, transparent);
+  color: var(--err);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  cursor: pointer;
+}
+
+.stop:hover {
+  background: color-mix(in srgb, var(--err) 20%, transparent);
+}

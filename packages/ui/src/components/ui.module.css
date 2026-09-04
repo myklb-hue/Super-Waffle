@@ -1,0 +1,1010 @@
+/* Styles for every primitive in packages/ui.
+ *
+ * One stylesheet rather than twenty-four: these are atoms that share the same
+ * dozen tokens, and splitting them would add files without adding isolation —
+ * CSS Modules already scopes the names. Components with real internal layout
+ * (the canvas nodes, the inspector panels) get their own module beside them.
+ *
+ * No colour literals. Everything resolves through tokens.css. */
+
+/* ---------------------------------------------------------------- Icon -- */
+
+.icon {
+  flex: none;
+  display: block;
+}
+
+/* ----------------------------------------------------------- StatusDot -- */
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+  flex: none;
+  background: var(--dot);
+}
+
+.statusDotIdle {
+  --dot: var(--text-faint);
+}
+
+.statusDotQueued {
+  /* Amber, per SPEC §3.2: waiting on an upstream block is a state worth
+   * seeing, and grey made it indistinguishable from never having run. */
+  --dot: var(--warn);
+}
+
+.statusDotReady {
+  --dot: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ok);
+}
+
+.statusDotRunning {
+  --dot: var(--ok);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.statusDotOk {
+  --dot: var(--ok);
+}
+
+.statusDotError {
+  --dot: var(--err);
+}
+
+.statusDotOff {
+  --dot: transparent;
+  box-shadow: inset 0 0 0 1px var(--text-faint);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 0%, transparent);
+  }
+}
+
+/* ---------------------------------------------------------------- Chip -- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: var(--chip-h);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) var(--a-chip), transparent);
+}
+
+.chipSolid {
+  color: var(--ground);
+  background: var(--c);
+}
+
+.chipMd {
+  height: var(--row-h);
+  font-size: var(--fs-sm);
+}
+
+.chipDot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: currentColor;
+  flex: none;
+}
+
+/* ------------------------------------------------------------- TypeDot -- */
+
+.typeDot {
+  width: var(--port-dot);
+  height: var(--port-dot);
+  border-radius: var(--r-full);
+  flex: none;
+  background: var(--c);
+  box-shadow: 0 0 0 var(--port-halo) color-mix(in srgb, var(--c) var(--a-wire-halo), transparent);
+}
+
+.typeDotDim {
+  opacity: 0.3;
+}
+
+.typeDots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.typeDots .typeDot {
+  width: 5px;
+  height: 5px;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------- Label -- */
+
+.label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--text-low);
+}
+
+/* --------------------------------------------------------------- Field -- */
+
+.fieldWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--field-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  color: var(--text-hi);
+  font-size: var(--fs-md);
+  width: 100%;
+  text-align: left;
+}
+
+.field:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+}
+
+.fieldInput {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  font: inherit;
+}
+
+.fieldInput::placeholder {
+  color: var(--text-low);
+}
+
+.fieldMono .fieldInput,
+.fieldMono .fieldStatic {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+.fieldMuted {
+  color: var(--text-low);
+}
+
+.fieldStatic {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldSuffix {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  flex: none;
+}
+
+.fieldChevron {
+  transform: rotate(90deg);
+  opacity: 0.6;
+  display: flex;
+  flex: none;
+}
+
+.fieldError {
+  border-color: var(--err);
+}
+
+.fieldErrorText {
+  font-size: var(--fs-sm);
+  color: var(--err);
+}
+
+.fieldDisabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* A skeleton, not a spinner: a field that is loading still occupies its own
+ * height, so the panel does not reflow when the value arrives. */
+.fieldLoading {
+  border-color: var(--line-soft);
+}
+
+.skeleton {
+  height: 9px;
+  flex: 1;
+  border-radius: var(--r-full);
+  background: linear-gradient(
+    90deg,
+    var(--line-soft) 25%,
+    var(--line) 50%,
+    var(--line-soft) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* -------------------------------------------------------------- Slider -- */
+
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.sliderHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.sliderValue {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--c);
+}
+
+.sliderInput {
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: linear-gradient(
+    to right,
+    var(--c) 0 var(--fill),
+    var(--line) var(--fill) 100%
+  );
+  outline: 0;
+}
+
+.sliderInput::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--r-full);
+  background: var(--c);
+  border: 2px solid var(--panel);
+  cursor: grab;
+}
+
+.sliderInput::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--panel);
+  border-radius: var(--r-full);
+  background: var(--c);
+  cursor: grab;
+}
+
+.sliderInput:disabled {
+  opacity: 0.45;
+}
+
+.sliderInput:disabled::-webkit-slider-thumb {
+  cursor: default;
+}
+
+/* -------------------------------------------------------------- Toggle -- */
+
+.toggle {
+  width: 30px;
+  height: 17px;
+  border-radius: var(--r-full);
+  background: var(--line);
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  transition: background 0.14s ease;
+}
+
+.toggleOn {
+  background: var(--c);
+  justify-content: flex-end;
+}
+
+.toggleKnob {
+  width: 13px;
+  height: 13px;
+  border-radius: var(--r-full);
+  background: var(--text-hi);
+  transition: transform 0.14s ease;
+}
+
+.toggleOn .toggleKnob {
+  background: var(--ground);
+}
+
+.toggle:disabled {
+  opacity: 0.45;
+}
+
+/* ----------------------------------------------------------- SwitchRow -- */
+
+.switchRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  width: 100%;
+  text-align: left;
+}
+
+.switchRowText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.switchRowLabel {
+  font-size: var(--fs-md);
+  color: var(--text-hi);
+}
+
+.switchRowHint {
+  font-size: var(--fs-sm);
+  color: var(--text-low);
+  line-height: var(--lh-prose);
+}
+
+/* ----------------------------------------------------------- Segmented -- */
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  height: var(--field-h);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+}
+
+.segmentedOption {
+  flex: 1;
+  padding: 0 var(--sp-5);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-md);
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+
+.segmentedOption:hover:not(:disabled) {
+  color: var(--text-hi);
+}
+
+.segmentedActive {
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+}
+
+.segmented:has(:disabled) {
+  opacity: 0.45;
+}
+
+/* -------------------------------------------------------------- Button -- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  height: var(--control-h);
+  padding: 0 var(--sp-5);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--block);
+  color: var(--text-hi);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--text-mid) 40%, var(--line));
+}
+
+.buttonPrimary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ground);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 88%, white);
+  border-color: color-mix(in srgb, var(--accent) 88%, white);
+}
+
+.buttonDanger {
+  color: var(--err);
+  border-color: color-mix(in srgb, var(--err) 45%, transparent);
+  background: color-mix(in srgb, var(--err) var(--a-chip), transparent);
+}
+
+.buttonDanger:hover:not(:disabled) {
+  border-color: var(--err);
+}
+
+.button:disabled {
+  opacity: 0.4;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: var(--r-full);
+  border: 1.6px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------------------------- Section -- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-6) 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.sectionTinted {
+  border-top-color: color-mix(in srgb, var(--c) 30%, transparent);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.sectionTinted .label {
+  color: var(--c);
+}
+
+/* ------------------------------------------------------------- TextBox -- */
+
+.textBox {
+  width: 100%;
+  padding: var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  color: var(--text-body);
+  font-size: var(--fs-md);
+  line-height: var(--lh-prose);
+  resize: vertical;
+  outline: 0;
+}
+
+.textBox:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+}
+
+.textBox::placeholder {
+  color: var(--text-low);
+}
+
+.textBoxMono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-mono);
+}
+
+.textBox:disabled {
+  opacity: 0.45;
+}
+
+/* ------------------------------------------------------ ConnectionRow -- */
+
+.connRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+}
+
+.connIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--row-h);
+  height: var(--row-h);
+  border-radius: var(--r-sm);
+  flex: none;
+  background: color-mix(in srgb, var(--c) var(--a-well), transparent);
+}
+
+.connText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.connName {
+  font-size: var(--fs-md);
+  color: var(--text-hi);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connMeta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connPending {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: var(--r-full);
+  border: 1px dashed var(--text-low);
+}
+
+/* ---------------------------------------------------------------- Tabs -- */
+
+.tabs {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-5);
+  height: var(--tabs-h);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.tab {
+  position: relative;
+  font-size: var(--fs-md);
+  color: var(--text-low);
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text-mid);
+}
+
+.tabActive {
+  color: var(--text-hi);
+}
+
+.tabActive::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 1.5px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+}
+
+/* --------------------------------------------------------- PanelHeader -- */
+
+.panelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.panelHeadRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.panelIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: var(--r-md);
+  flex: none;
+  background: color-mix(in srgb, var(--c) var(--a-well), transparent);
+}
+
+.panelTitles {
+  flex: 1;
+  min-width: 0;
+}
+
+.panelTitle {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tr-title);
+  color: var(--text-hi);
+}
+
+.panelSub {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  margin-top: var(--sp-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panelMenu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: var(--r-sm);
+  flex: none;
+  color: var(--text-mid);
+}
+
+.panelMenu:hover {
+  background: var(--line-soft);
+  color: var(--text-hi);
+}
+
+/* ------------------------------------------------------------- KeyHint -- */
+
+.keyHint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+}
+
+.keySep {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------- Callout -- */
+
+.callout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  border-radius: var(--r-md);
+  border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+  background: color-mix(in srgb, var(--c) var(--a-chip), transparent);
+}
+
+.calloutDashed {
+  border-style: dashed;
+  background: none;
+}
+
+.calloutTitle {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--c);
+}
+
+.calloutBody {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-prose);
+  color: var(--text-body);
+}
+
+/* ---------------------------------------------------------- EmptyState -- */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-8) var(--sp-6);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-xl);
+  text-align: center;
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sp-8);
+  height: var(--sp-8);
+  border-radius: var(--r-md);
+  background: var(--line-soft);
+  color: var(--text-low);
+}
+
+.emptyTitle {
+  font-size: var(--fs-md);
+  color: var(--text-mid);
+}
+
+.emptyHint {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-faint);
+}
+
+.emptyActions {
+  display: flex;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+/* ---------------------------------------------------------------- Grip -- */
+
+.grip {
+  position: absolute;
+  right: var(--grip-inset);
+  bottom: var(--grip-inset);
+  width: var(--grip);
+  height: var(--grip);
+  cursor: nwse-resize;
+  color: var(--text-faint);
+  touch-action: none;
+}
+
+.grip:hover {
+  color: var(--text-low);
+}
+
+.grip:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+/* ---------------------------------------------------------- ViewToggle -- */
+
+.viewToggle {
+  display: inline-flex;
+  gap: 1px;
+  padding: 1px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--field);
+}
+
+.viewOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 14px;
+  border-radius: var(--r-xs);
+  color: var(--text-low);
+}
+
+.viewOptionActive {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* ------------------------------------------------------------ CodeView -- */
+
+.codeView {
+  position: relative;
+  overflow: auto;
+  padding: var(--sp-4) 0;
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+.codeLine {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-5);
+  height: var(--lh-code);
+  padding: 0 var(--sp-5);
+  white-space: pre;
+}
+
+.codeGutter {
+  flex: none;
+  width: 20px;
+  text-align: right;
+  color: var(--text-faint);
+  user-select: none;
+}
+
+.codeMarked {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.codeErrored {
+  background: color-mix(in srgb, var(--err) 12%, transparent);
+}
+
+.codeErrored .codeGutter {
+  color: var(--err);
+}
+
+.tokKeyword {
+  color: var(--type-image);
+}
+
+.tokString {
+  color: var(--ok);
+}
+
+.tokNumber {
+  color: var(--type-data);
+}
+
+.tokComment {
+  color: var(--text-faint);
+}
+
+.tokType {
+  color: var(--accent);
+}
+
+.tokFunc {
+  color: var(--warn);
+}
+
+.tokPlain {
+  color: var(--text-body);
+}
+
+.codeEmpty,
+.codeLoadingText {
+  padding: var(--sp-6) var(--sp-5);
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+
+.codeSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+}
+
+/* --------------------------------------------------------------- Meter -- */
+
+.meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: var(--sp-6);
+}
+
+.meterBar {
+  width: 3px;
+  border-radius: var(--r-full);
+  background: var(--c);
+  min-height: 2px;
+}
+
+/* ------------------------------------------------------------- Tooltip -- */
+
+.tooltipWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + var(--sp-3));
+  left: 50%;
+  translate: -50% 0;
+  z-index: 20;
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--float) 94%, transparent);
+  box-shadow: var(--shadow-float);
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- Menu -- */
+
+.menu {
+  min-width: 180px;
+  padding: var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--float) 94%, transparent);
+  box-shadow: var(--shadow-float);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--control-h);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-md);
+  color: var(--text-body);
+  text-align: left;
+  width: 100%;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: var(--line-soft);
+  color: var(--text-hi);
+}
+
+.menuItem:disabled {
+  opacity: 0.4;
+}
+
+.menuItemDanger {
+  color: var(--err);
+}
+
+.menuLabel {
+  flex: 1;
+}
+
+.menuSep {
+  height: 1px;
+  margin: var(--sp-2) 0;
+  background: var(--line-soft);
+}
