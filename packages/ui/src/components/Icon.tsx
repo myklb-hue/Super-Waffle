@@ -3,7 +3,8 @@ import { ICONS, type IconName } from './icons';
 import { colorVar, type ColorToken } from '../types';
 import s from './ui.module.css';
 
-export type IconSize = 10 | 12 | 14 | 18;
+/** The sizes the artboards actually use. */
+export type IconSize = 10 | 11 | 12 | 13 | 14 | 18;
 
 export interface IconProps {
   name: IconName;

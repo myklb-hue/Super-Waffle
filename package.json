@@ -4,15 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "ui": "npm run dev -w @cyberloom/ui",
+    "dev": "npm run dev -w @cyberloom/desktop",
     "test": "npm run test --workspaces --if-present",
-    "gen": "cargo run -q -p block-kinds --bin export-types",
+    "gen": "cargo run -q -p loomd --bin export-types",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },

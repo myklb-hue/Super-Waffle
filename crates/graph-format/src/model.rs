@@ -37,10 +37,8 @@ pub struct Graph {
     /// is safe to commit (SPEC §12.4). Sorted, like every other map in the
     /// format: their order carries no meaning, and sorting is what lets two
     /// hands produce one file.
-    #[serde(default)]
     pub env: BTreeMap<String, String>,
     pub blocks: Vec<Block>,
-    #[serde(default)]
     pub frames: Vec<Frame>,
     pub wires: Vec<Wire>,
     pub ui: Ui,
@@ -180,10 +178,8 @@ pub struct Block {
     pub size: Option<Size>,
     pub view: View,
     /// Validated against the kind's setting definitions.
-    #[serde(default)]
     pub settings: BTreeMap<String, Value>,
     /// A custom block's parsed interface: the ports its signature produced.
-    #[serde(default)]
     pub ports: Vec<Port>,
     #[serde(default)]
     pub source: Option<Source>,

@@ -1,0 +1,148 @@
+/* A block on the canvas. Every number here is a token: the header height and
+ * the port rows are what the wire router reads, so they cannot be local. */
+
+.block {
+  background: var(--block);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-block);
+  min-width: var(--block-min-w);
+  font-family: var(--font-ui);
+  /* Ports hang off both edges, so nothing may clip them. */
+  overflow: visible;
+}
+
+.selected {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-selected);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--block-header-h);
+  padding: 0 var(--sp-4);
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px) 0 0;
+  color: var(--cat);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cat) var(--a-header-from), transparent),
+    color-mix(in srgb, var(--cat) var(--a-header-to), transparent)
+  );
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tr-title);
+  color: var(--text-hi);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The port zone. Rows are absolutely placed so their centres come from
+ * graph-core's portY and not from however the box model happens to stack. */
+.ports {
+  position: relative;
+}
+
+.portIn,
+.portOut {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--port-row);
+  translate: 0 -50%;
+}
+
+.portIn {
+  left: 0;
+  padding-left: var(--sp-4);
+}
+
+.portOut {
+  right: 0;
+  padding-right: var(--sp-4);
+  flex-direction: row-reverse;
+}
+
+.portLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: var(--tr-port);
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+
+/* The dot is the wire's endpoint. xyflow positions the handle itself; the
+ * halo is a shadow so it never affects layout. */
+.dot.dot {
+  position: absolute;
+  width: var(--port-dot);
+  height: var(--port-dot);
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--ty);
+  box-shadow: 0 0 0 var(--port-halo) color-mix(in srgb, var(--ty) var(--a-wire-halo), transparent);
+  min-width: 0;
+  min-height: 0;
+}
+
+.portIn .dot.dot {
+  left: calc(var(--port-dot) / -2);
+}
+
+.portOut .dot.dot {
+  right: calc(var(--port-dot) / -2);
+}
+
+.body {
+  padding: var(--sp-2) var(--sp-5) var(--sp-5);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  margin-bottom: var(--sp-2);
+}
+
+.value {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-mono);
+  color: var(--text-body);
+  overflow: hidden;
+  white-space: pre;
+}
+
+.more {
+  margin-top: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}

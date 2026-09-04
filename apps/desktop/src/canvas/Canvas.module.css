@@ -1,0 +1,52 @@
+/* The canvas surface. xyflow's own stylesheet is imported by Canvas.tsx and
+ * then overridden here, because its defaults are a light theme. */
+
+.canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--canvas);
+}
+
+.canvas :global(.react-flow) {
+  background: var(--canvas);
+}
+
+/* xyflow draws a card around every node; the block draws its own. Note there
+ * is deliberately no reset for `.react-flow__handle` here: it would have the
+ * same specificity as the port dot's own class, and which one won would then
+ * depend on the order the two CSS modules happened to be bundled in. */
+.canvas :global(.react-flow__node) {
+  border: 0;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  font-size: inherit;
+  color: inherit;
+  width: auto;
+}
+
+.canvas :global(.react-flow__edge-path) {
+  stroke-linecap: round;
+}
+
+.canvas :global(.react-flow__node.selected) {
+  box-shadow: none;
+}
+
+.minimap.minimap {
+  right: var(--sp-5);
+  bottom: var(--sp-5);
+  width: 138px;
+  height: 88px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--float) 94%, transparent);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+}
+
+.minimap.minimap :global(.react-flow__minimap-mask) {
+  fill: rgba(8, 9, 11, 0.72);
+}

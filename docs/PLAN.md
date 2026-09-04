@@ -231,7 +231,7 @@ graphs, blocks or the engine.
 
 | Component | Props | States |
 | --- | --- | --- |
-| `Icon` | `name: IconName; size?: 10\|12\|14\|18; color?: token; strokeWidth?` | — |
+| `Icon` | `name: IconName; size?: 10\|11\|12\|13\|14\|18; color?: token; strokeWidth?` | — |
 | `StatusDot` | `state: 'idle'\|'queued'\|'running'\|'ok'\|'error'\|'off'` | — (the state *is* the prop) |
 | `Chip` | `label; color: token; dot?; solid?; size?: 'sm'\|'md'` | — |
 | `TypeDot` / `TypeDots` | `kind: PortType` / `kinds: PortType[]` | — |
@@ -589,11 +589,21 @@ before 7 and 9 exist, because the Avatar's inputs come from them.
 Things I decided so the plan could be written. Each is reversible now
 and expensive later.
 
-1. **Tauri over Electron.** Assumed because the target is Linux only,
-   the host needs device access that is easier from Rust, and the engine
-   is Rust anyway. The cost is WebKitGTK: older than Chromium, and its
-   CSS and canvas performance need checking early. Slice 2 is where this
-   proves out or fails; an Electron fallback keeps every other decision.
+1. **Tauri over Electron. Settled in slice 2: it works.** The shell was
+   built and then run twice, once in Chromium and once in a real Tauri
+   window under WebKitGTK 2.52, and the two were compared pixel by pixel.
+   WebKitGTK renders all of it with no fallbacks: CSS Modules, custom
+   properties, `color-mix`, the bundled WOFF2 faces, the SVG wires, the
+   dashed loop frame and the whole xyflow canvas. Over the canvas region
+   0.79% of pixels differ, which is text antialiasing; the block and port
+   geometry is identical. The inspector and library differ more (8.7% and
+   4.7%) because line boxes round differently between the two font
+   rasterisers, so panel text drifts by a few pixels down a long column.
+   That is worth knowing for one reason: *pixel-matching an artboard can
+   only ever be true on one engine*, and the engine that matters is
+   WebKitGTK. What is **not** settled is performance: this was software
+   rendering under Xvfb with no GPU, so frame times mean nothing yet.
+   Measure that on real hardware before the canvas gets heavier.
 2. **xyflow over a hand-rolled canvas.** Assumed because writing pan,
    zoom, drag, selection, minimap and hit-testing is weeks of work that
    xyflow has already done. The spec's geometry rules are all expressible

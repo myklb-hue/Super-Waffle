@@ -1,0 +1,22 @@
+.waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  height: 100vh;
+  background: var(--ground);
+  color: var(--text-low);
+  font-size: var(--fs-md);
+}
+
+.waitingTitle {
+  font-size: var(--fs-lg);
+  color: var(--text-mid);
+}
+
+.waitingDetail {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--err);
+}

@@ -22,7 +22,7 @@ export const Icons = () => (
     </Case>
     <Case name="sizes">
       <Row>
-        {([10, 12, 14, 18] as const).map((sz) => (
+        {([10, 11, 12, 13, 14, 18] as const).map((sz) => (
           <Icon key={sz} name="llm" size={sz} color="accent" />
         ))}
       </Row>

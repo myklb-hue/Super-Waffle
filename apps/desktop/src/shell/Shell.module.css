@@ -1,0 +1,342 @@
+/* The window: a top bar, three columns, a status bar. Every width and height
+ * is a token, because the three layouts in SPEC §1.7 change them together. */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--ground);
+}
+
+.middle {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* ---------------------------------------------------------------- top bar */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--topbar-h);
+  flex: none;
+  padding: 0 var(--sp-5);
+  background: var(--bar);
+  border-bottom: 1px solid var(--line);
+}
+
+.mark {
+  display: flex;
+  padding-right: var(--sp-2);
+}
+
+.filename {
+  font-family: var(--font-mono);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--text-hi);
+}
+
+.saved {
+  font-size: var(--fs-sm);
+  color: var(--text-low);
+}
+
+.transport {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+}
+
+.run {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--control-h);
+  padding: 0 var(--sp-6);
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--ground);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.run:disabled {
+  opacity: 0.45;
+}
+
+.topRight {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: var(--r-sm);
+  color: var(--text-mid);
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+}
+
+/* ---------------------------------------------------------------- library */
+
+.library {
+  width: var(--library-w);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--field-h);
+  margin: var(--sp-5);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+}
+
+.searchText {
+  flex: 1;
+  font-size: var(--fs-md);
+  color: var(--text-low);
+}
+
+.kbd {
+  padding: 1px var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.shelves {
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--sp-4) var(--sp-5);
+}
+
+.shelf {
+  margin-bottom: var(--sp-4);
+}
+
+.shelfHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--category-row-h);
+  padding: 0 var(--sp-3);
+}
+
+.shelfDot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: var(--cat);
+}
+
+.shelfName {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+
+.shelfCount {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--library-row-h);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-md);
+}
+
+.row:hover {
+  background: var(--line-soft);
+}
+
+.rowName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libraryFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--field-h);
+  flex: none;
+  padding: 0 var(--sp-5);
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-md);
+  color: var(--text-low);
+}
+
+/* -------------------------------------------------------------- inspector */
+
+.inspector {
+  width: var(--inspector-w);
+  flex: none;
+  padding: var(--sp-5);
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-5);
+}
+
+.panelIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  flex: none;
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--accent) var(--a-well), transparent);
+}
+
+.panelTitle {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tr-title);
+  color: var(--text-hi);
+}
+
+.panelSub {
+  margin-top: var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+}
+
+/* A graph with problems still opens and still draws; this is where it says so
+ * rather than refusing the file (SPEC §12.1). */
+.problems {
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-5);
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--warn) var(--a-chip), transparent);
+}
+
+.problemsTitle {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--warn);
+  margin-bottom: var(--sp-3);
+}
+
+.problem {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-prose);
+  color: var(--text-body);
+}
+
+.section {
+  padding: var(--sp-6) 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--text-low);
+  margin-bottom: var(--sp-4);
+}
+
+.field {
+  margin-bottom: var(--sp-4);
+}
+
+.fieldLabel {
+  font-size: var(--fs-sm);
+  color: var(--text-low);
+  margin-bottom: var(--sp-2);
+}
+
+.fieldValue,
+.fieldValueMono {
+  padding: var(--sp-3) var(--sp-4);
+  min-height: var(--field-h);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  font-size: var(--fs-md);
+  line-height: var(--lh-prose);
+  color: var(--text-hi);
+}
+
+.fieldValueMono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+/* ------------------------------------------------------------- status bar */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  height: var(--statusbar-h);
+  flex: none;
+  padding: 0 var(--sp-5);
+  background: var(--bar);
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+}
+
+.status {
+  color: var(--text-low);
+}
+
+.statusWarn {
+  color: var(--warn);
+}
+
+.statusRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}

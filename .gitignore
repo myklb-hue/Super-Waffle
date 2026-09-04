@@ -8,3 +8,5 @@ packages/*/build/
 
 # rust
 /target/
+apps/desktop/dist/
+apps/desktop/src-tauri/gen/

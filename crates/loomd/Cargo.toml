@@ -1,14 +1,17 @@
 [package]
-name = "block-kinds"
-description = "The built-in block catalogue: every kind's ports and settings, shared by the engine and the generated TypeScript."
+name = "loomd"
+description = "The Cyberloom engine daemon: a socket, a workspace, and the graphs in it."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
 [dependencies]
+block-kinds = { path = "../block-kinds" }
 graph-format = { path = "../graph-format" }
 serde.workspace = true
-specta.workspace = true
 serde_json.workspace = true
+specta.workspace = true
 thiserror.workspace = true
+specta-typescript.workspace = true
+specta-serde.workspace = true

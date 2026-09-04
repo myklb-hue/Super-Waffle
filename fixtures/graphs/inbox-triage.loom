@@ -98,7 +98,7 @@ frames:
   - id: loop-items
     kind: loop
     position: [594, 132]
-    size: [814, 330]
+    size: [880, 352]
     over: watch.file
     as: item
     parallel: 2
