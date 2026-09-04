@@ -1,0 +1,12 @@
+[package]
+name = "block-source"
+description = "The signature is the block: deriving a custom block's interface from its code."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+graph-format = { path = "../graph-format" }
+serde.workspace = true
+specta.workspace = true
