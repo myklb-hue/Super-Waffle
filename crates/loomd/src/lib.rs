@@ -4,10 +4,8 @@
 //! headless service (SPEC §15.1) is this without a window, and so the shell
 //! surviving an engine crash is the normal case rather than a later retrofit.
 //!
-//! There is no runtime in here yet: this slice serves a workspace and the
-//! graphs in it. Running one comes later.
-
 pub mod rpc;
+pub mod run;
 pub mod workspace;
 
 pub use rpc::{

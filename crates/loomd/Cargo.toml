@@ -15,3 +15,4 @@ specta.workspace = true
 thiserror.workspace = true
 specta-typescript.workspace = true
 specta-serde.workspace = true
+ureq = { version = "3.4.0", features = ["json"] }
