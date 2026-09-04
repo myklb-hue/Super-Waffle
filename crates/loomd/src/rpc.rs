@@ -41,6 +41,33 @@ pub enum Request {
         path: String,
         graph: Box<graph_format::Graph>,
     },
+
+    /// Run a graph. Answers immediately with the run's id; everything the run
+    /// has to say arrives afterwards as events carrying that id.
+    ///
+    /// The graph comes from the shell rather than from disk, so what runs is
+    /// what is on screen. Autosave means the two are almost always the same,
+    /// but "almost always" is not a thing to build a Run button on: a person
+    /// who edits and immediately runs should get the edit.
+    #[serde(rename = "run.start")]
+    RunStart {
+        path: String,
+        graph: Box<graph_format::Graph>,
+    },
+
+    /// Stop a run, or every run on this connection when given none.
+    #[serde(rename = "run.stop")]
+    RunStop {
+        #[serde(default)]
+        run: Option<String>,
+    },
+
+    /// Answer a warning the run is parked on (SPEC §12.1).
+    #[serde(rename = "run.continue")]
+    RunContinue {
+        warning: String,
+        decision: crate::run::runner::Decision,
+    },
 }
 
 /// The envelope a request arrives in.
@@ -64,8 +91,26 @@ pub enum Reply {
     Workspace(Vec<GraphSummary>),
     Graph(Box<OpenGraph>),
     Saved(Saved),
+    Running(RunStarted),
+    /// How many runs stopped, or whether a warning was answered.
+    Acknowledged(Acknowledged),
     /// Not an exception: the shell shows it and carries on (SPEC §12.1).
     Error(RpcError),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RunStarted {
+    pub run: String,
+    /// What the plan could not do. The run starts anyway (SPEC §12.1).
+    pub problems: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Acknowledged {
+    pub ok: bool,
+    pub count: u32,
 }
 
 /// The response envelope.

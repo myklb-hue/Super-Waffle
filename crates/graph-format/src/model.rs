@@ -178,7 +178,7 @@ pub struct Block {
     pub size: Option<Size>,
     pub view: View,
     /// Validated against the kind's setting definitions.
-    pub settings: BTreeMap<String, Value>,
+    pub settings: BTreeMap<String, Setting>,
     /// A custom block's parsed interface: the ports its signature produced.
     pub ports: Vec<Port>,
     #[serde(default)]
@@ -296,43 +296,43 @@ impl FrameKind {
 /// file still round-trips byte for byte.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
 #[serde(untagged)]
-pub enum Value {
+pub enum Setting {
     Null,
     Bool(bool),
     Int(i32),
     Float(f64),
     String(String),
-    List(Vec<Value>),
-    Map(BTreeMap<String, Value>),
+    List(Vec<Setting>),
+    Map(BTreeMap<String, Setting>),
 }
 
-impl From<bool> for Value {
+impl From<bool> for Setting {
     fn from(v: bool) -> Self {
-        Value::Bool(v)
+        Setting::Bool(v)
     }
 }
 
-impl From<i32> for Value {
+impl From<i32> for Setting {
     fn from(v: i32) -> Self {
-        Value::Int(v)
+        Setting::Int(v)
     }
 }
 
-impl From<f64> for Value {
+impl From<f64> for Setting {
     fn from(v: f64) -> Self {
-        Value::Float(v)
+        Setting::Float(v)
     }
 }
 
-impl From<&str> for Value {
+impl From<&str> for Setting {
     fn from(v: &str) -> Self {
-        Value::String(v.to_owned())
+        Setting::String(v.to_owned())
     }
 }
 
-impl From<String> for Value {
+impl From<String> for Setting {
     fn from(v: String) -> Self {
-        Value::String(v)
+        Setting::String(v)
     }
 }
 

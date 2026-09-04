@@ -7,11 +7,24 @@
  *  - over HTTP, which is what `npm run dev` uses in a plain browser and what
  *    the screenshot tests drive.
  *
+ * A request and its reply are one round trip. Everything a run has to say
+ * comes the other way, unprompted, so there is a second channel for it:
+ * `subscribeEvents` below.
+ *
  * Everything above this file works in terms of `call`, so neither path leaks
  * into the components.
  */
 
-import type { Graph, OpenGraph, Reply, Request, Saved } from '@cyberloom/graph-core';
+import type {
+  Decision,
+  Graph,
+  OpenGraph,
+  Reply,
+  Request,
+  RunEvent,
+  RunStarted,
+  Saved,
+} from '@cyberloom/graph-core';
 
 declare global {
   interface Window {
@@ -82,4 +95,69 @@ export async function listWorkspace() {
   const reply = await call({ method: 'workspace.list' });
   if (reply.result !== 'workspace') throw new Error('the engine did not list the workspace');
   return reply.data;
+}
+
+// ------------------------------------------------------------------- events
+
+/**
+ * What a run says while it is in flight.
+ *
+ * The two transports differ only in how a line reaches the window: the Tauri
+ * host emits it as a window event, the dev server as an EventSource message.
+ * Everything above this sees one stream of `RunEvent`.
+ */
+export type EventHandler = (event: RunEvent) => void;
+
+export function subscribeEvents(handler: EventHandler): () => void {
+  return isTauri() ? subscribeTauri(handler) : subscribeSse(handler);
+}
+
+function subscribeTauri(handler: EventHandler): () => void {
+  let stop: (() => void) | null = null;
+  let cancelled = false;
+  void (async () => {
+    const { listen } = await import('@tauri-apps/api/event');
+    const unlisten = await listen<RunEvent>('loomd:event', (message) =>
+      handler(message.payload),
+    );
+    // The caller may have unsubscribed while the import was in flight.
+    if (cancelled) unlisten();
+    else stop = unlisten;
+  })();
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
+}
+
+function subscribeSse(handler: EventHandler): () => void {
+  const source = new EventSource('/events');
+  source.onmessage = (message) => {
+    try {
+      handler(JSON.parse(message.data as string) as RunEvent);
+    } catch {
+      // A malformed line is the engine's to report. Dropping it beats
+      // tearing the stream down over one bad object.
+    }
+  };
+  return () => source.close();
+}
+
+/** Run a graph. The reply is immediate; the run itself arrives as events. */
+export async function startRun(path: string, graph: Graph): Promise<RunStarted> {
+  const reply = await call({ method: 'run.start', params: { path, graph } });
+  if (reply.result === 'error') throw new Error(reply.data.message);
+  if (reply.result !== 'running') throw new Error(`unexpected reply: ${reply.result}`);
+  return reply.data;
+}
+
+export async function stopRun(run?: string): Promise<number> {
+  const reply = await call({ method: 'run.stop', params: { run: run ?? null } });
+  return reply.result === 'acknowledged' ? reply.data.count : 0;
+}
+
+/** Answer a warning the run is parked on (SPEC §12.1). */
+export async function answerWarning(warning: string, decision: Decision): Promise<boolean> {
+  const reply = await call({ method: 'run.continue', params: { warning, decision } });
+  return reply.result === 'acknowledged' && reply.data.ok;
 }

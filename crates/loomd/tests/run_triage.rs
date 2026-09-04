@@ -62,6 +62,7 @@ fn run_it(decide: Decision) -> (loomd::run::runner::Summary, Recorded) {
         root: &root,
         provider: &provider,
         run: "r1".into(),
+        cancel: Default::default(),
     };
     let mut events = Vec::new();
     let mut asked = Vec::new();
@@ -201,6 +202,7 @@ fn the_model_is_offered_the_runtimes_not_the_box() {
         root: &root,
         provider: &provider,
         run: "r2".into(),
+        cancel: Default::default(),
     }
     .execute(&mut |_| {}, &mut |_| Decision::Continue);
 

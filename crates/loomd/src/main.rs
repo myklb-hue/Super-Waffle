@@ -49,12 +49,9 @@ fn main() -> ExitCode {
 
     match socket {
         None => {
-            let stdin = std::io::stdin();
-            let stdout = std::io::stdout();
-            if let Err(e) = engine.serve(stdin.lock(), stdout.lock()) {
-                eprintln!("loomd: {e}");
-                return ExitCode::FAILURE;
-            }
+            // `stdout()` rather than a lock: the writer runs on its own
+            // thread, and a lock guard cannot cross one.
+            engine.serve(std::io::stdin().lock(), std::io::stdout());
         }
         Some(path) => {
             // A stale socket from a crashed engine would otherwise make every
@@ -78,9 +75,7 @@ fn main() -> ExitCode {
                                 continue;
                             }
                         };
-                        if let Err(e) = engine.serve(stream, write) {
-                            eprintln!("loomd: connection ended: {e}");
-                        }
+                        engine.serve(stream, write);
                     }
                     Err(e) => eprintln!("loomd: accept: {e}"),
                 }

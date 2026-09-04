@@ -1,11 +1,15 @@
 //! What travels along a wire while a graph runs.
 //!
-//! This is not `graph_format::Value`. That one is a *setting*: a scalar the
-//! user typed into the inspector, which the file has to round-trip. This one is
-//! a *value in flight*, and the difference matters in both directions — a
-//! setting can never be an image, and a value in flight is never written to
-//! disk. Keeping them apart means neither type has to carry the other's
-//! compromises.
+//! This is not `graph_format::Setting`. That one is a scalar the user typed
+//! into the inspector, which the file has to round-trip. This one is a *value
+//! in flight*, and the difference matters in both directions — a setting can
+//! never be an image, and a value in flight is never written to disk. Keeping
+//! them apart means neither type has to carry the other's compromises.
+//!
+//! Both were called `Value` until the generated TypeScript refused them: Rust
+//! keeps them apart by module and TypeScript has one namespace for the whole
+//! schema. The one that moved was the setting, because `Setting` is what its
+//! own documentation had been calling it all along.
 //!
 //! There is one variant per flow type in SPEC §4.1, and none for the closed
 //! types: `tools` and `memory` are handles and `exec` is control flow, so none
@@ -21,7 +25,14 @@ use std::fmt;
 #[serde(tag = "type", content = "value", rename_all = "camelCase")]
 pub enum Value {
     Text(String),
-    Data(serde_json::Value),
+    /// Arbitrary JSON.
+    ///
+    /// Exported as `unknown` rather than structurally: specta refuses to write
+    /// `serde_json::Value` because its `Number` holds an `i64` and TypeScript
+    /// cannot hold one without losing precision. `unknown` is the truthful type
+    /// anyway — this is a record whose shape the block decides, and the shell
+    /// should be made to look before it reads.
+    Data(#[specta(type = specta_typescript::Unknown)] serde_json::Value),
     /// A path on disk. Held as a string rather than a `PathBuf` because it
     /// crosses the socket as JSON and the shell shows it verbatim.
     File(String),

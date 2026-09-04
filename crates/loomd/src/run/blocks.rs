@@ -69,7 +69,7 @@ impl Output {
 /// empty string".
 pub fn setting<'a>(block: &'a Block, name: &str) -> Option<&'a str> {
     match block.settings.get(name) {
-        Some(graph_format::Value::String(s)) if !s.trim().is_empty() => Some(s),
+        Some(graph_format::Setting::String(s)) if !s.trim().is_empty() => Some(s),
         _ => None,
     }
 }
@@ -77,14 +77,14 @@ pub fn setting<'a>(block: &'a Block, name: &str) -> Option<&'a str> {
 pub fn flag(block: &Block, name: &str) -> bool {
     matches!(
         block.settings.get(name),
-        Some(graph_format::Value::Bool(true))
+        Some(graph_format::Setting::Bool(true))
     )
 }
 
 pub fn number(block: &Block, name: &str) -> Option<f64> {
     match block.settings.get(name) {
-        Some(graph_format::Value::Int(i)) => Some(f64::from(*i)),
-        Some(graph_format::Value::Float(f)) => Some(*f),
+        Some(graph_format::Setting::Int(i)) => Some(f64::from(*i)),
+        Some(graph_format::Setting::Float(f)) => Some(*f),
         _ => None,
     }
 }
@@ -251,7 +251,7 @@ pub fn pure_step(block: &Block, inputs: &Outputs) -> Result<Outputs, String> {
 mod tests {
     use super::*;
 
-    fn block(kind: &str, settings: &[(&str, graph_format::Value)]) -> Block {
+    fn block(kind: &str, settings: &[(&str, graph_format::Setting)]) -> Block {
         Block {
             id: kind.into(),
             kind: kind.into(),
@@ -312,7 +312,10 @@ mod tests {
     fn the_terminal_offers_its_setting_as_the_default_in_the_description() {
         let tools = tools_of(&block(
             "terminal",
-            &[("command", graph_format::Value::String("cargo build".into()))],
+            &[(
+                "command",
+                graph_format::Setting::String("cargo build".into()),
+            )],
         ));
         assert_eq!(tools[0].name, "terminal.run");
         assert!(tools[0].description.contains("cargo build"));
@@ -331,7 +334,7 @@ mod tests {
         let out = pure_step(
             &block(
                 "input",
-                &[("value", graph_format::Value::String("hello".into()))],
+                &[("value", graph_format::Setting::String("hello".into()))],
             ),
             &Outputs::new(),
         )
@@ -346,7 +349,7 @@ mod tests {
         let out = pure_step(
             &block(
                 "convert",
-                &[("to", graph_format::Value::String("data".into()))],
+                &[("to", graph_format::Setting::String("data".into()))],
             ),
             &inputs,
         )
@@ -366,7 +369,7 @@ mod tests {
         let err = pure_step(
             &block(
                 "convert",
-                &[("to", graph_format::Value::String("image".into()))],
+                &[("to", graph_format::Setting::String("image".into()))],
             ),
             &inputs,
         )
@@ -385,7 +388,7 @@ mod tests {
     fn a_venv_setting_picks_the_interpreter_inside_it() {
         let b = block(
             "python",
-            &[("venv", graph_format::Value::String(".venv".into()))],
+            &[("venv", graph_format::Setting::String(".venv".into()))],
         );
         assert_eq!(
             python_interpreter(&b, Path::new("/w")),

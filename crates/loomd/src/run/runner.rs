@@ -24,6 +24,8 @@ use super::value::Value;
 use graph_format::{Block, Endpoint, Graph};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
 /// How many times a model may call tools before answering.
@@ -47,7 +49,8 @@ pub struct Warning {
 /// a dangerous action and may not prevent one, so the choice is between going
 /// ahead and stopping the whole run — never between going ahead and being
 /// overruled on this one step (SPEC §12.1).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub enum Decision {
     Continue,
     /// Continue, and do not ask again for this block during this run.
@@ -72,6 +75,15 @@ pub struct Runner<'a> {
     pub root: &'a Path,
     pub provider: &'a dyn ModelProvider,
     pub run: String,
+    /// Set from outside to stop the run.
+    ///
+    /// Stopping is somebody else's decision — a person pressing the button, on
+    /// another thread — so it cannot be a return value from anything in here.
+    /// It is checked between steps and between tool rounds rather than in the
+    /// middle of one: a command that has started is allowed to finish, because
+    /// killing a shell halfway leaves the user's machine in a state the graph
+    /// never described.
+    pub cancel: Arc<AtomicBool>,
 }
 
 struct State<'a> {
@@ -135,7 +147,7 @@ impl<'a> Runner<'a> {
         }
 
         for id in &plan.order {
-            if st.stopped {
+            if st.stopped || self.cancelled(&mut st) {
                 break;
             }
             let Some(block) = self.block(id) else {
@@ -308,6 +320,15 @@ impl<'a> Runner<'a> {
 
     fn block(&self, id: &str) -> Option<&Block> {
         self.graph.blocks.iter().find(|b| b.id == id)
+    }
+
+    /// Whether someone pressed stop. Recorded on the state the first time it is
+    /// seen, so the run ends `Stopped` rather than merely ending.
+    fn cancelled(&self, st: &mut State<'_>) -> bool {
+        if self.cancel.load(Ordering::Relaxed) {
+            st.stopped = true;
+        }
+        st.stopped
     }
 
     fn console(&self, st: &mut State<'_>, source: Option<&str>, level: Level, message: String) {
@@ -484,7 +505,7 @@ impl<'a> Runner<'a> {
         let mut usage = super::model::Usage::default();
 
         for round in 0..MAX_TOOL_ROUNDS {
-            if st.stopped {
+            if st.stopped || self.cancelled(st) {
                 return Err("stopped".into());
             }
             let mut streamed = String::new();

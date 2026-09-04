@@ -6,6 +6,7 @@
 //!
 pub mod rpc;
 pub mod run;
+pub mod session;
 pub mod workspace;
 
 pub use rpc::{
@@ -13,7 +14,10 @@ pub use rpc::{
 };
 pub use workspace::{Workspace, WorkspaceError};
 
+use crate::session::{Outgoing, Session, write_lines};
 use std::io::{BufRead, BufReader, Write};
+use std::sync::Arc;
+use std::sync::mpsc::channel;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -34,7 +38,11 @@ impl Engine {
 
     /// Answer one request. Infallible on purpose: a failure is a `Reply::Error`
     /// the shell can show, not something that drops the connection.
-    pub fn handle(&self, request: Request) -> Reply {
+    ///
+    /// The session is where a run sends what it has to say, so it is a
+    /// parameter rather than something the engine owns: one engine serves many
+    /// connections, and a run belongs to the connection that asked for it.
+    pub fn handle(&self, request: Request, session: &Arc<Session>) -> Reply {
         match request {
             Request::EngineStatus => match self.workspace.graphs() {
                 Ok(graphs) => Reply::EngineStatus(EngineStatus {
@@ -104,6 +112,39 @@ impl Engine {
                 }
             },
 
+            Request::RunStart { path, graph } => {
+                // Validation is reported, never a refusal: a graph with
+                // problems still runs, and the console says what they were
+                // (SPEC §12.1).
+                let mut problems: Vec<String> = block_kinds::validate(&graph)
+                    .iter()
+                    .map(|p| p.to_string())
+                    .collect();
+                problems.extend(crate::run::plan(&graph).problems);
+                // Relative paths in a graph's settings resolve against the
+                // workspace, not the graph's own folder: the format says a
+                // source path is "relative to the workspace folder, so a graph
+                // moves with its files" (`graph_format::model::Source`).
+                let _ = &path;
+                match session.start_run(*graph, self.workspace.root().to_path_buf()) {
+                    Ok(run) => Reply::Running(rpc::RunStarted { run, problems }),
+                    Err(e) => Reply::Error(e),
+                }
+            }
+
+            Request::RunStop { run } => Reply::Acknowledged(rpc::Acknowledged {
+                ok: true,
+                count: session.stop(run.as_deref()) as u32,
+            }),
+
+            Request::RunContinue { warning, decision } => {
+                let ok = session.answer(&warning, decision);
+                Reply::Acknowledged(rpc::Acknowledged {
+                    ok,
+                    count: u32::from(ok),
+                })
+            }
+
             Request::GraphOpen { path } => match self.workspace.load(&path) {
                 Err(e) => Reply::Error(RpcError::new("open", e.to_string())),
                 Ok(graph) => {
@@ -123,33 +164,44 @@ impl Engine {
 
     /// Serve one connection until it closes.
     ///
-    /// One request per line, one reply per line. A line that will not parse
-    /// gets an error reply rather than a dropped connection, because a shell
-    /// that sent one bad message should be told, not disconnected.
-    pub fn serve(&self, read: impl std::io::Read, mut write: impl Write) -> std::io::Result<()> {
+    /// One request per line, one reply per line, plus events whenever a run has
+    /// something to say. A line that will not parse gets an error reply rather
+    /// than a dropped connection, because a shell that sent one bad message
+    /// should be told, not disconnected.
+    ///
+    /// Writing happens on its own thread, draining a queue. That is what keeps
+    /// a reply and a run's events from interleaving halfway through an object,
+    /// and it is why this reads rather than reading *and* writing.
+    pub fn serve(&self, read: impl std::io::Read, write: impl Write + Send + 'static) {
+        let (tx, rx) = channel::<Outgoing>();
+        let writer = std::thread::Builder::new()
+            .name("loomd-writer".into())
+            .spawn(move || write_lines(rx, write));
+        let session = Arc::new(Session::new(tx));
+
         for line in BufReader::new(read).lines() {
-            let line = line?;
+            let Ok(line) = line else { break };
             if line.trim().is_empty() {
                 continue;
             }
-            let out = match serde_json::from_str::<Envelope>(&line) {
-                Ok(envelope) => ReplyEnvelope {
-                    id: envelope.id,
-                    reply: self.handle(envelope.request),
-                },
-                Err(e) => ReplyEnvelope {
-                    id: 0,
-                    reply: Reply::Error(RpcError::new("protocol", e.to_string())),
-                },
-            };
-            writeln!(
-                write,
-                "{}",
-                serde_json::to_string(&out).expect("a reply always serialises")
-            )?;
-            write.flush()?;
+            match serde_json::from_str::<Envelope>(&line) {
+                Ok(envelope) => {
+                    let reply = self.handle(envelope.request, &session);
+                    session.send_reply(envelope.id, reply);
+                }
+                Err(e) => {
+                    session.send_reply(0, Reply::Error(RpcError::new("protocol", e.to_string())))
+                }
+            }
         }
-        Ok(())
+
+        // The shell hung up. Anything still running is stopped rather than left
+        // to finish into a socket nobody is reading: a run exists to be watched.
+        session.stop(None);
+        session.finish();
+        if let Ok(writer) = writer {
+            let _ = writer.join();
+        }
     }
 }
 
@@ -163,9 +215,28 @@ mod tests {
         )
     }
 
+    /// Somewhere for the writer thread to put what it wrote.
+    struct Collected(Arc<std::sync::Mutex<Vec<u8>>>);
+
+    impl Write for Collected {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0.lock().unwrap().extend_from_slice(buf);
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    /// A session with nowhere for events to go. These requests produce none;
+    /// the ones that do are covered over a real connection in `tests/protocol`.
+    pub(super) fn nowhere() -> Arc<Session> {
+        Arc::new(Session::new(channel().0))
+    }
+
     #[test]
     fn reports_what_it_is_serving() {
-        let Reply::EngineStatus(status) = engine().handle(Request::EngineStatus) else {
+        let Reply::EngineStatus(status) = engine().handle(Request::EngineStatus, &nowhere()) else {
             panic!("expected a status");
         };
         assert_eq!(status.graphs, 4);
@@ -175,7 +246,7 @@ mod tests {
 
     #[test]
     fn lists_the_workspace() {
-        let Reply::Workspace(graphs) = engine().handle(Request::WorkspaceList) else {
+        let Reply::Workspace(graphs) = engine().handle(Request::WorkspaceList, &nowhere()) else {
             panic!("expected a list");
         };
         assert_eq!(graphs.len(), 4);
@@ -187,9 +258,12 @@ mod tests {
 
     #[test]
     fn opens_a_graph_with_its_problems() {
-        let Reply::Graph(open) = engine().handle(Request::GraphOpen {
-            path: "graphs/home-assistant.loom".into(),
-        }) else {
+        let Reply::Graph(open) = engine().handle(
+            Request::GraphOpen {
+                path: "graphs/home-assistant.loom".into(),
+            },
+            &nowhere(),
+        ) else {
             panic!("expected a graph");
         };
         assert_eq!(open.graph.id, "home-assistant");
@@ -198,9 +272,12 @@ mod tests {
 
     #[test]
     fn a_bad_path_is_an_error_reply_not_a_panic() {
-        let Reply::Error(e) = engine().handle(Request::GraphOpen {
-            path: "../etc/passwd".into(),
-        }) else {
+        let Reply::Error(e) = engine().handle(
+            Request::GraphOpen {
+                path: "../etc/passwd".into(),
+            },
+            &nowhere(),
+        ) else {
             panic!("expected an error");
         };
         assert_eq!(e.code, "open");
@@ -218,9 +295,12 @@ mod tests {
             "\n",
             "not json\n",
         );
-        let mut out = Vec::new();
-        engine().serve(input.as_bytes(), &mut out).unwrap();
-        let lines: Vec<_> = String::from_utf8(out)
+        // The writer now runs on its own thread, so it needs somewhere to
+        // write that outlives this frame.
+        let out = Arc::new(std::sync::Mutex::new(Vec::new()));
+        engine().serve(input.as_bytes(), Collected(Arc::clone(&out)));
+        let written = std::mem::take(&mut *out.lock().unwrap());
+        let lines: Vec<_> = String::from_utf8(written)
             .unwrap()
             .lines()
             .map(str::to_owned)
@@ -243,7 +323,7 @@ mod tests {
 
     #[test]
     fn serves_the_catalogue_the_engine_actually_has() {
-        let Reply::Catalogue(kinds) = engine().handle(Request::GraphCatalogue) else {
+        let Reply::Catalogue(kinds) = engine().handle(Request::GraphCatalogue, &nowhere()) else {
             panic!("expected a catalogue");
         };
         assert_eq!(kinds.len(), block_kinds::KINDS.len());
@@ -253,6 +333,7 @@ mod tests {
 
 #[cfg(test)]
 mod save_tests {
+    use super::tests::nowhere;
     use super::*;
 
     /// The acceptance criterion for slice 3: a graph edited and saved comes
@@ -268,9 +349,12 @@ mod save_tests {
         std::fs::copy(source, dir.join("g.loom")).unwrap();
 
         let engine = Engine::new(Workspace::open(&dir).unwrap());
-        let Reply::Graph(open) = engine.handle(Request::GraphOpen {
-            path: "g.loom".into(),
-        }) else {
+        let Reply::Graph(open) = engine.handle(
+            Request::GraphOpen {
+                path: "g.loom".into(),
+            },
+            &nowhere(),
+        ) else {
             panic!("expected a graph");
         };
 
@@ -282,10 +366,13 @@ mod save_tests {
         added.position = graph_format::Position { x: 66.0, y: 704.0 };
         graph.blocks.push(added);
 
-        let Reply::Saved(saved) = engine.handle(Request::GraphSave {
-            path: "g.loom".into(),
-            graph: Box::new(graph),
-        }) else {
+        let Reply::Saved(saved) = engine.handle(
+            Request::GraphSave {
+                path: "g.loom".into(),
+                graph: Box::new(graph),
+            },
+            &nowhere(),
+        ) else {
             panic!("expected a save");
         };
         assert!(saved.written);
@@ -296,9 +383,12 @@ mod save_tests {
             open.graph.blocks[0].position.x
         );
 
-        let Reply::Graph(reopened) = engine.handle(Request::GraphOpen {
-            path: "g.loom".into(),
-        }) else {
+        let Reply::Graph(reopened) = engine.handle(
+            Request::GraphOpen {
+                path: "g.loom".into(),
+            },
+            &nowhere(),
+        ) else {
             panic!("expected a graph");
         };
         assert_eq!(reopened.graph, *saved.graph);
@@ -319,9 +409,12 @@ mod save_tests {
         std::fs::copy(source, dir.join("g.loom")).unwrap();
 
         let engine = Engine::new(Workspace::open(&dir).unwrap());
-        let Reply::Graph(open) = engine.handle(Request::GraphOpen {
-            path: "g.loom".into(),
-        }) else {
+        let Reply::Graph(open) = engine.handle(
+            Request::GraphOpen {
+                path: "g.loom".into(),
+            },
+            &nowhere(),
+        ) else {
             panic!("expected a graph");
         };
         let before = std::fs::metadata(dir.join("g.loom"))
@@ -329,10 +422,13 @@ mod save_tests {
             .modified()
             .unwrap();
 
-        let Reply::Saved(saved) = engine.handle(Request::GraphSave {
-            path: "g.loom".into(),
-            graph: Box::new(open.graph.clone()),
-        }) else {
+        let Reply::Saved(saved) = engine.handle(
+            Request::GraphSave {
+                path: "g.loom".into(),
+                graph: Box::new(open.graph.clone()),
+            },
+            &nowhere(),
+        ) else {
             panic!("expected a save");
         };
         assert!(
@@ -355,16 +451,22 @@ mod save_tests {
         let engine = Engine::new(
             Workspace::open(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures")).unwrap(),
         );
-        let graph = match engine.handle(Request::GraphOpen {
-            path: "graphs/door-watch.loom".into(),
-        }) {
+        let graph = match engine.handle(
+            Request::GraphOpen {
+                path: "graphs/door-watch.loom".into(),
+            },
+            &nowhere(),
+        ) {
             Reply::Graph(open) => Box::new(open.graph),
             _ => panic!("expected a graph"),
         };
-        let Reply::Error(e) = engine.handle(Request::GraphSave {
-            path: "../escaped.loom".into(),
-            graph,
-        }) else {
+        let Reply::Error(e) = engine.handle(
+            Request::GraphSave {
+                path: "../escaped.loom".into(),
+                graph,
+            },
+            &nowhere(),
+        ) else {
             panic!("expected an error");
         };
         assert_eq!(e.code, "save");

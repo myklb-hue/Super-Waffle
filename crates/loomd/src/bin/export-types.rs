@@ -10,9 +10,13 @@
 use block_kinds::{BlockKind, Category, KINDS, PortDef, SettingDef, SettingKind};
 use graph_format::{
     Between, Block, Defaults, Endpoint, Execution, Frame, FrameKind, Graph, Language, Overlap,
-    OverlapPolicy, Port, PortType, Position, RunMode, Side, Size, Source, SourceMode, Ui, Value,
+    OverlapPolicy, Port, PortType, Position, RunMode, Setting, Side, Size, Source, SourceMode, Ui,
     View, Viewport, Wire,
 };
+use loomd::rpc::{Acknowledged, RunStarted, Saved};
+use loomd::run::event::{BlockState, Level, PortValue, RunEvent, RunOutcome};
+use loomd::run::runner::Decision;
+use loomd::run::value::{Media, Value as RunValue};
 use loomd::{EngineStatus, GraphSummary, OpenGraph, Reply, Request, RpcError};
 use specta::Types;
 use specta_typescript::Typescript;
@@ -29,7 +33,7 @@ fn main() {
     types.register_mut::<FrameKind>();
     types.register_mut::<Port>();
     types.register_mut::<Source>();
-    types.register_mut::<Value>();
+    types.register_mut::<Setting>();
     types.register_mut::<Position>();
     types.register_mut::<Size>();
     types.register_mut::<Ui>();
@@ -53,6 +57,18 @@ fn main() {
     types.register_mut::<GraphSummary>();
     types.register_mut::<OpenGraph>();
     types.register_mut::<RpcError>();
+    types.register_mut::<Saved>();
+    types.register_mut::<RunStarted>();
+    types.register_mut::<Acknowledged>();
+    // What a run says while it is in flight.
+    types.register_mut::<RunEvent>();
+    types.register_mut::<BlockState>();
+    types.register_mut::<RunOutcome>();
+    types.register_mut::<Level>();
+    types.register_mut::<PortValue>();
+    types.register_mut::<RunValue>();
+    types.register_mut::<Media>();
+    types.register_mut::<Decision>();
     // The catalogue.
     types.register_mut::<BlockKind>();
     types.register_mut::<Category>();

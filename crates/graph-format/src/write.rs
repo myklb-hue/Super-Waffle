@@ -219,15 +219,15 @@ fn write_frame(out: &mut String, f: &Frame) {
     line(out, 2, &format!("continueOnError: {}", f.continue_on_error));
 }
 
-fn write_value(out: &mut String, depth: usize, key: &str, v: &Value) {
+fn write_value(out: &mut String, depth: usize, key: &str, v: &Setting) {
     match v {
-        Value::Map(m) if !m.is_empty() => {
+        Setting::Map(m) if !m.is_empty() => {
             line(out, depth, &format!("{}:", scalar(key)));
             for (k, v) in m {
                 write_value(out, depth + 1, k, v);
             }
         }
-        Value::List(items) if !items.is_empty() => {
+        Setting::List(items) if !items.is_empty() => {
             line(out, depth, &format!("{}:", scalar(key)));
             for item in items {
                 line(out, depth + 1, &format!("- {}", inline_value(item)));
@@ -235,23 +235,23 @@ fn write_value(out: &mut String, depth: usize, key: &str, v: &Value) {
         }
         // A string with a newline reads as code or prose, so give it a block
         // scalar rather than an escaped one-liner.
-        Value::String(s) if s.contains('\n') => write_block_scalar(out, depth, key, s),
+        Setting::String(s) if s.contains('\n') => write_block_scalar(out, depth, key, s),
         _ => line(out, depth, &format!("{}: {}", scalar(key), inline_value(v))),
     }
 }
 
-fn inline_value(v: &Value) -> String {
+fn inline_value(v: &Setting) -> String {
     match v {
-        Value::Null => "null".into(),
-        Value::Bool(b) => b.to_string(),
-        Value::Int(i) => i.to_string(),
-        Value::Float(f) => num(*f),
-        Value::String(s) => scalar(s),
-        Value::List(items) => {
+        Setting::Null => "null".into(),
+        Setting::Bool(b) => b.to_string(),
+        Setting::Int(i) => i.to_string(),
+        Setting::Float(f) => num(*f),
+        Setting::String(s) => scalar(s),
+        Setting::List(items) => {
             let inner: Vec<_> = items.iter().map(inline_value).collect();
             format!("[{}]", inner.join(", "))
         }
-        Value::Map(m) => {
+        Setting::Map(m) => {
             let inner: Vec<_> = m
                 .iter()
                 .map(|(k, v)| format!("{}: {}", scalar(k), inline_value(v)))

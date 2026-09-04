@@ -19,6 +19,8 @@ function engine(): Plugin {
   type Engine = ChildProcessByStdio<Writable, Readable, null>;
   let child: Engine | null = null;
   const pending = new Map<number, (reply: unknown) => void>();
+  /** Everyone listening on /events. A run's events go to all of them. */
+  const listeners = new Set<import('node:http').ServerResponse>();
   let nextId = 1;
 
   function start(): Engine {
@@ -29,14 +31,23 @@ function engine(): Plugin {
       stdio: ['pipe', 'pipe', 'inherit'],
     });
     createInterface({ input: started.stdout }).on('line', (line) => {
+      let message: { id?: number };
       try {
-        const reply = JSON.parse(line) as { id: number };
-        pending.get(reply.id)?.(reply);
-        pending.delete(reply.id);
+        message = JSON.parse(line) as { id?: number };
       } catch {
         // A line that will not parse is the engine's to report, not something
         // to bring the dev server down for.
+        return;
       }
+      // A reply carries the id of the request it answers; an event carries
+      // none and goes to whoever is listening. That one distinction is the
+      // whole of the demultiplexing.
+      if (message.id === undefined) {
+        for (const listener of listeners) listener.write(`data: ${line}\n\n`);
+        return;
+      }
+      pending.get(message.id)?.(message);
+      pending.delete(message.id);
     });
     started.on('exit', () => {
       child = null;
@@ -82,7 +93,27 @@ function engine(): Plugin {
           }
         });
       });
-      server.httpServer?.on('close', () => child?.kill());
+      // Events, as an EventSource stream. The Tauri build has the host's own
+      // event channel instead; this is the browser's equivalent, so developing
+      // in a tab watches a real run rather than a mock of one.
+      server.middlewares.use('/events', (req, res) => {
+        res.writeHead(200, {
+          'content-type': 'text/event-stream',
+          'cache-control': 'no-cache',
+          connection: 'keep-alive',
+        });
+        // Vite sits behind no proxy here, but a comment line makes the stream
+        // open immediately rather than when the first event arrives.
+        res.write(': open\n\n');
+        listeners.add(res);
+        start();
+        req.on('close', () => listeners.delete(res));
+      });
+
+      server.httpServer?.on('close', () => {
+        for (const listener of listeners) listener.end();
+        child?.kill();
+      });
     },
   };
 }

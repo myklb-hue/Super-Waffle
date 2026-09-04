@@ -138,6 +138,9 @@ pub enum RunEvent {
         /// The block that answers it.
         callee: String,
         name: String,
+        /// Whatever the model sent. `unknown` on the TypeScript side, for the
+        /// same reason as `run::Value::Data`.
+        #[specta(type = specta_typescript::Unknown)]
         arguments: serde_json::Value,
     },
 

@@ -300,29 +300,29 @@ fn frame_from(n: &Node) -> R<Frame> {
     })
 }
 
-fn value_from(y: &Yaml) -> R<Value> {
+fn value_from(y: &Yaml) -> R<Setting> {
     if y.is_null() {
-        return Ok(Value::Null);
+        return Ok(Setting::Null);
     }
     if let Some(b) = y.as_bool() {
-        return Ok(Value::Bool(b));
+        return Ok(Setting::Bool(b));
     }
     if let Some(i) = y.as_integer() {
         // Out of i32 range degrades to a float, which is the precision JSON
-        // would have given it anyway; see the note on Value.
+        // would have given it anyway; see the note on Setting.
         return Ok(match i32::try_from(i) {
-            Ok(i) => Value::Int(i),
-            Err(_) => Value::Float(i as f64),
+            Ok(i) => Setting::Int(i),
+            Err(_) => Setting::Float(i as f64),
         });
     }
     if let Some(f) = y.as_floating_point() {
-        return Ok(Value::Float(f));
+        return Ok(Setting::Float(f));
     }
     if let Some(s) = y.as_str() {
-        return Ok(Value::String(s.to_owned()));
+        return Ok(Setting::String(s.to_owned()));
     }
     if let Some(seq) = y.as_sequence() {
-        return Ok(Value::List(seq.iter().map(value_from).collect::<R<_>>()?));
+        return Ok(Setting::List(seq.iter().map(value_from).collect::<R<_>>()?));
     }
     if let Some(map) = y.as_mapping() {
         let mut out = BTreeMap::new();
@@ -333,9 +333,9 @@ fn value_from(y: &Yaml) -> R<Value> {
             })?;
             out.insert(key.to_owned(), value_from(v)?);
         }
-        return Ok(Value::Map(out));
+        return Ok(Setting::Map(out));
     }
-    Ok(Value::Null)
+    Ok(Setting::Null)
 }
 
 /// `node.port`, where the node is a block or a loop frame. Port names never
