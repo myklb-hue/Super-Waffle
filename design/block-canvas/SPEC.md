@@ -210,7 +210,31 @@ Chips in the header are for state that matters at a glance: `streaming`,
 chip. Chips are mono 9.5 px on a 12 % tint of their colour. Selection is
 *never* a chip; it is the ring.
 
-### 3.4 Loop frames
+### 3.4 Views and resizing
+
+Every block has three views, switched from a three-icon toggle in its
+header, by double-clicking the header, or with `⌘E` for the third. The
+view is remembered per block, per graph.
+
+| View | Shows | Third view depends on the block |
+| --- | --- | --- |
+| Compact | Name and ports | |
+| Summary | Ports plus a preview: a field, a thumbnail, the current state | |
+| Code | The inline editor | Custom blocks (§10.6) |
+| Stage | The picture fills the block; the header shrinks to a 24 px strip; port labels hide and only the dots stay on the edges | Blocks with a live picture: Avatar, Webcam, Display, Terminal, Object detection |
+
+Switching views never moves a port: the dot for row *i* stays at
+51 + 24·*i* px from the block's top in every view, so wires do not move
+when a block changes shape.
+
+**Resizing.** Every block has a grip in its bottom-right corner. In Summary
+view dragging it sets width and the body reflows. In Stage or Code view it
+sets width and height; a picture scales, code scrolls. Sizes snap to the
+22 px grid, the minimum is the compact size, and the size is remembered per
+block per graph. An Avatar keeps its rig's aspect ratio unless the lock in
+its inspector is turned off.
+
+### 3.5 Loop frames
 
 A Loop is not a block but a dashed frame on the canvas (slate,
 1.5 px dashed, 12 px radius). Its header carries the loop icon, *For each*,
@@ -652,16 +676,15 @@ fn)`), shell (`# @block`, `# @in`, `# @out` comments). A file with several
 
 ### 10.6 Views
 
-![Figure 12 — Compact, Summary and Code views of the same block; how to switch; the options for big programs.](fig/BlockViews.png)
+![Figure 12 — Three views of a custom block and three of a visual block; how to switch; resizing; the options for big programs.](fig/BlockViews.png)
+
+A custom block's third view is Code (§3.4 has the general rule).
 
 | View | Shows | Default when |
 | --- | --- | --- |
 | Compact | Name and ports | Saved to the library and dropped onto another graph |
 | Summary | Settings, description, line count and last reload | In use on the graph where it was written |
 | Code | The inline editor, sized by the user; scrolls inside | Opened deliberately |
-
-Switch with the three-icon toggle in the header, double-click on the
-header, or `⌘E`. The view is remembered per block, per graph.
 
 ### 10.7 Big programs
 
@@ -741,13 +764,23 @@ A window (optionally always on top), a specific screen, or a physical face:
 the avatar can call `face.render` on a USB device block to drive an LED
 matrix. The target is a setting, not a wire.
 
-### 11.6 A family
+### 11.6 On the canvas
+
+![Figure 16 — The assistant graph with the Avatar in Stage view: the rig fills a 240 px block, the header is a strip, the ports are dots at the same y as before, and the inspector shows the view and size controls.](fig/AssistantStage.png)
+
+The Avatar's third view is Stage (§3.4). Its Summary view shows a
+thumbnail of the rig and the current state; Stage fills the block with the
+rig itself, resizable from the corner with the aspect locked by default.
+On a busy graph Stage costs real canvas room, which is what the library
+rail is for.
+
+### 11.7 A family
 
 The Avatar is one of a small family of expression actuators. A **Status
 light** breathes a colour and a **Sound cue** plays a chime, each on the
 same command vocabulary. Same pattern, different medium.
 
-### 11.7 Warnings
+### 11.8 Warnings
 
 `face.express` is not a physical action and does not warn.
 
@@ -1015,6 +1048,7 @@ line height; code 10.5 px on 19 px lines.
 | 13 | CustomDrawer | Custom blocks |
 | 14 | RunModes | Live and embodied |
 | 15 | Avatar | Live and embodied |
+| 16 | AssistantStage | Live and embodied |
 | — | Interactive (clickable) | Clickable |
 
 ### 16.5 Files

@@ -118,6 +118,8 @@ human rose.
   (privacy, enrolment, what is stored, physical limits).
 - `Avatar` — the Avatar panel, four rigs (Line, Robot, Orb, Pixel) running
   the same six expressions, and the command vocabulary.
+- `AssistantStage` — the assistant graph with the Avatar in Stage view,
+  resized from the corner, wires unmoved.
 
 **Custom blocks**
 
@@ -129,8 +131,9 @@ human rose.
   shell spellings.
 - `CustomDrawer` — a 184-line block shown in Summary view on the canvas
   while its code is edited in the full-width drawer below.
-- `BlockViews` — the same block in Compact, Summary and Code views, how to
-  switch, and the three answers for big programs.
+- `BlockViews` — a custom block in Compact, Summary and Code beside a
+  visual block in Compact, Summary and Stage; switching, resizing, and the
+  three answers for big programs.
 
 **Clickable**
 

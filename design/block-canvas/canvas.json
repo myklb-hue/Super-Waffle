@@ -95,9 +95,18 @@
       "x": 3620,
       "y": 1160,
       "w": 1200,
-      "h": 1260,
+      "h": 1370,
       "page": "page-2",
       "title": "Avatar and rigs"
+    },
+    {
+      "file": "AssistantStage.dc.html",
+      "x": 0,
+      "y": 2400,
+      "w": 1920,
+      "h": 1080,
+      "page": "page-2",
+      "title": "Avatar staged"
     },
     {
       "file": "CustomBlock.dc.html",
@@ -131,7 +140,7 @@
       "x": 1680,
       "y": 1080,
       "w": 1400,
-      "h": 700,
+      "h": 1040,
       "page": "page-3",
       "title": "Block views"
     },
@@ -210,6 +219,14 @@
       "w": 620,
       "page": "page-2",
       "text": "Avatar: the block that gives the assistant a presence. A rig is one aesthetic plus the expressions it supports; the vocabulary the model can call is generated from the rig. Lip sync comes from the speech audio, never from the model."
+    },
+    {
+      "id": "stage-note",
+      "x": 0,
+      "y": 2250,
+      "w": 700,
+      "page": "page-2",
+      "text": "The same graph with the Avatar in Stage view: the picture fills the block, the header is a strip, ports are dots on the edges at the same y as before. Drag the corner to resize; the rig keeps its aspect. Every block with a live picture has a Stage view."
     },
     {
       "id": "proto-note",

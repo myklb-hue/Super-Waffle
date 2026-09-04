@@ -1408,6 +1408,31 @@ const camPreview = `<div style="position:relative;height:46px;border-radius:5px;
 
 const fnChip = (t) => chip(t, T.tools);
 
+const grip = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" style="position:absolute;right:3px;bottom:3px;opacity:.7;"><path d="M11 1L1 11M11 6L6 11M11 10l-1 1" stroke="${C.mid}" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+
+// Stage view: a slim header, port dots only on the edges at the same y as
+// every other view (switching views never moves a port), content fills the rest.
+function stageBlock(o) {
+  const c = o.color || T.any;
+  const selected = !!o.selected;
+  const borderCol = selected ? C.accent : o.state === 'running' ? rgba(C.ok, 0.5) : C.line;
+  const shadow = selected ? `0 0 0 1px ${C.accent},0 0 0 5px ${rgba(C.accent, 0.15)},0 16px 38px rgba(0,0,0,.6)` : `0 12px 30px rgba(0,0,0,.5)`;
+  const ins = (o.ports || []).filter(p => p.side === 'in'), outs = (o.ports || []).filter(p => p.side === 'out');
+  const dot = (p, i, side) => `<span title="${p.label}" style="position:absolute;${side === 'in' ? 'left:-5.5px;' : 'right:-5.5px;'}top:${51 + 24 * i - 5.5}px;width:11px;height:11px;border-radius:50%;background:${T[p.kind]};box-shadow:0 0 0 3px ${rgba(T[p.kind], 0.12)};opacity:${p.dim ? 0.3 : 1};"></span>`;
+  return `<div style="position:absolute;left:${o.x}px;top:${o.y}px;width:${o.w}px;background:${C.block};border:1px solid ${borderCol};border-radius:9px;box-shadow:${shadow};">
+  <div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 8px;border-bottom:1px solid ${C.soft};border-radius:8px 8px 0 0;background:linear-gradient(180deg,${rgba(c, 0.13)},${rgba(c, 0.02)});">
+    ${icon(o.icon, 12, c, 1.7)}
+    <span style="font-size:11px;font-weight:600;color:${C.hi};white-space:nowrap;">${o.title}</span>
+    <span style="flex:1;"></span>
+    ${o.badge || ''}
+    ${viewToggle('stage', 'stage')}
+    ${statusDot(o.state || 'idle')}
+  </div>
+  <div style="position:relative;height:${o.h}px;overflow:hidden;border-radius:0 0 8px 8px;background:${o.bg || C.field};">${o.content}${grip}</div>
+  ${ins.map((p, i) => dot(p, i, 'in')).join('')}${outs.map((p, i) => dot(p, i, 'out')).join('')}
+</div>`;
+}
+
 /* --------------------------------------------------------------- rigs */
 // Four base aesthetics, one expression vocabulary. Each returns a 64-unit SVG.
 const RIG_EXPR = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking'];
@@ -1484,8 +1509,9 @@ function rigFace(rig, expr, size = 64) {
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" style="display:block;flex:none;">${g}</svg>`;
 }
-const viewToggle = (active) => `<div style="display:flex;gap:1px;padding:1px;background:${C.field};border:1px solid ${C.line};border-radius:4px;">${[['minus', 'compact'], ['form', 'summary'], ['code', 'code']].map(([ic, v]) => `<div style="display:flex;align-items:center;justify-content:center;width:16px;height:14px;border-radius:3px;background:${v === active ? rgba(C.accent, 0.22) : 'transparent'};">${icon(ic, 10, v === active ? C.accent : C.low, 2)}</div>`).join('')}</div>`;
+const viewToggle = (active, third = 'code') => `<div style="display:flex;gap:1px;padding:1px;background:${C.field};border:1px solid ${C.line};border-radius:4px;">${[['minus', 'compact'], ['form', 'summary'], [third === 'stage' ? 'fit' : 'code', third]].map(([ic, v]) => `<div style="display:flex;align-items:center;justify-content:center;width:16px;height:14px;border-radius:3px;background:${v === active ? rgba(C.accent, 0.22) : 'transparent'};">${icon(ic, 10, v === active ? C.accent : C.low, 2)}</div>`).join('')}</div>`;
 
+function assistant(stage) {
 const XB = {
   webcam: { x: 24, y: 50, w: 180 },
   mic: { x: 24, y: 250, w: 180 },
@@ -1506,6 +1532,7 @@ const XB = {
   term: { x: 1100, y: 490, w: 200 },
   speaker: { x: 1340, y: 360, w: 180 },
 };
+if (stage) Object.assign(XB, { affect: { x: 1100, y: 30, w: 180 }, avatar: { x: 1300, y: 40, w: 240 }, display: { x: 1100, y: 200, w: 180 }, tts: { x: 1100, y: 360, w: 180 }, term: { x: 1100, y: 490, w: 180 }, speaker: { x: 1330, y: 420, w: 180 } });
 const xw = W(XB);
 const hubRow = (ic, t, col, extra = '') => `<div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon(ic, 11, col, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};white-space:nowrap;">${t}</span>${extra}</div>`;
 
@@ -1550,7 +1577,7 @@ const asstNodes = [
     badge: chip('2', T.memory),
     body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('braces', 'working &middot; fast', CAT.memory)}${hubRow('db', 'long-term &middot; vectors', CAT.memory)}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">consolidate every 10 min</div></div>`,
     ports: [{ kind: 'memory', label: 'working', side: 'in' }, { kind: 'memory', label: 'long-term', side: 'in' }, { kind: 'memory', label: 'memory', side: 'out' }] }),
-  blockNode({ ...XB.llm, icon: 'llm', color: CAT.models, title: 'Orchestrator', state: 'running', selected: true,
+  blockNode({ ...XB.llm, icon: 'llm', color: CAT.models, title: 'Orchestrator', state: 'running', selected: !stage,
     badge: chip('thinking', C.ok, { dot: true }),
     body: label('model') + field('qwen2.5:14b &middot; local', { mono: true, select: true })
       + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.55;color:${C.faint};">Mykl asked about the front door. Camera shows it closed, no one near it for 2 min. Pan the camera to confirm&#8230;</div>`
@@ -1567,7 +1594,17 @@ const asstNodes = [
   blockNode({ ...XB.affect, icon: 'face', color: CAT.models, title: 'Affect', state: 'running',
     body: `<div style="display:flex;gap:4px;">${chip('calm .72', CAT.models)}${chip('curious .21', C.mid)}</div><div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">affect-small &middot; 4 ms</div>`,
     ports: [{ kind: 'text', label: 'text', side: 'in' }, { kind: 'data', label: 'affect', side: 'out' }] }),
-  blockNode({ ...XB.avatar, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running',
+  stage
+    ? stageBlock({ ...XB.avatar, h: 240, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', selected: true,
+        content: `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 200)}</div><div style="position:absolute;left:9px;bottom:7px;font-family:${MONO};font-size:9px;color:${C.faint};">smile &middot; speaking &middot; 240 &times; 240</div>`,
+        ports: [
+          { kind: 'audio', label: 'speech', side: 'in' },
+          { kind: 'data', label: 'express', side: 'in' },
+          { kind: 'data', label: 'look', side: 'in' },
+          { kind: 'tools', label: 'tool', side: 'out', dim: true },
+          { kind: 'stream', label: 'state', side: 'out' },
+        ] })
+    : blockNode({ ...XB.avatar, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running',
     badge: chip('line', CAT.actuators),
     body: `<div style="display:flex;align-items:center;gap:10px;"><div style="width:46px;height:46px;flex:none;border-radius:6px;background:${C.field};border:1px solid ${C.soft};display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 40)}</div><div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">smile &middot; speaking<br>looking at Mykl</div></div>`,
     ports: [
@@ -1626,7 +1663,7 @@ const ORCH_BODY = [
   sect('Thoughts', switchRow('Print thoughts', true, { hint: '&rarr; Terminal, one line per step' }) + rowField('Detail', 'look / recall / act', { select: true, gap: 0 })),
 ].join('');
 
-const ASSISTANT = doc(`<div style="width:${AW}px;height:${AH}px;display:flex;flex-direction:column;background:${C.ground};overflow:hidden;font-family:${SANS};">
+return doc(`<div style="width:${AW}px;height:${AH}px;display:flex;flex-direction:column;background:${C.ground};overflow:hidden;font-family:${SANS};">
   ${topbar({ name: 'home-assistant.graph', saved: 'saved', live: '4 h 12 m', runtime: 'local &middot; ollama + cuda' })}
   <div style="flex:1;display:flex;min-height:0;">
     ${libraryRail()}
@@ -1642,10 +1679,11 @@ const ASSISTANT = doc(`<div style="width:${AW}px;height:${AH}px;display:flex;fle
       </div>
       ${minimap([[8, 9, 12, 8, CAT.senses], [8, 22, 12, 7, CAT.senses], [8, 32, 12, 6, CAT.senses], [24, 8, 13, 8, CAT.models], [24, 18, 13, 8, CAT.models], [24, 27, 13, 7, CAT.models], [24, 37, 13, 12, CAT.actuators], [24, 51, 13, 8, CAT.memory], [24, 60, 13, 9, CAT.memory], [41, 46, 13, 11, CAT.capabilities], [41, 59, 13, 11, CAT.memory], [59, 26, 17, 13, CAT.models], [80, 8, 13, 6, CAT.models], [96, 9, 13, 10, CAT.actuators], [80, 19, 13, 7, CAT.actuators], [80, 28, 13, 6, CAT.models], [80, 37, 13, 7, CAT.runtimes], [96, 28, 12, 6, CAT.actuators]])}
     </div>
-    ${inspector(ORCH_BODY, { title: 'Orchestrator', sub: 'models &middot; llm.chat &middot; role: orchestrator', icn: 'llm', col: CAT.models, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' })}
+    ${stage ? inspector(avatarBody(true), { title: 'Avatar', sub: 'actuators &middot; avatar.rig &middot; stage view', icn: 'face', col: CAT.actuators, tabs: ['Settings', 'Ports', 'Runs', 'Rigs'], tab: 'Settings' }) : inspector(ORCH_BODY, { title: 'Orchestrator', sub: 'models &middot; llm.chat &middot; role: orchestrator', icn: 'llm', col: CAT.models, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' })}
   </div>
   ${statusbar('18 blocks &middot; 22 wires &middot; 4 specialists', 'live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 warning')}
 </div>`);
+}
 
 /* =========================================================== 11. SensePanels */
 
@@ -1891,28 +1929,50 @@ const viewCode = blockNode({ ...VB, w: 330, icon: 'shield', color: CAT.senses, t
   body: codeBlock(CODE.slice(0, 6), { h: 128 }) + `<div style="display:flex;align-items:center;margin-top:6px;font-family:${MONO};font-size:9px;color:${C.faint};"><span>&#8230; 4 more lines</span><span style="flex:1;"></span><span style="color:${C.low};">drag to resize &#8599;</span></div>`,
   ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
 
-const viewCol = (cap, note, block, w) => `<div style="flex:none;width:${w}px;display:flex;flex-direction:column;gap:12px;">
+const viewCol = (cap, note, block, w, h = 240) => `<div style="flex:none;width:${w}px;display:flex;flex-direction:column;gap:12px;">
   <div><div style="font-size:12px;font-weight:600;color:${C.hi};margin-bottom:3px;">${cap}</div><div style="font-size:10.5px;line-height:1.5;color:${C.low};">${note}</div></div>
-  <div style="position:relative;height:240px;">${block}</div>
+  <div style="position:relative;height:${h}px;">${block}</div>
 </div>`;
+
+const AV_PORTS = [{ kind: 'audio', label: 'speech', side: 'in' }, { kind: 'data', label: 'express', side: 'in' }, { kind: 'data', label: 'look', side: 'in' }, { kind: 'tools', label: 'tool', side: 'out' }, { kind: 'stream', label: 'state', side: 'out' }];
+const avCompact = blockNode({ ...VB, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', badge: viewToggle('compact', 'stage'), ports: AV_PORTS });
+const avSummary = blockNode({ ...VB, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', badge: viewToggle('summary', 'stage'),
+  body: `<div style="display:flex;align-items:center;gap:10px;"><div style="width:46px;height:46px;flex:none;border-radius:6px;background:${C.field};border:1px solid ${C.soft};display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 40)}</div><div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">line &middot; smile<br>speaking &middot; looking at Mykl</div></div>`,
+  ports: AV_PORTS });
+const avStage = stageBlock({ ...VB, w: 260, h: 236, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running',
+  content: `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 190)}</div><div style="position:absolute;left:9px;bottom:7px;font-family:${MONO};font-size:9px;color:${C.faint};">260 &times; 260</div>`,
+  ports: AV_PORTS });
 
 const shortcut = (k) => `<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};border:1px solid ${C.line};border-radius:3px;padding:1px 5px;white-space:nowrap;">${k}</span>`;
 
 const BLOCKVIEWS = doc(sheet({
-  w: 1400, h: 700, kicker: 'Custom block views',
-  title: 'The code is one view of the block, not the block',
+  w: 1400, h: 1040, kicker: 'Block views',
+  title: 'Three views for every block, and the third depends on what the block is',
   body: `<div style="display:flex;gap:40px;">
   ${viewCol('Compact', 'Name and ports only &mdash; what every block looks like from a distance, and the default once a block is saved to the library.', viewCompact, 250)}
   ${viewCol('Summary', 'Settings and description, no code. The default while the block is being used on a graph. Change a setting here or in the code; they stay in sync.', viewSummary, 250)}
   ${viewCol('Code', 'The editor, inline. Sized by you: drag the corner, it scrolls inside. Fine up to a screenful; past that the drawer below is the better place.', viewCode, 330)}
+  <div style="flex:1;"></div>
+</div>
+<div style="display:flex;gap:40px;">
+  ${viewCol('Compact', 'A block with a live picture has the same first two views as a custom block.', avCompact, 250, 300)}
+  ${viewCol('Summary', 'A thumbnail and the current state. The default for a visual block on a graph.', avSummary, 250, 300)}
+  ${viewCol('Stage', 'The picture fills the block. The header shrinks to a strip, port labels hide and only the dots stay on the edges, at exactly the y they had before: switching views never moves a wire.', avStage, 260, 300)}
   <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
     <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
       <div style="font-size:11.5px;font-weight:600;color:${C.hi};margin-bottom:8px;">Switching</div>
       <div style="display:flex;flex-direction:column;gap:7px;font-size:10.5px;line-height:1.5;color:${C.low};">
         <div style="display:flex;align-items:center;gap:8px;">${viewToggle('summary')}<span>the toggle in every custom block's header</span></div>
         <div style="display:flex;align-items:center;gap:8px;">${shortcut('dbl-click')}<span>on the header cycles compact &rarr; summary &rarr; code</span></div>
-        <div style="display:flex;align-items:center;gap:8px;">${shortcut('&#8984;E')}<span>opens the code of the selected block</span></div>
-        <div>The view is remembered per block, per graph.</div>
+        <div style="display:flex;align-items:center;gap:8px;">${shortcut('&#8984;E')}<span>opens the third view of the selected block</span></div>
+        <div>The third view is <b style="color:${C.mid};">Code</b> for a custom block and <b style="color:${C.mid};">Stage</b> for a block with a live picture: Avatar, Webcam, Display, Terminal, Object detection. The view is remembered per block, per graph.</div>
+      </div>
+    </div>
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:11.5px;font-weight:600;color:${C.hi};">Resizing</span><span style="position:relative;width:18px;height:18px;border:1px solid ${C.line};border-radius:3px;">${grip}</span></div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:10.5px;line-height:1.5;color:${C.low};">
+        <div><b style="color:${C.mid};">Drag the corner.</b> In Summary it sets width and the body reflows. In Stage or Code it sets width and height; the picture scales, the code scrolls.</div>
+        <div>Snaps to the 22 px grid. Minimum is the compact size. Remembered per block, per graph. An Avatar keeps its aspect unless you unlock it in the inspector.</div>
       </div>
     </div>
     <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
@@ -2026,14 +2086,16 @@ const rigThumb = (rig, name, on) => `<div style="flex:1;display:flex;flex-direct
 
 const VOCAB = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking', 'sleepy', 'look', 'nod', 'shake'];
 
-const AVATAR_BODY = [
+function avatarBody(stage = false) { return [
   sect('Rig', `<div style="display:flex;gap:6px;">${RIGS.map(([r, n]) => rigThumb(r, n, r === 'line')).join('')}</div><div style="margin-top:9px;display:flex;align-items:center;gap:8px;"><span style="font-size:10px;color:${C.low};">Rigs are content, not code.</span><span style="flex:1;"></span>${chip('add rig&#8230;', C.mid)}</div>`, { tint: CAT.actuators, right: chip('line', CAT.actuators) }),
   sect('Vocabulary', `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px;">${VOCAB.map(v => chip(v, T.tools)).join('')}</div>` + rowField('Offered as', 'face.express, face.look, face.gesture', { mono: true, gap: 0 }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Generated from the rig. A rig without <span style="font-family:${MONO};">frown</span> simply doesn't offer it.</div>`, { right: chip('10', T.tools) }),
   sect('Inputs', connRow('note', 'speech', 'Text to speech &middot; lip sync from amplitude', 'audio', 'ok') + connRow('face', 'express', 'Affect &middot; from the orchestrator\'s own words', 'data', 'running') + connRow('approve', 'look', 'Face recognition &middot; gaze follows a person', 'data', 'ok') + switchRow('Auto-affect from speech', false, { hint: 'off &mdash; an Affect block feeds express instead' })),
   sect('Idle', rowField('Blink', 'every 3&ndash;6 s', { mono: true }) + rowField('Breathe', 'on &middot; 12 / min', { mono: true }) + rowField('Settle to neutral after', '4 s', { mono: true }) + rowField('Sleep after', '10 min without events', { select: true, gap: 0 })),
+  sect('View', segmented(['Compact', 'Summary', 'Stage'], stage ? 'Stage' : 'Summary', C.accent) + `<div style="height:11px;"></div>` + rowField('Size on canvas', stage ? '240 &times; 240 &middot; drag the corner' : '200 wide &middot; drag the corner', { mono: true }) + switchRow('Keep aspect', true, { hint: 'the rig stays square while you resize' })),
   sect('Output', rowField('Target', 'Window &middot; always on top', { select: true, icon: 'form' }) + rowField('Size', '480 &times; 480', { mono: true, gap: 0 }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Or a physical face over USB &mdash; the avatar calls <span style="font-family:${MONO};">face.render</span> on a device block.</div>`),
   sect('Live', `<div style="display:flex;align-items:center;gap:10px;">${rigFace('line', 'smile', 44)}<div style="font-family:${MONO};font-size:10px;line-height:1.7;color:${C.mid};">smile &middot; 0.8<br>speaking &middot; looking at Mykl</div></div>`, { tint: C.ok, right: chip('running', C.ok, { dot: true }) }),
-].join('');
+].join(''); }
+const AVATAR_BODY = avatarBody(false);
 
 const vocabRow = (name, note, rigs) => `<div style="display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:14px;align-items:center;height:30px;padding:0 10px;border-bottom:1px solid ${C.soft};">
   <span style="font-family:${MONO};font-size:10.5px;color:${C.hi};">${name}</span>
@@ -2042,12 +2104,12 @@ const vocabRow = (name, note, rigs) => `<div style="display:grid;grid-template-c
 </div>`;
 
 const AVATAR_SHEET = doc(sheet({
-  w: 1200, h: 1260, kicker: 'Presence',
+  w: 1200, h: 1370, kicker: 'Presence',
   title: 'Four rigs, one vocabulary &mdash; the rig decides what the model may ask for',
   body: `<div style="display:flex;gap:26px;align-items:flex-start;">
   <div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
     <div style="display:flex;align-items:baseline;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:${CAT.actuators};flex:none;transform:translateY(-1px);"></span><span style="font-size:12px;font-weight:600;color:${C.hi};">Avatar</span><span style="font-size:10.5px;color:${C.low};">the assistant's presence</span></div>
-    <div style="height:1090px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(AVATAR_BODY, { title: 'Avatar', sub: 'actuators &middot; avatar.rig', icn: 'face', col: CAT.actuators, tabs: ['Settings', 'Ports', 'Runs', 'Rigs'], tab: 'Settings' })}</div>
+    <div style="height:1200px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(AVATAR_BODY, { title: 'Avatar', sub: 'actuators &middot; avatar.rig', icn: 'face', col: CAT.actuators, tabs: ['Settings', 'Ports', 'Runs', 'Rigs'], tab: 'Settings' })}</div>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;gap:18px;">
     <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:14px 16px 12px;">
@@ -2089,7 +2151,8 @@ const files = {
   'BlockAnatomy.dc.html': ANATOMY,
   'Continuous.dc.html': CONTINUOUS,
   'RunModes.dc.html': RUNMODES_SHEET,
-  'Assistant.dc.html': ASSISTANT,
+  'Assistant.dc.html': assistant(false),
+  'AssistantStage.dc.html': assistant(true),
   'SensePanels.dc.html': SENSE_SHEET,
   'CustomBlock.dc.html': CUSTOMBLOCK,
   'CustomRules.dc.html': CUSTOMRULES,
@@ -2111,11 +2174,12 @@ const canvas = {
     { file: 'RunModes.dc.html', x: 1680, y: 0, w: 1120, h: 980, page: 'page-2', title: 'Run modes' },
     { file: 'Assistant.dc.html', x: 0, y: 1160, w: 1920, h: 1080, page: 'page-2', title: 'Home assistant' },
     { file: 'SensePanels.dc.html', x: 2040, y: 1160, w: 1460, h: 1020, page: 'page-2', title: 'Embodied panels' },
-    { file: 'Avatar.dc.html', x: 3620, y: 1160, w: 1200, h: 1260, page: 'page-2', title: 'Avatar and rigs' },
+    { file: 'Avatar.dc.html', x: 3620, y: 1160, w: 1200, h: 1370, page: 'page-2', title: 'Avatar and rigs' },
+    { file: 'AssistantStage.dc.html', x: 0, y: 2400, w: 1920, h: 1080, page: 'page-2', title: 'Avatar staged' },
     { file: 'CustomBlock.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-3', title: 'Custom block' },
     { file: 'CustomRules.dc.html', x: 1680, y: 0, w: 1400, h: 820, page: 'page-3', title: 'Code becomes a block' },
     { file: 'CustomDrawer.dc.html', x: 0, y: 1080, w: 1560, h: 900, page: 'page-3', title: 'Big program, small block' },
-    { file: 'BlockViews.dc.html', x: 1680, y: 1080, w: 1400, h: 700, page: 'page-3', title: 'Block views' },
+    { file: 'BlockViews.dc.html', x: 1680, y: 1080, w: 1400, h: 1040, page: 'page-3', title: 'Block views' },
     { file: 'Interactive.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-4', title: 'Clickable shell', is_interactive: true },
   ],
   annotations: [
@@ -2135,6 +2199,8 @@ const canvas = {
       text: 'Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in.\n\nThe code is one view of the block, not the block: compact, summary or code, per block. A big program lives in the drawer under the canvas, or in your own editor, while the block on the canvas stays small.' },
     { id: 'avatar-note', x: 3620, y: 1010, w: 620, page: 'page-2',
       text: 'Avatar: the block that gives the assistant a presence. A rig is one aesthetic plus the expressions it supports; the vocabulary the model can call is generated from the rig. Lip sync comes from the speech audio, never from the model.' },
+    { id: 'stage-note', x: 0, y: 2250, w: 700, page: 'page-2',
+      text: 'The same graph with the Avatar in Stage view: the picture fills the block, the header is a strip, ports are dots on the edges at the same y as before. Drag the corner to resize; the rig keeps its aspect. Every block with a live picture has a Stage view.' },
     { id: 'proto-note', x: 0, y: -150, w: 620, page: 'page-4',
       text: 'Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports.' },
   ],
