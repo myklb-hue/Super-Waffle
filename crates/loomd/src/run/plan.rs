@@ -43,6 +43,11 @@ pub struct Plan {
     /// slots are resolved through it, so an LLM's entry lists the runtimes
     /// rather than the Toolbox between them.
     pub bindings: BTreeMap<String, Vec<String>>,
+    /// The same, but for every block rather than only the ones doing the
+    /// holding. A Toolbox and a Memory hub are capabilities themselves, so they
+    /// are absent from `bindings` by design — and a hub still has to be able to
+    /// find the stores in its own slots.
+    pub slots: BTreeMap<String, Vec<String>>,
     /// Which wire connects a producing port to a consuming one, so the runner
     /// can say which wire lit up.
     pub wires: HashMap<Endpoint, Vec<(String, Endpoint)>>,
@@ -156,11 +161,16 @@ pub fn plan(graph: &Graph) -> Plan {
     // its handle holds the runtimes behind it, and the model's tool list names
     // `terminal.run`, never `toolbox.something`.
     let mut bindings: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut slots: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for block in &graph.blocks {
         let held = resolve_handles(graph, &by_id, &block.id, &mut HashSet::new());
-        if !held.is_empty() && !capabilities.contains(&block.id) {
-            bindings.insert(block.id.clone(), held);
+        if held.is_empty() {
+            continue;
         }
+        if !capabilities.contains(&block.id) {
+            bindings.insert(block.id.clone(), held.clone());
+        }
+        slots.insert(block.id.clone(), held);
     }
 
     // ---------------------------------------------------------------- order
@@ -270,6 +280,7 @@ pub fn plan(graph: &Graph) -> Plan {
         order,
         capabilities,
         bindings,
+        slots,
         wires,
         sources,
         frames,
@@ -378,9 +389,18 @@ fn resolve_handles(
             continue;
         }
         let source = &wire.from.node;
+        // A Toolbox is a bundle and a Memory hub is not, which looks
+        // inconsistent and is not. A model holding a Toolbox calls
+        // `terminal.run` and never names the Toolbox, so the Toolbox has to
+        // dissolve into what is behind it. A model holding a hub calls
+        // `remember()` — the hub is the thing being called, and dissolving it
+        // would hand the model two stores and no way to choose between them.
+        // (This line used to name `memoryHub`, a kind that does not exist; the
+        // hub's id is `memory-hub`, so the branch never fired and the intended
+        // bug never happened.)
         let is_bundle = by_id
             .get(source.as_str())
-            .is_some_and(|b| matches!(b.kind.as_str(), "toolbox" | "memoryHub"));
+            .is_some_and(|b| b.kind == "toolbox");
         if is_bundle {
             out.extend(resolve_handles(graph, by_id, source, seen));
         } else if !out.contains(source) {

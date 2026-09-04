@@ -411,7 +411,23 @@ pub static KINDS: &[BlockKind] = &[
                 "Recall order",
                 &["recent-first", "relevance", "mixed"],
             ),
+            falls_back_to(
+                setting("maxRecalled", "Max recalled", SettingKind::Number),
+                "12",
+            ),
+            hinted(
+                falls_back_to(range("cutoff", "Relevance cutoff", 0.0, 1.0), "0.6"),
+                "Below this, a memory is noise rather than context.",
+            ),
             setting("consolidateEvery", "Consolidate every", SettingKind::Text),
+            hinted(
+                switch("summarise", "Summarise before storing", true),
+                "The orchestrator writes one line per episode on its way to long-term memory.",
+            ),
+            hinted(
+                switch("forgetAfter", "Forget after retention", false),
+                "Off. Nothing is deleted by age unless you turn this on.",
+            ),
             setting("retention", "Retention", SettingKind::Text),
         ],
     },

@@ -946,3 +946,55 @@ Still not proven here:
   ways mid-call. That is a slice of its own, with its own thinking about what a
   custom block is allowed to reach, rather than something to bolt onto the
   panels.
+
+---
+
+Found while building slice 8 (Memory):
+
+- **A Memory hub is not a bundle, and the code thought it might be.** The
+  binding resolver read `matches!(kind, "toolbox" | "memoryHub")` — and no kind
+  is called `memoryHub`, so the branch never fired and the bug it would have
+  caused never happened. It would have been a real one: a Toolbox is
+  transparent because a model holding one calls `terminal.run` and never names
+  the Toolbox, but a model holding a hub calls `remember()`, so dissolving the
+  hub would have handed the model two stores and no way to choose between them.
+  The line now names `toolbox` alone, with the reason written next to it.
+- **`bindings` deliberately omits capabilities, and a hub needs its own slots.**
+  A hub is a capability — its `memory` out is a handle — so it is not in
+  `bindings` by design, and it still has to find the stores wired into it.
+  `Plan` gained `slots`, which is the same computation without the filter.
+- **Consolidation copies; it does not move.** Moving what falls out of working
+  memory into the long-term store makes the two behaviours fight: a window is
+  supposed to lose things, and if losing them is also how they become permanent
+  then what survives depends on whether the graph happened to be busy. Worse,
+  it means a Once run that learns one fact learns nothing permanently, because
+  nothing ever overflowed. Copying separates them — working memory forgets on
+  its own schedule, the long-term store keeps what mattered, and each episode is
+  carried exactly once.
+- **The same memory twice is one memory.** Long-term rows are keyed by a
+  fingerprint of their text and kind rather than by a counter. A graph that runs
+  every minute would otherwise write the same sentence sixty times an hour, and
+  recall would return it twelve times.
+
+Two decisions worth recording:
+
+- **SQLite is bundled, not linked.** `rusqlite`'s `bundled` feature compiles
+  SQLite from source into the binary. It costs a slow first build and it means
+  the AppImage in slice 12 has no system dependency to detect, no version to be
+  wrong about, and nothing to explain to a user whose distribution ships a
+  different one.
+- **Recall reads every vector.** No index. At the scale a person's assistant
+  reaches — thousands of episodes — a scan is a few milliseconds and there is no
+  index to keep correct; an index is the answer at a scale this program does not
+  have, and a wrong index is worse than a scan. Written down so the day it stops
+  being true is a decision rather than a discovery.
+
+What this environment cannot prove:
+
+- **Real embeddings.** Relevance is cosine similarity over whatever
+  `Perception::embed` returns, and the scripted implementation returns a
+  deterministic vector from the text's length. That proves the ordering, the
+  cutoff, the round trip through SQLite and the difference between recall and
+  recency; it does not prove that `nomic-embed-text` puts "who is Sam" near "Sam
+  is the partner". The weights are not fetchable here (§15.13's download is
+  denied by the network policy), and the seam between the two is one trait.

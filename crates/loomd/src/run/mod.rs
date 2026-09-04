@@ -4,6 +4,7 @@ pub mod blocks;
 pub mod custom;
 pub mod event;
 pub mod live;
+pub mod memory;
 pub mod model;
 pub mod ollama;
 pub mod perceive;

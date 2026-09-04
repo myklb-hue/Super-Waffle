@@ -16,6 +16,7 @@
 
 use super::blocks::{self, Outputs};
 use super::event::{BlockState, Level, PortValue, RunEvent, RunOutcome};
+use super::memory::{Episode, Hub, Order};
 use super::model::{
     ChatRequest, Message, ModelError, ModelProvider, ToolCall, display_name, wire_name,
 };
@@ -46,6 +47,13 @@ fn human(bytes: u32) -> String {
 /// enough for the conversations these graphs describe — the triage example
 /// needs one — and hitting it is reported rather than hidden.
 const MAX_TOOL_ROUNDS: usize = 8;
+
+/// What embeds a memory and a question so the two can be compared.
+///
+/// One model for both ends, always: two texts embedded by different models are
+/// two points in two different spaces, and the cosine between them is a number
+/// that means nothing.
+const EMBED_MODEL: &str = "nomic-embed-text";
 
 /// What the run is about to do, and why it warranted asking (SPEC §12.2).
 #[derive(Debug, Clone, PartialEq)]
@@ -103,6 +111,8 @@ pub struct Runner<'a> {
     pub scratch: Arc<super::sense::Scratch>,
     /// What reads a frame or a sound.
     pub eye: Arc<dyn super::perceive::Perception>,
+    /// The stores this run has open (SPEC §6.5).
+    pub vault: Arc<super::memory::Vault>,
 }
 
 struct State<'a> {
@@ -1200,10 +1210,33 @@ impl<'a> Runner<'a> {
             .get("prompt")
             .map(Value::as_text)
             .ok_or("nothing is wired to the prompt")?;
+
+        // What this model holds, seen through any Toolbox between them.
+        let held = plan.bindings.get(&block.id).cloned().unwrap_or_default();
+
+        // What it already knows, before it is asked anything (SPEC §9.2). The
+        // recall is about the prompt, so what comes back is what the question
+        // is about rather than whatever happened most recently.
+        if let Some(hub) = self.memory(&held, plan, st) {
+            let about = self.eye.embed(&prompt, EMBED_MODEL).ok();
+            let recalled = hub.recall(about.as_deref());
+            if !recalled.is_empty() {
+                self.console(
+                    st,
+                    Some(&block.id),
+                    Level::Info,
+                    format!("recalled {} from memory", plural(recalled.len(), "thing")),
+                );
+                let lines: Vec<String> = recalled.iter().map(Episode::line).collect();
+                messages.push(Message::system(format!(
+                    "What you remember:\n{}",
+                    lines.join("\n")
+                )));
+            }
+        }
+
         messages.push(Message::user(prompt));
 
-        // The tools this model holds, seen through any Toolbox between them.
-        let held = plan.bindings.get(&block.id).cloned().unwrap_or_default();
         let mut tools = Vec::new();
         for id in &held {
             if let Some(callee) = self.block(id) {
@@ -1285,7 +1318,7 @@ impl<'a> Runner<'a> {
                     "name": display_name(&call.name),
                     "arguments": call.arguments,
                 }));
-                let result = self.dispatch(block, call, &held, st);
+                let result = self.dispatch(block, call, &held, plan, st);
                 request.messages.push(Message::Tool {
                     name: call.name.clone(),
                     content: result,
@@ -1333,11 +1366,148 @@ impl<'a> Runner<'a> {
     /// exactly what the triage example is about, and the model is supposed to
     /// read it and reason. Only a call the engine cannot make at all comes back
     /// as an apology.
+    /// The memory this block holds, assembled from its slots (SPEC §9.2).
+    ///
+    /// A hub bundles stores; a store wired straight into a model is a hub of
+    /// one, which is the same arrangement as a runtime wired straight into
+    /// `llm.tools` and right for the same reason (§9.1).
+    fn memory(&self, held: &[String], plan: &Plan, st: &mut State<'_>) -> Option<Hub> {
+        let mut stores = Vec::new();
+        let mut settings_from = None;
+        for id in held {
+            let Some(block) = self.block(id) else {
+                continue;
+            };
+            if !blocks::is_memory(&block.kind) {
+                continue;
+            }
+            // A hub is one block standing for several: its slots are the
+            // stores, and its settings are the recall rules for all of them.
+            let behind = match block.kind.as_str() {
+                "memory-hub" => {
+                    settings_from = Some(block);
+                    plan.slots.get(id).cloned().unwrap_or_default()
+                }
+                _ => vec![id.clone()],
+            };
+            for store_id in behind {
+                let Some(store_block) = self.block(&store_id) else {
+                    continue;
+                };
+                match self.vault.store(store_block) {
+                    Ok(store) => stores.push((store_id, store)),
+                    Err(e) => self.console(
+                        st,
+                        Some(&store_id),
+                        Level::Error,
+                        format!("this store could not be opened: {e}"),
+                    ),
+                }
+            }
+        }
+        if stores.is_empty() {
+            return None;
+        }
+        let hub = settings_from;
+        Some(Hub {
+            stores,
+            order: hub
+                .and_then(|b| blocks::setting(b, "recall"))
+                .map(Order::read)
+                .unwrap_or(Order::RecentFirst),
+            max: hub
+                .and_then(|b| blocks::number(b, "maxRecalled"))
+                .unwrap_or(12.0)
+                .max(1.0) as usize,
+            cutoff: hub.and_then(|b| blocks::number(b, "cutoff")).unwrap_or(0.0),
+        })
+    }
+
+    /// Consolidate one hub by name, from outside a run.
+    ///
+    /// The live loop has a hub id and a timer; everything else consolidation
+    /// needs — the stores, the model, a console to report on — belongs to a
+    /// `Runner`, so this is the door between the two.
+    pub fn consolidate_hub(
+        &self,
+        hub_id: &str,
+        plan: &Plan,
+        emit: &mut dyn FnMut(RunEvent),
+        ask: &mut dyn FnMut(&Warning) -> Decision,
+    ) -> usize {
+        let Some(block) = self.block(hub_id) else {
+            return 0;
+        };
+        let mut st = State {
+            emit,
+            ask,
+            values: HashMap::new(),
+            failed: HashSet::new(),
+            ran: HashSet::new(),
+            trusted: HashSet::new(),
+            errors: Vec::new(),
+            stopped: false,
+        };
+        let held = vec![hub_id.to_owned()];
+        match self.memory(&held, plan, &mut st) {
+            None => 0,
+            Some(hub) => self.consolidate(block, &hub, &mut st),
+        }
+    }
+
+    /// Carry what fell out of working memory into the long-term store,
+    /// summarising on the way (SPEC §9.2).
+    ///
+    /// Summarising asks the model, because the specification says the
+    /// orchestrator writes one line per episode and a line written by anything
+    /// else would be a different promise. A model that will not answer is not
+    /// a reason to lose the memory: the text goes across as it stands, and the
+    /// console says the summary was skipped.
+    fn consolidate(&self, hub_block: &Block, hub: &Hub, st: &mut State<'_>) -> usize {
+        let summarise = blocks::flag(hub_block, "summarise");
+        let one_line = |episode: &Episode| {
+            if !summarise {
+                return episode.text.clone();
+            }
+            let request = ChatRequest {
+                model: self.graph.defaults.model.clone(),
+                messages: vec![
+                    Message::system(
+                        "Rewrite what the user says as one short line, worth                          keeping. Answer with the line and nothing else.",
+                    ),
+                    Message::user(episode.text.clone()),
+                ],
+                tools: Vec::new(),
+                temperature: None,
+                top_p: None,
+                max_tokens: Some(64),
+            };
+            match self.provider.chat(&request, &mut |_| {}) {
+                Ok(turn) if !turn.text.trim().is_empty() => turn.text.trim().to_owned(),
+                _ => episode.text.clone(),
+            }
+        };
+        let moved = hub.consolidate(&one_line);
+        if !moved.is_empty() {
+            self.console(
+                st,
+                Some(&hub_block.id),
+                Level::Info,
+                format!(
+                    "consolidated {} into long-term memory",
+                    plural(moved.len(), "memory")
+                ),
+            );
+        }
+        moved.len()
+    }
+
     fn dispatch(
         &self,
         caller: &Block,
         call: &ToolCall,
         held: &[String],
+        plan: &Plan,
         st: &mut State<'_>,
     ) -> String {
         let display = display_name(&call.name);
@@ -1389,6 +1559,52 @@ impl<'a> Runner<'a> {
             ("python", "exec") => match arg("code") {
                 None => Err("no code was given".into()),
                 Some(code) => blocks::python(callee, &code, self.root),
+            },
+            (kind, "remember") if blocks::is_memory(kind) => match arg("text") {
+                None => Err("nothing was given to remember".into()),
+                Some(text) => {
+                    let sort = arg("kind").unwrap_or_else(|| "episode".into());
+                    let vector = self.eye.embed(&text, EMBED_MODEL).ok();
+                    match self.memory(held, plan, st) {
+                        None => Err("this memory has no stores wired into it".into()),
+                        Some(hub) => hub.remember(&text, &sort, vector.as_deref()).map(|id| {
+                            // "when working memory is full" (SPEC §9.2): the
+                            // moment something new arrives is the moment
+                            // something old may have fallen out.
+                            self.consolidate(callee, &hub, st);
+                            said(format!("remembered, as {id}"))
+                        }),
+                    }
+                }
+            },
+            // §12.2 warrants a warning before deleting a person from long-term
+            // memory. Forgetting is the only memory call that can lose
+            // something, so it is the one that asks first — and, as everywhere
+            // else, it warns and does not block (§12.1).
+            (kind, "forget") if blocks::is_memory(kind) => match arg("what") {
+                None => Err("nothing was given to forget".into()),
+                Some(what) => {
+                    let asked = self.permitted(
+                        st,
+                        Warning {
+                            block: callee.id.clone(),
+                            action: format!("Forget everything matching `{what}`"),
+                            reason: "Deleting a person deletes every sighting of \
+                                     them, from every store."
+                                .into(),
+                            remember: false,
+                        },
+                    );
+                    match asked {
+                        false => Err("stopped before forgetting".into()),
+                        true => match self.memory(held, plan, st) {
+                            None => Err("this memory has no stores wired into it".into()),
+                            Some(hub) => hub
+                                .forget(&what)
+                                .map(|gone| said(format!("forgot {}", plural(gone, "memory")))),
+                        },
+                    }
+                }
             },
             (kind, verb) => Err(format!("`{kind}` has no tool called `{verb}`")),
         };
@@ -1442,5 +1658,31 @@ impl<'a> Runner<'a> {
             state: BlockState::Ready,
         });
         result
+    }
+}
+
+/// A tool result that is a sentence rather than a process.
+///
+/// Memory has no exit code and no stderr; what it has to say is one line, and
+/// dressing it as a finished command would put `exit 0` in front of it.
+fn said(what: String) -> blocks::Output {
+    blocks::Output {
+        stdout: what,
+        stderr: String::new(),
+        code: 0,
+        ms: 0,
+    }
+}
+
+/// `1 memory`, `3 memories`, `no memories`.
+fn plural(n: usize, thing: &str) -> String {
+    let many = match thing {
+        "memory" => "memories".to_owned(),
+        other => format!("{other}s"),
+    };
+    match n {
+        0 => format!("no {many}"),
+        1 => format!("1 {thing}"),
+        n => format!("{n} {many}"),
     }
 }

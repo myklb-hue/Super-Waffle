@@ -271,6 +271,7 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
       </Section>
 
       <SenseSections block={block} />
+      <MemorySections graph={graph} block={block} />
 
       <Section title="On the canvas">
         <SwitchRow
@@ -282,6 +283,102 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
       </Section>
     </>
   );
+}
+
+/** The memory kinds: the stores, and the hub that bundles them (SPEC §6.5). */
+const STORES = ['working-memory', 'long-term-memory', 'episode-log'];
+
+/**
+ * The sections a memory hub has (Figure 6).
+ *
+ * Stores says what is behind it, because a hub is one block standing for
+ * several and the panel is the only place that shape is visible. What is kept
+ * is §12.3 stated where a person will read it: transcripts, who was seen, where
+ * and when — yes; faces as vectors; frames and audio never. It is prose for the
+ * same reason face recognition's is — it describes the program, and a switch
+ * would say it could be otherwise.
+ */
+function MemorySections({ graph, block }: { graph: Graph; block: Block }) {
+  if (block.kind !== 'memory-hub') return null;
+
+  // The stores in its slots, in wire order, which is the order recall reads
+  // them in.
+  const slots = graph.wires
+    .filter((w) => w.to.node === block.id)
+    .map((w) => graph.blocks.find((b) => b.id === w.from.node))
+    .filter((b): b is Block => !!b && STORES.includes(b.kind));
+
+  return (
+    <>
+      <Section
+        title="Stores"
+        right={<Chip label={`${slots.length}`} color={slots.length > 0 ? 'ok' : 'err'} />}
+      >
+        {slots.length === 0 ? (
+          <Callout
+            title="No stores wired in"
+            body="A hub with empty slots is a handle to nothing: the model gets remember() and forget(), and both fail. Wire a Working or Long-term memory into it."
+            color="err"
+            dashed
+          />
+        ) : (
+          slots.map((store) => {
+            const kind = lookupKind(store.kind);
+            return (
+              <div key={store.id} className={s.derived}>
+                <Icon
+                  name={(kind?.icon ?? 'braces') as IconName}
+                  size={12}
+                  color="cat-memory"
+                  strokeWidth={1.7}
+                />
+                <span className={s.derivedName}>{nameOf(store)}</span>
+                <span className={s.derivedType}>{describeStore(store)}</span>
+              </div>
+            );
+          })
+        )}
+        {slots.length > 0 && (
+          <div className={s.summary}>
+            New memories land in {nameOf(slots[0])}
+            {slots.length > 1
+              ? `, and consolidation carries them to ${nameOf(slots[slots.length - 1])}.`
+              : '.'}
+          </div>
+        )}
+      </Section>
+
+      <Section title="What is kept" tint="err" right={<Chip label="on this machine" color="err" dot />}>
+        <p className={s.prose}>
+          Transcripts, who was seen, where and when — yes. Faces, as vectors.
+          Frames and audio, never.
+        </p>
+        <p className={s.prose}>
+          Delete a person and every sighting goes with them. The model is asked
+          before anything is forgotten, and asked once per call.
+        </p>
+      </Section>
+    </>
+  );
+}
+
+/** What to call a block: what the user named it, else what its kind is. */
+function nameOf(block: Block | undefined): string {
+  if (!block) return 'nothing';
+  return block.title ?? lookupKind(block.kind)?.title ?? block.id;
+}
+
+/** A store's row in the Stores section: what it is, in its own terms. */
+function describeStore(store: Block): string {
+  const at = (name: string) => store.settings[name];
+  switch (store.kind) {
+    case 'working-memory':
+      return `in-process · ${at('items') ?? 128} items · ${at('window') ?? '5m'}`;
+    case 'long-term-memory':
+      return `sqlite${at('vectors') === false ? '' : ' + vectors'} · ${at('path') ?? 'memory.db'}`;
+    default:
+      return `append-only · ${at('path') ?? 'episodes.jsonl'}`;
+  }
 }
 
 /** The kinds that reach into the room: a camera and a microphone (SPEC §12.3). */

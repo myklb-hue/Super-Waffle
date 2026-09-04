@@ -59,6 +59,7 @@ impl Running {
                     loomd::run::sense::Scratch::open("live-test").unwrap(),
                 ),
                 eye: std::sync::Arc::new(loomd::run::perceive::Scripted::default()),
+                vault: std::sync::Arc::new(loomd::run::memory::Vault::new("/tmp")),
             }
             .execute(
                 &mut |event| {

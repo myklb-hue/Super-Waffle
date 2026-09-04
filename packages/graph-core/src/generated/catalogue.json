@@ -1297,6 +1297,26 @@
         "default": "recent-first"
       },
       {
+        "name": "maxRecalled",
+        "label": "Max recalled",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null,
+        "default": "12"
+      },
+      {
+        "name": "cutoff",
+        "label": "Relevance cutoff",
+        "kind": "range",
+        "options": [],
+        "min": 0.0,
+        "max": 1.0,
+        "hint": "Below this, a memory is noise rather than context.",
+        "default": "0.6"
+      },
+      {
         "name": "consolidateEvery",
         "label": "Consolidate every",
         "kind": "text",
@@ -1305,6 +1325,26 @@
         "max": null,
         "hint": null,
         "default": null
+      },
+      {
+        "name": "summarise",
+        "label": "Summarise before storing",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "The orchestrator writes one line per episode on its way to long-term memory.",
+        "default": "true"
+      },
+      {
+        "name": "forgetAfter",
+        "label": "Forget after retention",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": "Off. Nothing is deleted by age unless you turn this on.",
+        "default": "false"
       },
       {
         "name": "retention",

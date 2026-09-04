@@ -141,6 +141,10 @@ impl Session {
                         return;
                     }
                 };
+                // One vault for the whole run, for the same reason as the
+                // scratch: working memory is windowed, and a window means
+                // nothing if the store is rebuilt for every event.
+                let vault = Arc::new(crate::run::memory::Vault::new(root.clone()));
                 let eye: Arc<dyn crate::run::perceive::Perception> =
                     Arc::new(crate::run::perceive::Local::new(
                         models_folder(),
@@ -157,6 +161,7 @@ impl Session {
                             cancel,
                             scratch,
                             eye,
+                            vault,
                         }
                         .execute(emit, ask);
                     }
@@ -170,6 +175,7 @@ impl Session {
                             paused,
                             scratch,
                             eye,
+                            vault,
                         }
                         .execute(emit, ask);
                     }

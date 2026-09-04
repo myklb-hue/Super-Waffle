@@ -52,6 +52,7 @@ pub struct Live<'a> {
     pub paused: Arc<AtomicBool>,
     pub scratch: Arc<super::sense::Scratch>,
     pub eye: Arc<dyn super::perceive::Perception>,
+    pub vault: Arc<super::memory::Vault>,
 }
 
 impl Live<'_> {
@@ -99,8 +100,15 @@ impl Live<'_> {
         // events when the graph says to, and dropped between them when not.
         let mut carried: HashMap<Endpoint, Value> = HashMap::new();
 
+        // "Consolidation: every n minutes" (SPEC §9.2). Working memory is
+        // windowed, so a graph that never consolidates loses what it learned as
+        // the window slides — the timer is what makes a live assistant's memory
+        // last longer than its attention span.
+        let mut consolidators = self.consolidators(&plan);
+
         while !self.cancel.load(Ordering::Relaxed) {
             self.absorb(&rx, &mut queue, &mut tally, emit);
+            self.consolidate_due(&plan, &mut consolidators, emit, ask);
 
             if self.paused.load(Ordering::Relaxed) {
                 std::thread::sleep(IDLE);
@@ -126,6 +134,53 @@ impl Live<'_> {
             results: Vec::new(),
         });
         tally
+    }
+
+    /// The memory hubs with an interval set, and when each is next due.
+    fn consolidators(&self, plan: &Plan) -> Vec<(String, Duration, Instant)> {
+        let _ = plan;
+        self.graph
+            .blocks
+            .iter()
+            .filter(|b| b.kind == "memory-hub")
+            .filter_map(|b| {
+                let every = super::blocks::setting(b, "consolidateEvery")?;
+                let period = super::memory::parse_window(every)?;
+                Some((b.id.clone(), period, Instant::now() + period))
+            })
+            .collect()
+    }
+
+    /// Carry what is due, if anything is.
+    ///
+    /// It runs on the loop thread, between events rather than during one: a
+    /// consolidation that summarises asks the model, and a model call in the
+    /// middle of an event would put the graph's own work behind it.
+    fn consolidate_due(
+        &self,
+        plan: &Plan,
+        due: &mut [(String, Duration, Instant)],
+        emit: &mut dyn FnMut(RunEvent),
+        ask: &mut dyn FnMut(&Warning) -> Decision,
+    ) {
+        let now = Instant::now();
+        for (id, period, next) in due.iter_mut() {
+            if now < *next {
+                continue;
+            }
+            *next = now + *period;
+            let runner = Runner {
+                graph: self.graph,
+                root: self.root,
+                provider: self.provider,
+                run: self.run.clone(),
+                cancel: Arc::clone(&self.cancel),
+                scratch: Arc::clone(&self.scratch),
+                eye: Arc::clone(&self.eye),
+                vault: Arc::clone(&self.vault),
+            };
+            runner.consolidate_hub(id, plan, emit, ask);
+        }
     }
 
     /// Arm every source the mode calls for.
@@ -294,6 +349,7 @@ impl Live<'_> {
             cancel: Arc::clone(&self.cancel),
             scratch: Arc::clone(&self.scratch),
             eye: Arc::clone(&self.eye),
+            vault: Arc::clone(&self.vault),
         };
         let summary = runner.execute_steps(&steps, seeded, emit, ask);
 
@@ -398,6 +454,7 @@ mod tests {
             paused: Default::default(),
             scratch: Arc::new(crate::run::sense::Scratch::open("absorb-test").unwrap()),
             eye: Arc::new(crate::run::perceive::Scripted::default()),
+            vault: Arc::new(crate::run::memory::Vault::new("/tmp")),
         };
         let (tx, rx) = channel();
         for event in events {

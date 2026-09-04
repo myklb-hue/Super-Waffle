@@ -210,8 +210,59 @@ pub fn tools_of(block: &Block) -> Vec<ToolDef> {
                 "required": ["code"]
             }),
         }],
+        // A model with a memory handle gets `remember()` and `forget()`, and
+        // nothing else (SPEC §9.2). Recall is not among them on purpose: it is
+        // put in front of the model before it asks, because a model that has to
+        // remember to remember will not.
+        "memory-hub" | "working-memory" | "long-term-memory" | "episode-log" => vec![
+            ToolDef {
+                name: format!("{id}.remember"),
+                description: "Keep something worth knowing later: a fact, a \
+                              person, a place, or what just happened."
+                    .into(),
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "text": {
+                            "type": "string",
+                            "description": "One sentence, in your own words."
+                        },
+                        "kind": {
+                            "type": "string",
+                            "enum": ["episode", "person", "place", "fact"],
+                            "description": "What sort of thing it is. Defaults to episode."
+                        }
+                    },
+                    "required": ["text"]
+                }),
+            },
+            ToolDef {
+                name: format!("{id}.forget"),
+                description: "Forget everything matching this. Deleting a \
+                              person deletes every sighting of them."
+                    .into(),
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "what": {
+                            "type": "string",
+                            "description": "A name, a phrase, or the id of one memory."
+                        }
+                    },
+                    "required": ["what"]
+                }),
+            },
+        ],
         _ => Vec::new(),
     }
+}
+
+/// The memory kinds, which are the ones a `memory` handle can lead to.
+pub fn is_memory(kind: &str) -> bool {
+    matches!(
+        kind,
+        "memory-hub" | "working-memory" | "long-term-memory" | "episode-log"
+    )
 }
 
 /// What a step produces on each of its output ports.

@@ -64,6 +64,7 @@ fn run(graph: &graph_format::Graph) -> (loomd::run::runner::Summary, Vec<RunEven
         cancel: Default::default(),
         scratch: std::sync::Arc::new(loomd::run::sense::Scratch::open("t").unwrap()),
         eye: std::sync::Arc::new(loomd::run::perceive::Scripted::default()),
+        vault: std::sync::Arc::new(loomd::run::memory::Vault::new("/tmp")),
     };
     let mut events = Vec::new();
     let summary = runner.execute(&mut |e| events.push(e), &mut |_| Decision::Continue);
