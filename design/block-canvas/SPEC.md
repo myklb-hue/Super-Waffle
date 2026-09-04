@@ -43,8 +43,8 @@ and what was changed.
 A single-user, local-first environment for composing AI programs out of
 blocks. The user owns the machine, the models, the tools and the data. The
 first target is a personal assistant that can see, hear, remember, speak,
-print its thoughts and move things — but the same shell builds a
-five-block ticket-triage script.
+show a face, print its thoughts and move things — but the same shell
+builds a five-block ticket-triage script.
 
 ### 1.2 Who it is for
 
@@ -85,6 +85,8 @@ explicitly in review.
 8. **The code is one view of a block, not the block.** A custom block is a
    function whose signature is its interface. It shows as compact,
    summary or code; a big program lives in the drawer, not in a big block.
+   The same holds for a block with a picture: compact, summary or stage
+   (§3.4). What a block *is* never changes with how big it is drawn.
 9. **Presence is a block.** The assistant's face is an actuator like any
    other: a rig declares the expressions it supports, the model may call
    only those, and timing comes from the wires, not from the model.
@@ -145,8 +147,9 @@ Gestures:
 | Drag a port | Starts a wire (§5.2) |
 | Click a block | Selects it; inspector shows it |
 | Click empty canvas | Deselects; inspector shows graph |
-| Double-click a block header | Cycles compact → summary → code (custom blocks) |
+| Double-click a block header | Cycles compact → summary → the block's third view, Code or Stage (§3.4) |
 | Drag a block header | Moves it |
+| Drag the corner grip | Resizes the block (§3.4) |
 | Shift-click / marquee | Multi-select; inspector shows shared settings |
 | `esc` during a drag | Cancels the drag |
 
@@ -156,7 +159,7 @@ Gestures:
 | --- | --- |
 | `R` | Run (or start live) |
 | `⌘K` | Search blocks |
-| `⌘E` | Open the code of the selected custom block |
+| `⌘E` | Open the selected block's third view: Code for a custom block, Stage for a visual one (§3.4) |
 | `⌘G` | Collapse the selection into a subgraph |
 | `esc` | Cancel drag; stop editing |
 
@@ -169,12 +172,14 @@ Gestures:
 ### 3.1 Anatomy
 
 A block is a rounded card (9 px radius) with a 31 px header, a port zone,
-and a body.
+a body, and a resize grip. In Stage view (§3.4) the header is a 24 px strip
+and the body is the picture.
 
 - **Header.** Category-coloured icon, title in Space Grotesk 600 at 12 px,
   a gradient tint of the category colour, optional badge chips on the
-  right, and the status dot last. A custom block also carries its language
-  chip (`py`, `ts`, `sh`) and the view toggle (§10.6).
+  right, the three-icon view toggle (§3.4), and the status dot last. A
+  custom block adds its language chip (`py`, `ts`, `sh`); an Avatar adds
+  its rig chip.
 - **Port zone.** One row per port index, 24 px tall, inputs down the left
   edge and outputs down the right. The dot of row *i* is centred
   51 + 24·*i* px from the block's top; this is what the wire router uses.
@@ -184,6 +189,8 @@ and a body.
 - **Body.** Whatever the block wants to show inline: a field, a preview of
   its current value, a level meter, a list of bundled functions. The body
   is a *preview*, not the settings; settings live in the inspector.
+- **Grip.** A 12 px diagonal grip in the bottom-right corner. Dragging it
+  resizes the block (§3.4).
 
 Minimum width is 168 px; content sets the rest. Widths on the mockups run
 168–480 px.
@@ -207,7 +214,7 @@ LLM, exit code for a terminal, a progress hairline).
 
 Chips in the header are for state that matters at a glance: `streaming`,
 `42 lines`, `listening`, `3/min`, `armed`, `warns`, `2 fns`, a language
-chip. Chips are mono 9.5 px on a 12 % tint of their colour. Selection is
+chip on a custom block, a rig chip on an Avatar. Chips are mono 9.5 px on a 12 % tint of their colour. Selection is
 *never* a chip; it is the ring.
 
 ### 3.4 Views and resizing
@@ -293,7 +300,7 @@ port type:
 | Shape | Port | Who initiates | Example |
 | --- | --- | --- | --- |
 | Reply | `tools` / `memory` | the holder | `motor.move()` returns "stalled at −31°" |
-| Telemetry | `stream` / `data` output | the device, continuously | encoder position, temperature, load |
+| Telemetry | `stream` / `data` output | the device, continuously | encoder position, temperature, load; the Avatar's `state` (expression, speaking, gaze) |
 | Interrupt | `exec` output | the device, on an event | collision, limit reached, device unplugged |
 
 The Motors block on the assistant example carries all three (`tool`,
@@ -304,7 +311,8 @@ finished its next thought.
 ### 4.5 Optional ports and visibility
 
 Every block has a canonical port set (§6). Ports that are optional and
-unwired are hidden in compact and summary views to keep blocks small. They
+unwired are hidden in every view to keep blocks small (in Stage view even
+wired ports show as dots without labels, §3.4). They
 appear the moment a compatible wire drag begins, so they can be targeted,
 and on the block's *Ports* tab in the inspector. The LLM's canonical set,
 for instance, is `trigger`, `prompt`, `context`, `tools`, `memory` in and
@@ -360,7 +368,9 @@ field (default *None*; setting one inserts a mapping step on the wire), a
 ![Figure 4 — The library panel, the full catalogue by category, and the port-type legend.](fig/Library.png)
 
 Nine categories plus Custom. Each category has a colour shared between its
-shelf in the library and the header of every block in it.
+shelf in the library and the header of every block in it. Blocks with a
+live picture — Webcam, Object detection, Display, Terminal, Avatar — have a
+Stage view (§3.4); custom blocks have a Code view (§10.6).
 
 ### 6.1 Models — cyan `#56c7d6`
 
@@ -497,7 +507,8 @@ standard:
 - Wire: **Settings · Debug**
 - Multi-select: **Common · Arrange**
 - A block type may append one tab of its own: *Source* and *Tests* for a
-  custom block, *People* for face recognition, *Browse* for the memory hub.
+  custom block, *People* for face recognition, *Browse* for the memory hub,
+  *Rigs* for the Avatar.
 
 ### 7.3 Sections
 
@@ -506,6 +517,10 @@ rule. A section that carries a boundary (safety, privacy, physical limits)
 is tinted and leads the panel. Controls: select fields, mono text fields,
 sliders with the value on the right, toggles with a one-line hint,
 connection rows (icon, name, meta, status dot), chip groups.
+
+Every block with a third view has a **View** section: the view as a
+segmented control, the size on canvas, and for an Avatar the aspect lock
+(§3.4).
 
 ### 7.4 Panel catalogue
 
@@ -525,6 +540,7 @@ Panels drawn in the mockups, and what leads each:
 | Memory hub | Stores | Recall (order, max, cutoff); Consolidation; **What is kept** |
 | Motors | Device | **Limits** (ranges, speed, warn before move); Exposes and reports; Live |
 | Custom block | Source (inline / file, runtime) | **Interface** (parsed, live); Settings (generated); View; Library |
+| Avatar | Rig (picker) | Vocabulary (generated from the rig); Inputs; Idle; View; Output; Live |
 | Graph, live | **Run mode** | Sources armed; When events overlap; Between events; Recent events |
 
 ![Figure 6 — Inspector panels for a sense, a specialist model, the memory hub and an actuator.](fig/SensePanels.png)
@@ -896,8 +912,9 @@ Eighteen blocks, twenty-two wires. Left to right:
 What the example demonstrates:
 
 - **Multiple specialist models working together.** Three perception
-  models report into one orchestrator's `context`; the orchestrator never
-  sees a frame. The inspector's Specialists section lists them.
+  models report into one orchestrator's `context`, and a fourth, Affect,
+  reads the orchestrator's own words for the Avatar; the orchestrator never
+  sees a frame. The inspector's Specialists section lists all four.
 - **Working and long-term memory.** Two stores, one handle, consolidation
   every ten minutes, the orchestrator writing one line per episode.
 - **Speaking, showing, thinking aloud.** `text` fans out to a display and
@@ -929,8 +946,9 @@ the code is edited in the drawer.
 
 ## 14. Consistency review
 
-The fifteen artboards were reviewed against each other before this
-document was written. Findings, and what was done:
+The artboards were reviewed against each other before this document was
+written, and again after the Avatar and the view rule were added. Findings,
+and what was done:
 
 | # | Finding | Resolution |
 | --- | --- | --- |
@@ -949,6 +967,8 @@ document was written. Findings, and what was done:
 | 13 | The Motors panel clipped its last field. | Panel height corrected. |
 | 14 | *Deploy* sits on the top bar with no defined behaviour. | Left as an open question (§15). |
 | 15 | The Avatar on Figure 9 shows an unwired `tool` port, which §4.5 says should be hidden. | Kept visible and dimmed on purpose, so the example shows both ways an expression can arrive. The rule stands; the mockup is the exception. |
+| 16 | The view toggle, double-click and `⌘E` were specified for custom blocks only, while the Avatar needed the same gestures. | One rule for every block (§3.4); the shell, anatomy, gestures, keyboard and inspector sections now describe it once and the custom-block and Avatar sections refer to it. |
+| 17 | Figures 9 and 16 are the same graph with one block in a different view. | Kept as two artboards: artboards on the design canvas share no state, so a view toggle cannot be shown live. The clickable prototype (Interactive) is where that would go. |
 
 ---
 
@@ -976,6 +996,9 @@ Decisions this draft does not make. Each needs an answer before build.
    or Go would need a compile step; is that in scope?
 9. **Touch and small screens.** The shell is designed for a desktop at
    1560 px and above. The rail (48 px) is the only concession so far.
+10. **Rig format.** Rive is the assumed format for animated rigs, with a
+    folder of SVG states as the simple alternative. Which is the reference
+    format, and is a rig editor in scope, or is authoring always external?
 
 ---
 
@@ -1022,7 +1045,9 @@ line height; code 10.5 px on 19 px lines.
 | Top bar / status bar | 46 / 28 px |
 | Library / rail / inspector | 264 / 48 / 328 px |
 | Console drawer / code drawer | 176 / 300 px |
-| Block radius / header / port row | 9 / 31 / 24 px |
+| Block radius / header / port row | 9 / 31 / 24 px (header 24 px in Stage view) |
+| Resize grip | 12 px, bottom-right |
+| Avatar in Stage, default | 240 × 240 px, aspect locked |
 | First port centre | 51 px from block top |
 | Port dot / halo | 11 px / 3 px |
 | Wire core / handle / halo | 1.9 / 2.2 / 5 px |
