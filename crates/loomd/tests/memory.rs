@@ -163,6 +163,7 @@ fn run_answering(
         scratch: Arc::new(loomd::run::sense::Scratch::open("memory-test").unwrap()),
         eye: Arc::new(loomd::run::perceive::Scripted::default()),
         vault: Arc::new(Vault::new(root)),
+        bench: Arc::new(loomd::run::runner::Bench::scripted()),
     }
     .execute(&mut |e| events.push(e), &mut |w| {
         warnings.push(w.clone());

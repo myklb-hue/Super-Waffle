@@ -60,6 +60,7 @@ impl Running {
                 ),
                 eye: std::sync::Arc::new(loomd::run::perceive::Scripted::default()),
                 vault: std::sync::Arc::new(loomd::run::memory::Vault::new("/tmp")),
+                bench: std::sync::Arc::new(loomd::run::runner::Bench::scripted()),
             }
             .execute(
                 &mut |event| {

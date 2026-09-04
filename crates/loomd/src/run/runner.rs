@@ -113,6 +113,97 @@ pub struct Runner<'a> {
     pub eye: Arc<dyn super::perceive::Perception>,
     /// The stores this run has open (SPEC §6.5).
     pub vault: Arc<super::memory::Vault>,
+    /// The devices this run has open, and what a fault has stopped.
+    ///
+    /// It belongs to the run rather than to one pass through the graph, because
+    /// a fault raised while handling one event has to still be holding when the
+    /// next arrives — a Toolbox that un-paused itself between events would be
+    /// a reflex with no memory (SPEC §9.1).
+    pub bench: Arc<Bench>,
+}
+
+/// The devices a run has open, and the Toolboxes a fault has stopped.
+#[derive(Default)]
+pub struct Bench {
+    devices: std::sync::Mutex<HashMap<String, Arc<dyn super::actuate::Device>>>,
+    aim: std::sync::Mutex<HashMap<String, super::actuate::Aim>>,
+    /// Toolboxes not taking calls until a person resumes or `motor.home`
+    /// succeeds (SPEC §9.1).
+    stopped: std::sync::Mutex<HashSet<String>>,
+    /// Set for a run whose devices are scripted rather than real, which is how
+    /// a graph with motors in it runs on a machine that has none.
+    pub scripted: bool,
+}
+
+impl Bench {
+    /// A bench whose devices answer from a script.
+    pub fn scripted() -> Self {
+        Self {
+            scripted: true,
+            ..Self::default()
+        }
+    }
+
+    /// The device this block is, opened the first time it is asked for.
+    fn device(&self, block: &Block) -> Result<Arc<dyn super::actuate::Device>, String> {
+        if let Some(already) = self.devices.lock().unwrap().get(&block.id) {
+            return Ok(Arc::clone(already));
+        }
+        let made: Arc<dyn super::actuate::Device> = if self.scripted {
+            Arc::new(super::actuate::Scripted::default())
+        } else {
+            let path = blocks::setting(block, "port")
+                .ok_or("this block has no port set: give it something like /dev/ttyUSB0")?;
+            let baud = blocks::number(block, "baud").unwrap_or(115_200.0) as u32;
+            Arc::new(super::actuate::Serial::open(
+                path,
+                baud,
+                std::time::Duration::from_millis(500),
+            )?)
+        };
+        self.devices
+            .lock()
+            .unwrap()
+            .insert(block.id.clone(), Arc::clone(&made));
+        Ok(made)
+    }
+
+    fn aimed(&self, block: &str) -> super::actuate::Aim {
+        self.aim
+            .lock()
+            .unwrap()
+            .get(block)
+            .copied()
+            .unwrap_or_default()
+    }
+
+    fn now_aimed(&self, block: &str, aim: super::actuate::Aim) {
+        self.aim.lock().unwrap().insert(block.to_owned(), aim);
+    }
+
+    /// Stop every Toolbox this block's `fault` is wired into.
+    fn fault(&self, graph: &Graph, block: &str) -> Vec<String> {
+        let stopped: Vec<String> = graph
+            .wires
+            .iter()
+            .filter(|w| w.from.node == block && w.from.port == "fault" && w.to.port == "pause")
+            .map(|w| w.to.node.clone())
+            .collect();
+        self.stopped.lock().unwrap().extend(stopped.iter().cloned());
+        stopped
+    }
+
+    /// Let them take calls again.
+    pub fn clear(&self) {
+        self.stopped.lock().unwrap().clear();
+    }
+
+    /// The Toolboxes a fault has stopped, for the panel and for dispatch.
+    pub fn holding(&self) -> Vec<String> {
+        let mut out: Vec<String> = self.stopped.lock().unwrap().iter().cloned().collect();
+        out.sort();
+        out
+    }
 }
 
 struct State<'a> {
@@ -197,10 +288,14 @@ impl<'a> Runner<'a> {
         for block in &self.graph.blocks {
             let state = if block.disabled {
                 BlockState::Disabled
-            } else if plan.is_capability(&block.id) {
-                BlockState::Ready
             } else if order.contains(&block.id) {
                 BlockState::Queued
+            } else if plan.is_capability(&block.id) {
+                // Ready, not queued: it is bound and waiting to be called. A
+                // block that is both — a Terminal that runs its command and
+                // answers calls — is queued, because that is the thing about to
+                // happen (SPEC §3.3).
+                BlockState::Ready
             } else if announce {
                 BlockState::Idle
             } else {
@@ -1423,6 +1518,124 @@ impl<'a> Runner<'a> {
         })
     }
 
+    /// Move, or go home (SPEC §6.6, §4.4).
+    ///
+    /// Three shapes of feedback come out of one call: the reply goes back to
+    /// the model, the position goes onto the `state` port, and a fault fires
+    /// `fault`, which stops any Toolbox that port is wired into before the
+    /// model has finished its next thought.
+    fn motors(
+        &self,
+        block: &Block,
+        verb: &str,
+        aim: super::actuate::Aim,
+        st: &mut State<'_>,
+    ) -> Result<blocks::Output, String> {
+        use super::actuate::{Aim, interpret, within};
+
+        // §12.2: a physical action warrants a warning, and the toggle is the
+        // user's own (§12.1). Going home is not a move into the unknown — it is
+        // how a fault is cleared — so it does not stop to ask.
+        if verb == "move"
+            && blocks::flag(block, "warnBeforeMove")
+            && !self.permitted(
+                st,
+                Warning {
+                    block: block.id.clone(),
+                    action: format!("Move the motors to {}", aim.line()),
+                    reason: "Moving a motor is a physical action.".into(),
+                    remember: true,
+                },
+            )
+        {
+            return Err("stopped before moving".into());
+        }
+
+        // A limit is the machine's own geometry, not a policy about the user.
+        // Past it, nothing moves and the block faults — which is what a real
+        // controller does at an end stop.
+        if verb == "move"
+            && let Err(why) = within(
+                aim,
+                blocks::number(block, "panLimit"),
+                blocks::number(block, "tiltLimit"),
+            )
+        {
+            self.raise(block, &why, st);
+            return Err(why);
+        }
+
+        let line = match verb {
+            "home" => "home".to_owned(),
+            _ => format!("move {:.0} {:.0}", aim.pan, aim.tilt),
+        };
+        let said = self.bench.device(block)?.send(&line)?;
+        let reply = interpret(&said, if verb == "home" { Aim::default() } else { aim });
+
+        if let Some(state) = &reply.state {
+            self.bench.now_aimed(&block.id, aim);
+            self.telemetry(block, "state", state, st);
+        }
+        match &reply.fault {
+            Some(why) => {
+                self.raise(block, why, st);
+                Err(reply.text)
+            }
+            None => {
+                // "or a clearing call (`motor.home`) succeeds" (SPEC §9.1).
+                if verb == "home" && !self.bench.holding().is_empty() {
+                    self.bench.clear();
+                    self.console(
+                        st,
+                        Some(&block.id),
+                        Level::Info,
+                        "home cleared the fault; tool calls are going through again".into(),
+                    );
+                }
+                Ok(said_ok(reply.text))
+            }
+        }
+    }
+
+    /// A device said something about itself: put it on the port and light the
+    /// wire (SPEC §4.4).
+    fn telemetry(&self, block: &Block, port: &str, what: &str, st: &mut State<'_>) {
+        (st.emit)(RunEvent::BlockOutput {
+            run: self.run.clone(),
+            block: block.id.clone(),
+            port: port.to_owned(),
+            chunk: what.to_owned(),
+        });
+        st.values
+            .insert(Endpoint::new(&block.id, port), Value::Text(what.to_owned()));
+        for wire in &self.graph.wires {
+            if wire.from.node == block.id && wire.from.port == port {
+                (st.emit)(RunEvent::WireActive {
+                    run: self.run.clone(),
+                    wire: wire.id.clone(),
+                });
+            }
+        }
+    }
+
+    /// A fault: the console says so, the `fault` port fires, and every Toolbox
+    /// it is wired into stops taking calls (SPEC §4.4, §9.1).
+    fn raise(&self, block: &Block, why: &str, st: &mut State<'_>) {
+        self.console(st, Some(&block.id), Level::Error, format!("fault: {why}"));
+        self.telemetry(block, "fault", why, st);
+        for toolbox in self.bench.fault(self.graph, &block.id) {
+            self.console(
+                st,
+                Some(&toolbox),
+                Level::Warn,
+                format!(
+                    "{toolbox} is holding: no tool calls until the fault clears \
+                     or you resume."
+                ),
+            );
+        }
+    }
+
     /// Consolidate one hub by name, from outside a run.
     ///
     /// The live loop has a hub id and a timer; everything else consolidation
@@ -1522,6 +1735,25 @@ impl<'a> Runner<'a> {
         if !held.contains(&callee_id.to_owned()) {
             return format!("`{display}` is not one of the tools you were given");
         }
+
+        // A fault stopped the Toolbox this tool is behind (SPEC §9.1). It
+        // pauses; it never locks — `motor.home` still goes through, because a
+        // pause a person cannot get out of from inside the graph is a lock.
+        //
+        // The refusal is worked out here and reported below with every other
+        // outcome, rather than returned from here: a call that was refused is
+        // still a call the trace should show, and an early return would have
+        // made the one call a person most wants to see the one that leaves no
+        // record.
+        let refused = (verb != "home")
+            .then(|| {
+                self.bench.holding().into_iter().find(|toolbox| {
+                    plan.slots
+                        .get(toolbox)
+                        .is_some_and(|behind| behind.iter().any(|b| b == callee_id))
+                })
+            })
+            .flatten();
         let Some(callee) = self.block(callee_id) else {
             return format!("there is no block called `{callee_id}`");
         };
@@ -1547,66 +1779,92 @@ impl<'a> Runner<'a> {
                 .map(str::to_owned)
         };
 
-        let outcome: Result<blocks::Output, String> = match (callee.kind.as_str(), verb) {
-            ("terminal", "run") => {
-                match arg("command")
-                    .or_else(|| blocks::setting(callee, "command").map(str::to_owned))
-                {
-                    None => Err("no command was given and the block has no default".into()),
-                    Some(command) => self.shell_with_warning(callee, &command, st),
-                }
-            }
-            ("python", "exec") => match arg("code") {
-                None => Err("no code was given".into()),
-                Some(code) => blocks::python(callee, &code, self.root),
-            },
-            (kind, "remember") if blocks::is_memory(kind) => match arg("text") {
-                None => Err("nothing was given to remember".into()),
-                Some(text) => {
-                    let sort = arg("kind").unwrap_or_else(|| "episode".into());
-                    let vector = self.eye.embed(&text, EMBED_MODEL).ok();
-                    match self.memory(held, plan, st) {
-                        None => Err("this memory has no stores wired into it".into()),
-                        Some(hub) => hub.remember(&text, &sort, vector.as_deref()).map(|id| {
-                            // "when working memory is full" (SPEC §9.2): the
-                            // moment something new arrives is the moment
-                            // something old may have fallen out.
-                            self.consolidate(callee, &hub, st);
-                            said(format!("remembered, as {id}"))
-                        }),
+        let outcome: Result<blocks::Output, String> = if let Some(toolbox) = refused {
+            Err(format!(
+                "not called: a fault stopped {toolbox}. Call a clearing tool \
+                 such as `motor.home`, or ask the user to resume."
+            ))
+        } else {
+            match (callee.kind.as_str(), verb) {
+                ("terminal", "run") => {
+                    match arg("command")
+                        .or_else(|| blocks::setting(callee, "command").map(str::to_owned))
+                    {
+                        None => Err("no command was given and the block has no default".into()),
+                        Some(command) => self.shell_with_warning(callee, &command, st),
                     }
                 }
-            },
-            // §12.2 warrants a warning before deleting a person from long-term
-            // memory. Forgetting is the only memory call that can lose
-            // something, so it is the one that asks first — and, as everywhere
-            // else, it warns and does not block (§12.1).
-            (kind, "forget") if blocks::is_memory(kind) => match arg("what") {
-                None => Err("nothing was given to forget".into()),
-                Some(what) => {
-                    let asked = self.permitted(
-                        st,
-                        Warning {
-                            block: callee.id.clone(),
-                            action: format!("Forget everything matching `{what}`"),
-                            reason: "Deleting a person deletes every sighting of \
-                                     them, from every store."
-                                .into(),
-                            remember: false,
+                ("python", "exec") => match arg("code") {
+                    None => Err("no code was given".into()),
+                    Some(code) => blocks::python(callee, &code, self.root),
+                },
+                ("motors", verb @ ("move" | "home")) => {
+                    let number = |key: &str| call.arguments.get(key).and_then(|v| v.as_f64());
+                    let aim = match verb {
+                        "home" => super::actuate::Aim::default(),
+                        _ => super::actuate::Aim {
+                            pan: number("pan").unwrap_or(self.bench.aimed(callee_id).pan),
+                            tilt: number("tilt").unwrap_or(self.bench.aimed(callee_id).tilt),
                         },
-                    );
-                    match asked {
-                        false => Err("stopped before forgetting".into()),
-                        true => match self.memory(held, plan, st) {
+                    };
+                    self.motors(callee, verb, aim, st)
+                }
+                ("usb-device", "send") => match arg("line") {
+                    None => Err("no line was given to send".into()),
+                    Some(line) => self
+                        .bench
+                        .device(callee)
+                        .and_then(|device| device.send(&line))
+                        .map(said),
+                },
+                (kind, "remember") if blocks::is_memory(kind) => match arg("text") {
+                    None => Err("nothing was given to remember".into()),
+                    Some(text) => {
+                        let sort = arg("kind").unwrap_or_else(|| "episode".into());
+                        let vector = self.eye.embed(&text, EMBED_MODEL).ok();
+                        match self.memory(held, plan, st) {
                             None => Err("this memory has no stores wired into it".into()),
-                            Some(hub) => hub
-                                .forget(&what)
-                                .map(|gone| said(format!("forgot {}", plural(gone, "memory")))),
-                        },
+                            Some(hub) => hub.remember(&text, &sort, vector.as_deref()).map(|id| {
+                                // "when working memory is full" (SPEC §9.2): the
+                                // moment something new arrives is the moment
+                                // something old may have fallen out.
+                                self.consolidate(callee, &hub, st);
+                                said(format!("remembered, as {id}"))
+                            }),
+                        }
                     }
-                }
-            },
-            (kind, verb) => Err(format!("`{kind}` has no tool called `{verb}`")),
+                },
+                // §12.2 warrants a warning before deleting a person from long-term
+                // memory. Forgetting is the only memory call that can lose
+                // something, so it is the one that asks first — and, as everywhere
+                // else, it warns and does not block (§12.1).
+                (kind, "forget") if blocks::is_memory(kind) => match arg("what") {
+                    None => Err("nothing was given to forget".into()),
+                    Some(what) => {
+                        let asked = self.permitted(
+                            st,
+                            Warning {
+                                block: callee.id.clone(),
+                                action: format!("Forget everything matching `{what}`"),
+                                reason: "Deleting a person deletes every sighting of \
+                                     them, from every store."
+                                    .into(),
+                                remember: false,
+                            },
+                        );
+                        match asked {
+                            false => Err("stopped before forgetting".into()),
+                            true => match self.memory(held, plan, st) {
+                                None => Err("this memory has no stores wired into it".into()),
+                                Some(hub) => hub
+                                    .forget(&what)
+                                    .map(|gone| said(format!("forgot {}", plural(gone, "memory")))),
+                            },
+                        }
+                    }
+                },
+                (kind, verb) => Err(format!("`{kind}` has no tool called `{verb}`")),
+            }
         };
 
         let ms = started.elapsed().as_millis() as u32;
@@ -1665,6 +1923,10 @@ impl<'a> Runner<'a> {
 ///
 /// Memory has no exit code and no stderr; what it has to say is one line, and
 /// dressing it as a finished command would put `exit 0` in front of it.
+fn said_ok(what: String) -> blocks::Output {
+    said(what)
+}
+
 fn said(what: String) -> blocks::Output {
     blocks::Output {
         stdout: what,

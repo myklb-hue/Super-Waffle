@@ -272,6 +272,7 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
 
       <SenseSections block={block} />
       <MemorySections graph={graph} block={block} />
+      <ActuatorSections graph={graph} block={block} />
 
       <Section title="On the canvas">
         <SwitchRow
@@ -281,6 +282,77 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
           onChange={() => toggleDisabled([block.id])}
         />
       </Section>
+    </>
+  );
+}
+
+/**
+ * The sections an actuator has (Figure 6, Figure 9).
+ *
+ * Feedback says what comes back and by which route, because that is the thing
+ * about a device that is hardest to see on the canvas: three ports, three
+ * different senses of "reports", and only one of them is the tool's own reply
+ * (SPEC §4.4). Reflex says what the interrupt is wired to do, and whether it is
+ * wired to do anything — a `fault` going nowhere is a device that will fail
+ * quietly, and the panel is the only place that is visible.
+ */
+function ActuatorSections({ graph, block }: { graph: Graph; block: Block }) {
+  if (block.kind !== 'motors' && block.kind !== 'usb-device' && block.kind !== 'gpio') {
+    return null;
+  }
+  const kind = lookupKind(block.kind);
+  const shapes: Record<string, string> = {
+    tools: 'reply · when you call it',
+    stream: 'telemetry · while it acts',
+    exec: 'interrupt · the reflex path',
+  };
+  const out = (kind?.ports ?? []).filter((p) => p.side === 'out');
+  const paused = graph.wires
+    .filter((w) => w.from.node === block.id && w.from.port === 'fault' && w.to.port === 'pause')
+    .map((w) => graph.blocks.find((b) => b.id === w.to.node))
+    .filter((b): b is Block => !!b);
+  const faults = out.some((p) => p.type === 'exec');
+
+  return (
+    <>
+      <Section title="Feedback">
+        {out.map((port) => (
+          <div key={port.name} className={s.derived}>
+            <TypeDot kind={port.type} />
+            <span className={s.derivedName}>{port.name}</span>
+            <span className={s.derivedType}>{shapes[port.type] ?? port.type}</span>
+          </div>
+        ))}
+      </Section>
+
+      {faults && (
+        <Section
+          title="Reflex"
+          tint="err"
+          right={
+            <Chip
+              label={paused.length > 0 ? `stops ${paused.length}` : 'not wired'}
+              color={paused.length > 0 ? 'ok' : 'err'}
+              dot
+            />
+          }
+        >
+          {paused.length === 0 ? (
+            <Callout
+              title="fault goes nowhere"
+              body="Wire fault into a Toolbox's pause and a stall stops tool calls before the model has finished its next thought. Unwired, the fault is reported and nothing acts on it."
+              color="err"
+              dashed
+            />
+          ) : (
+            <p className={s.prose}>
+              A fault stops {paused.map(nameOf).join(' and ')} taking calls. It pauses; it never
+              locks — a clearing call such as <code>motor.home</code> still goes through, and so
+              does Resume.
+            </p>
+          )}
+        </Section>
+      )}
     </>
   );
 }

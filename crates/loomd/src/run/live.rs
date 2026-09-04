@@ -53,6 +53,7 @@ pub struct Live<'a> {
     pub scratch: Arc<super::sense::Scratch>,
     pub eye: Arc<dyn super::perceive::Perception>,
     pub vault: Arc<super::memory::Vault>,
+    pub bench: Arc<super::runner::Bench>,
 }
 
 impl Live<'_> {
@@ -178,6 +179,7 @@ impl Live<'_> {
                 scratch: Arc::clone(&self.scratch),
                 eye: Arc::clone(&self.eye),
                 vault: Arc::clone(&self.vault),
+                bench: Arc::clone(&self.bench),
             };
             runner.consolidate_hub(id, plan, emit, ask);
         }
@@ -350,6 +352,7 @@ impl Live<'_> {
             scratch: Arc::clone(&self.scratch),
             eye: Arc::clone(&self.eye),
             vault: Arc::clone(&self.vault),
+            bench: Arc::clone(&self.bench),
         };
         let summary = runner.execute_steps(&steps, seeded, emit, ask);
 
@@ -455,6 +458,7 @@ mod tests {
             scratch: Arc::new(crate::run::sense::Scratch::open("absorb-test").unwrap()),
             eye: Arc::new(crate::run::perceive::Scripted::default()),
             vault: Arc::new(crate::run::memory::Vault::new("/tmp")),
+            bench: Default::default(),
         };
         let (tx, rx) = channel();
         for event in events {

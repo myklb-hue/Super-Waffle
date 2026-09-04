@@ -140,6 +140,13 @@ pub fn plan(graph: &Graph) -> Plan {
         }
     }
 
+    // Capability and step are not opposites, and this is where that shows.
+    // A block is a *capability* when something it produces is a handle: it is
+    // bound to whoever holds it and waits to be called. It is a *step* when it
+    // has something to produce that nobody has to ask for — an output that is
+    // not a handle, or no wired outputs at all. A Terminal wired both ways is
+    // both: it runs its command in the order, and the model can also call it
+    // (SPEC §13.3).
     let capabilities: BTreeSet<String> = graph
         .blocks
         .iter()
@@ -148,7 +155,19 @@ pub fn plan(graph: &Graph) -> Plan {
             match outs {
                 // Nowhere to send a result is not the same as having no result.
                 None => false,
-                Some(types) => types.iter().all(|t| t.is_handle()),
+                // *Any* handle, not all of them. A device that can be
+                // commanded can also report (SPEC §4.4), and the Motors block
+                // carries all three shapes at once: `tool` is the handle,
+                // `state` streams telemetry and `fault` interrupts. Requiring
+                // every wired output to be a handle made wiring up the
+                // telemetry turn the device into a step — so the graph tried to
+                // *run* the motors, failed, and the tool nobody could call was
+                // the one the orchestrator had been given.
+                //
+                // A Branch is still a step under this rule, because `exec` is
+                // closed but not a handle: it is control flow, not something to
+                // call.
+                Some(types) => types.iter().any(|t| t.is_handle()),
             }
         })
         .map(|b| b.id.clone())
@@ -190,7 +209,14 @@ pub fn plan(graph: &Graph) -> Plan {
         .blocks
         .iter()
         .map(|b| b.id.as_str())
-        .filter(|id| !capabilities.contains(*id))
+        .filter(|id| {
+            // Only a block whose every wired output is a handle is excused
+            // from taking a turn: there is nothing it produces that anybody is
+            // waiting for. Anything else is a step, capability or not.
+            wired_out
+                .get(*id)
+                .is_none_or(|types| !types.iter().all(|t| t.is_handle()))
+        })
         .filter(|id| !framed.contains_key(id))
         .collect();
     steps.extend(graph.frames.iter().map(|f| f.id.as_str()));
@@ -469,7 +495,8 @@ mod tests {
             to: Endpoint::new("report", "value"),
         });
         let plan = plan(&graph);
-        assert!(!plan.is_capability("terminal"));
+        // Both, which is the point: it answers calls *and* it takes a turn.
+        assert!(plan.is_capability("terminal"));
         assert!(plan.order.contains(&"terminal".to_owned()));
         // It is still bound to the model, which can still call it.
         assert!(plan.bindings["llm"].contains(&"terminal".to_owned()));

@@ -98,6 +98,7 @@ fn run(graph: &graph_format::Graph, eye: Arc<dyn Perception>, turns: Vec<ChatTur
         scratch: Arc::clone(&scratch),
         eye,
         vault: Arc::new(loomd::run::memory::Vault::new(&root)),
+        bench: Arc::new(loomd::run::runner::Bench::scripted()),
     }
     .execute(&mut |e| events.push(e), &mut |_| Decision::Continue);
     Ran {

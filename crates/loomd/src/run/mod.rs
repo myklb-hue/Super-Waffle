@@ -1,5 +1,6 @@
 //! Running a graph.
 
+pub mod actuate;
 pub mod blocks;
 pub mod custom;
 pub mod event;

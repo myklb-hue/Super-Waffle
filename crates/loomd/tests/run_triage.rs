@@ -66,6 +66,7 @@ fn run_it(decide: Decision) -> (loomd::run::runner::Summary, Recorded) {
         scratch: std::sync::Arc::new(loomd::run::sense::Scratch::open("t").unwrap()),
         eye: std::sync::Arc::new(loomd::run::perceive::Scripted::default()),
         vault: std::sync::Arc::new(loomd::run::memory::Vault::new("/tmp")),
+        bench: std::sync::Arc::new(loomd::run::runner::Bench::scripted()),
     };
     let mut events = Vec::new();
     let mut asked = Vec::new();
@@ -209,6 +210,7 @@ fn the_model_is_offered_the_runtimes_not_the_box() {
         scratch: std::sync::Arc::new(loomd::run::sense::Scratch::open("t").unwrap()),
         eye: std::sync::Arc::new(loomd::run::perceive::Scripted::default()),
         vault: std::sync::Arc::new(loomd::run::memory::Vault::new("/tmp")),
+        bench: std::sync::Arc::new(loomd::run::runner::Bench::scripted()),
     }
     .execute(&mut |_| {}, &mut |_| Decision::Continue);
 

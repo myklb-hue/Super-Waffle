@@ -998,3 +998,49 @@ What this environment cannot prove:
   recency; it does not prove that `nomic-embed-text` puts "who is Sam" near "Sam
   is the partner". The weights are not fetchable here (§15.13's download is
   denied by the network policy), and the seam between the two is one trait.
+
+---
+
+Found while building slice 9 (Actuators and feedback):
+
+- **Capability and step are not opposites, and the rule said they were.** A
+  block counted as a capability only when *every* wired output was a handle.
+  §4.4's whole point is that a device which can be commanded can also report,
+  and the Motors block carries all three shapes at once — `tool` is the handle,
+  `state` streams telemetry, `fault` interrupts. So wiring up the telemetry
+  turned the device into a step: the graph tried to *run* the motors, failed
+  with "not a kind this engine can run yet", and the tool the orchestrator had
+  been given was one nobody could call. The rule is now two rules. A block is a
+  capability when *any* wired output is a handle; it is a step unless *every*
+  wired output is a handle. A Terminal wired both ways is both, which is what
+  §13.3 needs. A Branch is still a step, because `exec` is closed but is not a
+  handle.
+- **A device that is only ever called takes its turn by doing nothing.** With
+  the rule fixed, Motors is still in the order — blocks reading its telemetry
+  have to come after it — and there is nothing for it to do until somebody calls
+  it. Reporting an error there would have been reporting that a servo failed to
+  be asked a question.
+- **A refused tool call left no trace.** The "not one of the tools you were
+  given" path returned early, before the `tool.call` and `tool.result` events.
+  The call a person most wants to see in the trace — the one that was stopped —
+  was the one that left no record. Refusals now come out with every other
+  outcome.
+
+One decision worth recording:
+
+- **A limit is the machine's geometry, not a policy about the user.** §12.1 says
+  the application may warn and may not prevent, and a pan limit looks like a
+  prevention. It is not: asking a servo for an angle it does not have is how a
+  servo is broken, and a real controller refuses at its end stop. So a move past
+  a limit does not happen and raises a fault, exactly as the hardware would —
+  and the limits are two text fields the user owns.
+
+What this environment cannot prove:
+
+- **A real serial device.** `serialport` is in the build (without its libudev
+  default feature, which will not compile here), and the `Serial` implementation
+  writes a line and reads a line with a timeout. Nothing on this machine has a
+  serial port, so what is proven is everything above the wire: the warning, the
+  limits, the three feedback ports, the Toolbox that stops taking calls, the
+  clearing call that starts it again. The seam is one trait with two
+  implementations, as it is for models, perception and capture.

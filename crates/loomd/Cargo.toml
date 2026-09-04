@@ -18,3 +18,4 @@ specta-typescript.workspace = true
 specta-serde.workspace = true
 ureq = { version = "3.4.0", features = ["json"] }
 rusqlite = { version = "0.40.2", features = ["bundled"] }
+serialport = { version = "4.10.0", default-features = false }

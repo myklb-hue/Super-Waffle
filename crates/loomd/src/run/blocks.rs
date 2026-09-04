@@ -210,6 +210,39 @@ pub fn tools_of(block: &Block) -> Vec<ToolDef> {
                 "required": ["code"]
             }),
         }],
+        "motors" => vec![
+            ToolDef {
+                name: format!("{id}.move"),
+                description: "Point the camera. Angles are degrees from centre; \
+                              negative is left and down."
+                    .into(),
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "pan": { "type": "number", "description": "Degrees left or right." },
+                        "tilt": { "type": "number", "description": "Degrees up or down." }
+                    }
+                }),
+            },
+            ToolDef {
+                name: format!("{id}.home"),
+                description: "Return to centre. This also clears a fault, so it \
+                              is what to call when a move has been refused."
+                    .into(),
+                parameters: serde_json::json!({ "type": "object", "properties": {} }),
+            },
+        ],
+        "usb-device" => vec![ToolDef {
+            name: format!("{id}.send"),
+            description: "Send one line to the device and read one line back.".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "line": { "type": "string", "description": "The line to send." }
+                },
+                "required": ["line"]
+            }),
+        }],
         // A model with a memory handle gets `remember()` and `forget()`, and
         // nothing else (SPEC §9.2). Recall is not among them on purpose: it is
         // put in front of the model before it asks, because a model that has to
@@ -336,6 +369,15 @@ pub fn pure_step(block: &Block, inputs: &Outputs) -> Result<Outputs, String> {
             let value = inputs.get("value").cloned().unwrap_or(Value::Null);
             out.insert("value".into(), value);
         }
+        // A device that is only ever called takes its turn by doing nothing.
+        //
+        // It is in the order because its telemetry ports are wired and the
+        // blocks reading them have to be ordered after it — but there is
+        // nothing for it to *do* until somebody calls it, and its `state` and
+        // `fault` are things it says while acting rather than things it
+        // produces on demand (SPEC §4.4). Reporting an error here would be
+        // reporting that a servo failed to be asked a question.
+        "motors" | "usb-device" | "gpio" => {}
         other => return Err(format!("`{other}` is not a kind this engine can run yet")),
     }
     Ok(out)

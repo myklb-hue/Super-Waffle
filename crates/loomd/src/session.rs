@@ -145,6 +145,9 @@ impl Session {
                 // scratch: working memory is windowed, and a window means
                 // nothing if the store is rebuilt for every event.
                 let vault = Arc::new(crate::run::memory::Vault::new(root.clone()));
+                // One bench for the whole run: a fault raised while handling
+                // one event has to still be holding when the next arrives.
+                let bench = Arc::new(crate::run::runner::Bench::default());
                 let eye: Arc<dyn crate::run::perceive::Perception> =
                     Arc::new(crate::run::perceive::Local::new(
                         models_folder(),
@@ -162,6 +165,7 @@ impl Session {
                             scratch,
                             eye,
                             vault,
+                            bench,
                         }
                         .execute(emit, ask);
                     }
@@ -176,6 +180,7 @@ impl Session {
                             scratch,
                             eye,
                             vault,
+                            bench,
                         }
                         .execute(emit, ask);
                     }
