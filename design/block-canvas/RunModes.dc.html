@@ -1,0 +1,331 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin:0; background:#08090b; color:#e8ebf0; font-family:'Space Grotesk','Helvetica Neue',Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#56c7d6; text-decoration:none; }
+    a:hover { color:#93dde8; }
+    @keyframes flow { to { stroke-dashoffset:-28; } }
+    @keyframes breathe { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  </style>
+</helmet>
+<div style="width:1120px;height:980px;box-sizing:border-box;padding:30px 32px;background:#08090b;font-family:'Space Grotesk','Helvetica Neue',Arial,sans-serif;display:flex;flex-direction:column;gap:22px;overflow:hidden;">
+  <div>
+    <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:#56c7d6;margin-bottom:7px;">Continuous running</div>
+    <div style="font-size:19px;font-weight:600;letter-spacing:-.02em;color:#e8ebf0;">The transport says how the graph runs; sources and loops say when</div>
+  </div>
+  <div style="display:flex;gap:16px;">
+  <div style="flex:1;background:#111419;border:1px solid #242932;border-radius:10px;padding:14px 16px;">
+  <div style="display:flex;align-items:center;height:32px;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:7px;height:28px;padding:0 12px 0 10px;border-radius:6px;background:#56c7d6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#08090b" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M7 4.5l12 7.5-12 7.5z"/></svg><span style="font-size:11.5px;font-weight:600;color:#08090b;">Run</span></div></div>
+  <div style="font-size:12px;font-weight:600;color:#e8ebf0;margin-bottom:4px;">Once</div>
+  <div style="font-size:10.5px;line-height:1.5;color:#5f6875;">Runs the graph top to bottom, then stops. What every graph does until it has a source.</div>
+</div>
+  <div style="flex:1;background:#111419;border:1px solid #242932;border-radius:10px;padding:14px 16px;">
+  <div style="display:flex;align-items:center;height:32px;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 4px 0 10px;border-radius:6px;background:rgba(111,201,138,0.13);border:1px solid rgba(111,201,138,0.35);">
+  <span style="width:7px;height:7px;border-radius:50%;background:#6fc98a;flex:none;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#6fc98a;letter-spacing:.03em;">live</span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:rgba(111,201,138,0.7);">4h 12m</span>
+  <div style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:rgba(224,104,95,0.16);margin-left:2px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e0685f" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg></div>
+</div></div>
+  <div style="font-size:12px;font-weight:600;color:#e8ebf0;margin-bottom:4px;">Live</div>
+  <div style="font-size:10.5px;line-height:1.5;color:#5f6875;">Sources stay armed and every event runs downstream. Stop tears the whole graph down.</div>
+</div>
+  <div style="flex:1;background:#111419;border:1px solid #242932;border-radius:10px;padding:14px 16px;">
+  <div style="display:flex;align-items:center;height:32px;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 4px 0 10px;border-radius:6px;background:rgba(224,164,88,0.13);border:1px solid rgba(224,164,88,0.35);">
+  <span style="width:7px;height:7px;border-radius:50%;background:#e0a458;flex:none;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#e0a458;letter-spacing:.03em;">next in</span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:rgba(224,164,88,0.7);">4:12</span>
+  <div style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:rgba(224,104,95,0.16);margin-left:2px;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e0685f" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg></div>
+</div></div>
+  <div style="font-size:12px;font-weight:600;color:#e8ebf0;margin-bottom:4px;">Scheduled</div>
+  <div style="font-size:10.5px;line-height:1.5;color:#5f6875;">Only Schedule blocks are armed. Between ticks the graph sleeps and costs nothing.</div>
+</div>
+  <div style="flex:1;background:#111419;border:1px solid #242932;border-radius:10px;padding:14px 16px;">
+  <div style="display:flex;align-items:center;height:32px;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 12px 0 10px;border-radius:6px;background:rgba(152,162,174,0.13);border:1px solid rgba(152,162,174,0.35);">
+  <span style="width:7px;height:7px;border-radius:50%;background:#98a2ae;flex:none;"></span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:600;color:#e8ebf0;letter-spacing:.03em;">paused</span>
+  <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:rgba(232,235,240,0.7);">queue 12</span>
+  
+</div></div>
+  <div style="font-size:12px;font-weight:600;color:#e8ebf0;margin-bottom:4px;">Paused</div>
+  <div style="font-size:10.5px;line-height:1.5;color:#5f6875;">Events keep queueing; nothing runs until you resume. Useful while you rewire a live graph.</div>
+</div>
+</div>
+<div style="display:flex;gap:22px;">
+  <div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#dcc65b;flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:#e8ebf0;">Watch folder</span>
+      <span style="font-size:10.5px;color:#5f6875;">a source block</span>
+    </div>
+    <div style="height:680px;background:#111419;border:1px solid #242932;border-radius:10px;overflow:hidden;"><div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+  <div style="flex:none;padding:13px 16px 0;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(220,198,91,0.14);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M3.5 6.5h6l2 2.2h9V19a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:#e8ebf0;">Watch folder</div>
+        <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:2px;">senses &middot; fs.watch</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:13px;border-bottom:1px solid #1a1e25;"><div style="padding-bottom:8px;font-size:11.5px;color:#e8ebf0;border-bottom:1.5px solid #56c7d6;margin-bottom:-1px;">Settings</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Ports</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Events</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Source</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Path</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M3.5 6.5h6l2 2.2h9V19a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/></svg>
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">~/inbox</span>
+  
+  
+</div></div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Pattern</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">*.eml</span>
+  
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">On</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">create, modify</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Rate</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Debounce</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">500 ms</span>
+  
+  
+</div></div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">When busy</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Queue &middot; max 50</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Drop duplicates</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">same path within 5 s</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#56c7d6;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Emits</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;"><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(127,147,201,0.12);border:1px solid rgba(127,147,201,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#7f93c9;"><span style="width:5px;height:5px;border-radius:50%;background:#7f93c9;"></span>file</span><span style="font-size:10.5px;color:#5f6875;">one event per matching file</span></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(111,201,138,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#6fc98a;text-transform:uppercase;">Live</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(111,201,138,0.12);border:1px solid rgba(111,201,138,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#6fc98a;"><span style="width:5px;height:5px;border-radius:50%;background:#6fc98a;"></span>watching</span>
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Rate</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">3 / min</span>
+  
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Total</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">1,204 &middot; last 12 s ago</span>
+  
+  
+</div></div>
+</div></div>
+</div></div>
+  </div><div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#dcc65b;flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:#e8ebf0;">Schedule</span>
+      <span style="font-size:10.5px;color:#5f6875;">periodic trigger</span>
+    </div>
+    <div style="height:680px;background:#111419;border:1px solid #242932;border-radius:10px;overflow:hidden;"><div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+  <div style="flex:none;padding:13px 16px 0;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(220,198,91,0.14);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcc65b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 1.8"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:#e8ebf0;">Schedule</div>
+        <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:2px;">senses &middot; clock.tick</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:13px;border-bottom:1px solid #1a1e25;"><div style="padding-bottom:8px;font-size:11.5px;color:#e8ebf0;border-bottom:1.5px solid #56c7d6;margin-bottom:-1px;">Settings</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Ports</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Events</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Interval</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;gap:3px;padding:3px;background:#0b0d11;border:1px solid #242932;border-radius:7px;"><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:24px;border-radius:5px;font-size:11px;font-weight:600;color:#08090b;background:#56c7d6;"><span style="width:5px;height:5px;border-radius:50%;background:#08090b;"></span>Every</div><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:24px;border-radius:5px;font-size:11px;font-weight:500;color:#98a2ae;background:transparent;">Cron</div><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:24px;border-radius:5px;font-size:11px;font-weight:500;color:#98a2ae;background:transparent;">Once at</div></div><div style="height:11px;"></div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Every</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">15 minutes</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Jitter</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">&plusmn; 2 min</span>
+  
+  
+</div></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Catch-up</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Run missed ticks</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">after sleep or a crash</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#242932;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#6c7583;"></div>
+</div>
+</div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Skip if still running</div>
+    
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#56c7d6;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Emits</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;"><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(232,235,240,0.12);border:1px solid rgba(232,235,240,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e8ebf0;"><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span>exec</span><span style="font-size:10.5px;color:#5f6875;">a tick &mdash; wire it to any trigger port</span></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(224,164,88,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#e0a458;text-transform:uppercase;">Next</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(224,164,88,0.12);border:1px solid rgba(224,164,88,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e0a458;">armed</span>
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Fires in</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">4:12</span>
+  
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">This hour</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">3 ticks &middot; 0 skipped</span>
+  
+  
+</div></div>
+</div></div>
+</div></div>
+  </div><div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#8a93a3;flex:none;transform:translateY(-1px);"></span>
+      <span style="font-size:12px;font-weight:600;color:#e8ebf0;">Loop frame</span>
+      <span style="font-size:10.5px;color:#5f6875;">repeat a region of the canvas</span>
+    </div>
+    <div style="height:680px;background:#111419;border:1px solid #242932;border-radius:10px;overflow:hidden;"><div style="display:flex;flex-direction:column;height:100%;min-height:0;">
+  <div style="flex:none;padding:13px 16px 0;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(138,147,163,0.14);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a93a3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M4.5 10a7.5 7.5 0 0 1 12.8-3.5"/><path d="M19.5 14a7.5 7.5 0 0 1-12.8 3.5"/><path d="M17.5 3v4h-4"/><path d="M6.5 21v-4h4"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:#e8ebf0;">For each</div>
+        <div style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#5f6875;margin-top:2px;">control &middot; loop.frame</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/></svg>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:13px;border-bottom:1px solid #1a1e25;"><div style="padding-bottom:8px;font-size:11.5px;color:#e8ebf0;border-bottom:1.5px solid #56c7d6;margin-bottom:-1px;">Settings</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Ports</div><div style="padding-bottom:8px;font-size:11.5px;color:#5f6875;border-bottom:1.5px solid transparent;margin-bottom:-1px;">Runs</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Iterate</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Over</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">items &middot; any</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div></div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">As</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">item</span>
+  
+  
+</div></div><div style="margin-bottom:11px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Parallel</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">2</span>
+  
+  
+</div></div><div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Max iterations</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">500</span>
+  
+  
+</div></div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Stop when</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><circle cx="7" cy="5.5" r="2"/><circle cx="7" cy="18.5" r="2"/><circle cx="17" cy="9" r="2"/><path d="M7 7.5v9"/><path d="M9 5.5h3a3 3 0 0 1 3 3v.5"/></svg>
+  <span style="flex:1;font-size:11.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">branch.urgent fires</span>
+  <span style="transform:rotate(90deg);opacity:.6;"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5f6875" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;display:block;"><path d="M9 6l6 6-6 6"/></svg></span>
+  
+</div><div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+  <div style="flex:1;">
+    <div style="font-size:11.5px;color:#e8ebf0;">Continue on error</div>
+    <div style="font-size:10px;color:#5f6875;margin-top:2px;">failed items go to the errors port</div>
+  </div>
+  <div style="width:28px;height:16px;border-radius:8px;background:#56c7d6;position:relative;flex:none;">
+  <div style="position:absolute;top:2px;left:14px;width:12px;height:12px;border-radius:50%;background:#0b0d11;"></div>
+</div>
+</div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#5f6875;text-transform:uppercase;">Ports</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;"><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;width:22px;">in</span><span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;">items</span><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(138,147,163,0.12);border:1px solid rgba(138,147,163,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#8a93a3;"><span style="width:5px;height:5px;border-radius:50%;background:#8a93a3;"></span>any</span></div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;"><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;width:22px;">out</span><span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;">results</span><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(167,139,208,0.12);border:1px solid rgba(167,139,208,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#a78bd0;"><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span>data</span></div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;"><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;width:22px;">out</span><span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;">done</span><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(232,235,240,0.12);border:1px solid rgba(232,235,240,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#e8ebf0;"><span style="width:5px;height:5px;border-radius:50%;background:#e8ebf0;"></span>exec</span></div><div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;"><span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#39414c;width:22px;">out</span><span style="flex:1;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;">errors</span><span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(167,139,208,0.12);border:1px solid rgba(167,139,208,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#a78bd0;"><span style="width:5px;height:5px;border-radius:50%;background:#a78bd0;"></span>data</span></div>
+  </div>
+</div><div style="padding:14px 16px;border-bottom:1px solid #1a1e25;background:rgba(111,201,138,0.04);">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
+    <span style="font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:#6fc98a;text-transform:uppercase;">Live</span>
+    <span style="flex:1;height:1px;background:#1a1e25;"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:rgba(111,201,138,0.12);border:1px solid rgba(111,201,138,0.3);font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#6fc98a;"><span style="width:5px;height:5px;border-radius:50%;background:#6fc98a;"></span>running</span>
+  </div>
+  <div style="margin-bottom:0px;"><div style="font-size:10.5px;color:#5f6875;margin-bottom:5px;letter-spacing:.01em;">Iteration</div><div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:#0b0d11;border:1px solid #242932;border-radius:6px;">
+  
+  <span style="flex:1;font-size:11.5px;font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#e8ebf0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">3 of 7 &middot; queue 4</span>
+  
+  
+</div></div>
+</div></div>
+</div></div>
+  </div>
+</div>
+</div>
+</x-dc>
+
+</body>
+</html>
