@@ -187,9 +187,9 @@ and the body is the picture.
   `sh`); an Avatar adds its rig chip.
 - **Port zone.** One row per port index, 24 px tall, inputs down the left
   edge and outputs down the right. The dot of row *i* is centred
-  51 + 24·*i* px from the block's top; this is what the wire router uses.
+  52 + 24·*i* px from the block's top; this is what the wire router uses.
   Port dots are 11 px, coloured by type, with a 3 px halo. Labels are
-  JetBrains Mono 9.5 px. The port zone comes before the body so labels
+  JetBrains Mono 10 px. The port zone comes before the body so labels
   never overlay content.
 - **Body.** Whatever the block wants to show inline: a field, a preview of
   its current value, a level meter, a list of bundled functions. The body
@@ -219,7 +219,7 @@ LLM, exit code for a terminal, a progress hairline).
 
 Chips in the header are for state that matters at a glance: `streaming`,
 `42 lines`, `listening`, `3/min`, `armed`, `warns`, `2 fns`, a language
-chip on a custom block, a rig chip on an Avatar. Chips are mono 9.5 px on a 12 % tint of their colour. Selection is
+chip on a custom block, a rig chip on an Avatar. Chips are mono 10 px on a 12 % tint of their colour. Selection is
 *never* a chip; it is the ring.
 
 ### 3.4 Views and resizing
@@ -274,7 +274,7 @@ the frame shows the current iteration and item.
 | `stream` | `#6fc98a` green | output arriving incrementally | `text`, `data` |
 | `image` | `#d77bd0` magenta | frames from a camera or a file | `image`, `any` |
 | `audio` | `#dcc65b` yellow | samples from a microphone | `audio`, `any` |
-| `file` | `#7f93c9` slate-blue | a path or blob on disk | `file`, `any` |
+| `file` | `#6fa3a8` slate-teal | a path or blob on disk | `file`, `any` |
 | `exec` | `#e8ebf0` white | a trigger or control flow, never a value | `exec` |
 | `any` | `#8a93a3` grey | accepts every type | everything |
 
@@ -1132,6 +1132,10 @@ The rules it works under:
 
 ### 16.1 Colour tokens
 
+These are reproduced from `packages/ui/src/styles/tokens.css`, which is the
+authority: the application resolves every colour through a token there, and
+the artboards are generated from the same values.
+
 | Token | Value | Use |
 | --- | --- | --- |
 | ground | `#08090b` | window background |
@@ -1139,10 +1143,11 @@ The rules it works under:
 | panel | `#111419` | library, inspector, drawers |
 | bar | `#0f1217` | top bar |
 | block | `#191d24` | block body |
-| field | `#0b0d11` | inputs, code, rows |
+| field | `#0b0d11` | inputs, code, rows, stage background |
+| float | `#12161c` at 94 % | zoom pill, minimap, drag tooltip |
 | line | `#242932` | borders |
 | soft | `#1a1e25` | hairlines inside panels |
-| text hi / mid / low / faint | `#e8ebf0` / `#98a2ae` / `#5f6875` / `#39414c` | |
+| text hi / body / mid / low / faint | `#e8ebf0` / `#c3cad4` / `#98a2ae` / `#5f6875` / `#39414c` | body is console output, code and panel prose |
 | accent | `#56c7d6` | selection, primary action, active tab |
 | ok / warn / err | `#6fc98a` / `#e0a458` / `#e0685f` | status |
 
@@ -1159,9 +1164,11 @@ colours are in §4.1.
   commands, log lines, chips, category labels (uppercase, 0.12–0.17 em
   tracking).
 
-Sizes on the reference frame: block title 12 px; port label 9.5 px; field
-11.5 px; panel section label 9.5 px uppercase; console 10.5 px on 1.85
-line height; code 10.5 px on 19 px lines.
+Five sizes, not sixteen: 10 px for mono port labels, chips, section
+labels and timestamps; 11 px for mono values, console, code and hints;
+12 px for block titles, panel body, fields and tabs; 13 px for panel
+titles; 20 px for design-document titles, which the application does not
+use. Line heights 1.45 for prose, 1.6 for mono, 19 px fixed for code.
 
 ### 16.3 Dimensions
 
@@ -1171,14 +1178,16 @@ line height; code 10.5 px on 19 px lines.
 | Top bar / status bar | 46 / 28 px |
 | Library / rail / inspector | 264 / 48 / 328 px |
 | Console drawer / code drawer | 176 / 300 px |
-| Block radius / header / port row | 9 / 31 / 24 px (header 24 px in Stage view) |
+| Block radius / header / port row | 9 / 32 / 24 px (header 24 px in Stage view) |
 | Resize grip | 12 px, bottom-right |
 | Avatar in Stage, default | 240 × 240 px, aspect locked |
-| First port centre | 51 px from block top |
+| First port centre | 52 px from block top |
 | Port dot / halo | 11 px / 3 px |
 | Wire core / handle / halo | 1.9 / 2.2 / 5 px |
 | Minimum block width | 168 px |
-| Hit targets | ≥ 44 px on touch; 26–30 px controls on desktop |
+| Control height | 28 px buttons and icon buttons; 32 px fields, segmented controls and tab strips |
+| Chip / row height | 20 / 24 px |
+| Hit targets | ≥ 44 px on touch |
 
 ### 16.4 Figures
 
@@ -1205,10 +1214,21 @@ line height; code 10.5 px on 19 px lines.
 ### 16.5 Files
 
 ```
+packages/ui/
+  src/styles/
+    tokens.css       colour, type, spacing, radii, elevation, geometry
+    fonts.css        the bundled faces; fonts/ holds the WOFF2 and the licence
+    globals.css      the reset
+  src/components/    the primitives; icons.ts is generated
+  src/*.stories.tsx  the story site: npm run ui
+scripts/
+  fetch-fonts.mjs    re-downloads the bundled faces
+  gen-icons.mjs      design/cyberloom/icons.mjs -> packages/ui icons.ts
 design/cyberloom/
   SPEC.md            this document
   spec.html          the same, as a page with figures embedded (generated)
   build.mjs          generates every artboard from shared tokens
+  icons.mjs          the icon set, shared with the application
   build-spec.mjs     builds spec.html from SPEC.md and fig/
   *.dc.html          one artboard each
   canvas.json        artboard layout, pages, notes

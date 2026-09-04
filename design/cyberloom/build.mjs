@@ -33,7 +33,7 @@ const T = {
   tools:  '#e0a458',
   data:   '#a78bd0',
   stream: '#6fc98a',
-  file:   '#7f93c9',
+  file:   '#6fa3a8',
   image:  '#d77bd0',
   audio:  '#dcc65b',
   memory: '#7e9ff0',
@@ -99,7 +99,7 @@ function port({ kind, label, side, top, glow = false, dim = false }) {
     : 'right:-5.5px;flex-direction:row-reverse;';
   return `<div style="position:absolute;${pos}top:${top}px;display:flex;align-items:center;gap:8px;opacity:${dim ? 0.3 : 1};">
 <span style="width:11px;height:11px;border-radius:50%;background:${c};${ring}flex:none;"></span>
-<span style="font-family:${MONO};font-size:9.5px;font-weight:500;color:${C.mid};letter-spacing:.03em;white-space:nowrap;">${label}</span>
+<span style="font-family:${MONO};font-size:10px;font-weight:500;color:${C.mid};letter-spacing:.03em;white-space:nowrap;">${label}</span>
 </div>`;
 }
 
@@ -127,12 +127,12 @@ function portRow(p) {
   const rev = p.side === 'out';
   return `<div style="display:flex;align-items:center;gap:8px;${rev ? 'flex-direction:row-reverse;margin-right:-6.5px;' : 'margin-left:-6.5px;'}opacity:${p.dim ? 0.3 : 1};">
 <span style="width:11px;height:11px;border-radius:50%;background:${c};${ring}flex:none;"></span>
-<span style="font-family:${MONO};font-size:9.5px;font-weight:500;color:${C.mid};letter-spacing:.03em;white-space:nowrap;">${p.label}</span>
+<span style="font-family:${MONO};font-size:10px;font-weight:500;color:${C.mid};letter-spacing:.03em;white-space:nowrap;">${p.label}</span>
 </div>`;
 }
 
 // ports are rows: inputs down the left edge, outputs down the right, one row per index.
-// row i's dot is centred at y = 51 + 24 * i from the block's top (see PY).
+// row i's dot is centred at y = 52 + 24 * i from the block's top (see PY).
 function portZone(ports = []) {
   const ins = ports.filter(p => p.side === 'in');
   const outs = ports.filter(p => p.side === 'out');
@@ -145,7 +145,7 @@ function portZone(ports = []) {
   }
   return { n, html: n ? `<div style="padding:8px 0 4px;">${rows.join('')}</div>` : '' };
 }
-const PY = (b, i) => b.y + 51 + 24 * i;
+const PY = (b, i) => b.y + 52 + 24 * i;
 const W = (B) => (from, oi, to, ii, kind, opt) => { const a = B[from], b = B[to]; return wire(a.x + a.w, PY(a, oi), b.x, PY(b, ii), kind, opt); };
 
 function blockNode(o) {
@@ -161,7 +161,7 @@ function blockNode(o) {
   const ghost = o.ghost ? 'opacity:.5;' : '';
   const zone = portZone(o.ports);
   return `<div style="position:absolute;left:${o.x}px;top:${o.y}px;width:${o.w}px;background:${C.block};border:1px solid ${borderCol};border-radius:9px;box-shadow:${shadow};${ghost}">
-  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid ${C.soft};border-radius:8px 8px 0 0;background:linear-gradient(180deg,${rgba(c, 0.13)},${rgba(c, 0.02)});">
+  <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-bottom:1px solid ${C.soft};border-radius:8px 8px 0 0;background:linear-gradient(180deg,${rgba(c, 0.13)},${rgba(c, 0.02)});">
     ${icon(o.icon, 13, c, 1.7)}
     <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:${C.hi};white-space:nowrap;">${o.title}</span>
     <span style="flex:1;"></span>
@@ -191,7 +191,7 @@ function wire(x1, y1, x2, y2, kind, opt = {}) {
 
 const sect = (title, inner, opt = {}) => `<div style="padding:14px 16px;border-bottom:1px solid ${C.soft};${opt.tint ? `background:${rgba(opt.tint, 0.04)};` : ''}">
   <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px;">
-    <span style="font-family:${MONO};font-size:9.5px;font-weight:700;letter-spacing:.13em;color:${opt.tint || C.low};text-transform:uppercase;">${title}</span>
+    <span style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.13em;color:${opt.tint || C.low};text-transform:uppercase;">${title}</span>
     <span style="flex:1;height:1px;background:${C.soft};"></span>
     ${opt.right || ''}
   </div>
@@ -200,7 +200,7 @@ const sect = (title, inner, opt = {}) => `<div style="padding:14px 16px;border-b
 
 const label = (t) => `<div style="font-size:10.5px;color:${C.low};margin-bottom:5px;letter-spacing:.01em;">${t}</div>`;
 
-const field = (value, opt = {}) => `<div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;">
+const field = (value, opt = {}) => `<div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;">
   ${opt.icon ? icon(opt.icon, 12, C.low) : ''}
   <span style="flex:1;font-size:11.5px;${opt.mono ? `font-family:${MONO};font-size:10.5px;` : ''}color:${opt.muted ? C.low : C.hi};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${value}</span>
   ${opt.select ? `<span style="transform:rotate(90deg);opacity:.6;">${icon('chev', 11, C.low)}</span>` : ''}
@@ -232,7 +232,7 @@ const switchRow = (l, on, opt = {}) => `<div style="display:flex;align-items:cen
   ${toggle(on, opt.col)}
 </div>`;
 
-const chip = (t, col, opt = {}) => `<span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:${rgba(col, opt.solid ? 0.9 : 0.12)};border:1px solid ${rgba(col, 0.3)};font-family:${MONO};font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:${opt.solid ? '#0b0d11' : col};">${opt.dot ? `<span style="width:5px;height:5px;border-radius:50%;background:${col};"></span>` : ''}${t}</span>`;
+const chip = (t, col, opt = {}) => `<span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:4px;background:${rgba(col, opt.solid ? 0.9 : 0.12)};border:1px solid ${rgba(col, 0.3)};font-family:${MONO};font-size:10px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:${opt.solid ? '#0b0d11' : col};">${opt.dot ? `<span style="width:5px;height:5px;border-radius:50%;background:${col};"></span>` : ''}${t}</span>`;
 
 const textBox = (text, h = 88) => `<div style="min-height:${h}px;padding:9px 10px;background:${C.field};border:1px solid ${C.line};border-radius:6px;font-family:${MONO};font-size:10.5px;line-height:1.6;color:#c3cad4;white-space:pre-wrap;">${text}</div>`;
 
@@ -240,7 +240,7 @@ const connRow = (ic, name, meta, kind, state) => `<div style="display:flex;align
   ${icon(ic, 13, T[kind] || C.mid, 1.7)}
   <div style="flex:1;min-width:0;">
     <div style="font-size:11.5px;color:${C.hi};">${name}</div>
-    <div style="font-family:${MONO};font-size:9.5px;color:${C.low};margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${meta}</div>
+    <div style="font-family:${MONO};font-size:10px;color:${C.low};margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${meta}</div>
   </div>
   ${state === 'pending' ? chip('linking', T.tools) : statusDot(state)}
 </div>`;
@@ -254,7 +254,7 @@ const LIB_W = 264, INSP_W = 328, TOP_H = 46, BOT_H = 28;
 const CW = SHELL_W - LIB_W - INSP_W;      // 968
 const CH = SHELL_H - TOP_H - BOT_H;       // 826
 
-const iconBtn = (name, opt = {}) => `<div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;${opt.on ? `background:${rgba(C.accent, 0.14)};` : ''}">${icon(name, 14, opt.on ? C.accent : C.mid, 1.6)}</div>`;
+const iconBtn = (name, opt = {}) => `<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;${opt.on ? `background:${rgba(C.accent, 0.14)};` : ''}">${icon(name, 14, opt.on ? C.accent : C.mid, 1.6)}</div>`;
 
 function topbar({ name = 'untitled.loom', saved = 'saved', running = false, elapsed = '', live = '', runtime = 'local &middot; ollama' } = {}) {
   const transport = live
@@ -274,7 +274,7 @@ function topbar({ name = 'untitled.loom', saved = 'saved', running = false, elap
     : `<div style="display:flex;align-items:center;gap:7px;height:28px;padding:0 12px 0 10px;border-radius:6px;background:${C.accent};">
         ${icon('play', 11, '#08090b', 0)}
         <span style="font-size:11.5px;font-weight:600;color:#08090b;letter-spacing:.01em;">Run</span>
-        <span style="font-family:${MONO};font-size:9.5px;color:${rgba('#08090b', 0.55)};margin-left:2px;">R</span>
+        <span style="font-family:${MONO};font-size:10px;color:${rgba('#08090b', 0.55)};margin-left:2px;">R</span>
       </div>`;
   return `<div style="display:flex;align-items:center;gap:10px;height:${TOP_H}px;flex:none;padding:0 12px;background:${C.bar};border-bottom:1px solid ${C.line};">
   <div style="display:flex;align-items:center;gap:9px;">
@@ -289,7 +289,7 @@ function topbar({ name = 'untitled.loom', saved = 'saved', running = false, elap
     ${transport}
     ${iconBtn('step')}
     <span style="width:1px;height:18px;background:${C.line};"></span>
-    <div style="display:flex;align-items:center;gap:7px;height:26px;padding:0 9px;border-radius:6px;border:1px solid ${C.line};">
+    <div style="display:flex;align-items:center;gap:7px;height:28px;padding:0 9px;border-radius:6px;border:1px solid ${C.line};">
       <span style="width:6px;height:6px;border-radius:50%;background:${C.ok};"></span>
       <span style="font-family:${MONO};font-size:10px;color:${C.mid};">${runtime}</span>
     </div>
@@ -299,7 +299,7 @@ function topbar({ name = 'untitled.loom', saved = 'saved', running = false, elap
     <span style="font-family:${MONO};font-size:10px;color:${C.low};margin-right:6px;">100%</span>
     ${iconBtn('fit')}
     ${iconBtn('dots')}
-    <div style="display:flex;align-items:center;gap:6px;height:26px;padding:0 11px;margin-left:6px;border-radius:6px;border:1px solid ${C.line};">
+    <div style="display:flex;align-items:center;gap:6px;height:28px;padding:0 11px;margin-left:6px;border-radius:6px;border:1px solid ${C.line};">
       <span style="font-size:11px;font-weight:500;color:${C.hi};">Deploy</span>
     </div>
   </div>
@@ -405,9 +405,9 @@ function catHeader(cat, open, count) {
   return `<div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 6px;">
   <span style="transform:rotate(${open ? 90 : 0}deg);opacity:.7;display:flex;">${icon('chev', 10, C.low, 2)}</span>
   <span style="width:6px;height:6px;border-radius:2px;background:${col};"></span>
-  <span style="font-family:${MONO};font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.mid};">${cat.name}</span>
+  <span style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.mid};">${cat.name}</span>
   <span style="flex:1;"></span>
-  <span style="font-family:${MONO};font-size:9.5px;color:${C.faint};">${count}</span>
+  <span style="font-family:${MONO};font-size:10px;color:${C.faint};">${count}</span>
 </div>`;
 }
 
@@ -423,10 +423,10 @@ function libraryPanel({ open = ['models','capabilities','runtimes'], placed = []
   }).join('');
   return `<div style="width:${LIB_W}px;flex:none;display:flex;flex-direction:column;background:${C.panel};border-right:1px solid ${C.line};min-height:0;">
   <div style="padding:12px 12px 10px;border-bottom:1px solid ${C.soft};">
-    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;">
+    <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;">
       ${icon('search', 13, C.low)}
       <span style="flex:1;font-size:11.5px;color:${C.faint};">Search blocks</span>
-      <span style="font-family:${MONO};font-size:9.5px;color:${C.faint};border:1px solid ${C.line};border-radius:3px;padding:1px 4px;">&#8984;K</span>
+      <span style="font-family:${MONO};font-size:10px;color:${C.faint};border:1px solid ${C.line};border-radius:3px;padding:1px 4px;">&#8984;K</span>
     </div>
   </div>
   <div style="flex:1;overflow:hidden;padding:8px 10px;">${groups}</div>
@@ -443,10 +443,10 @@ function inspector(inner, { title, sub, tabs, tab, icn, col } = {}) {
   const head = title
     ? `<div style="flex:none;padding:13px 16px 0;">
         <div style="display:flex;align-items:center;gap:9px;">
-          <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:${rgba(col || C.accent, 0.14)};">${icon(icn || 'note', 14, col || C.accent, 1.7)}</div>
+          <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:${rgba(col || C.accent, 0.14)};">${icon(icn || 'note', 14, col || C.accent, 1.7)}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:${C.hi};">${title}</div>
-            <div style="font-family:${MONO};font-size:9.5px;color:${C.low};margin-top:2px;">${sub}</div>
+            <div style="font-family:${MONO};font-size:10px;color:${C.low};margin-top:2px;">${sub}</div>
           </div>
           ${icon('dots', 15, C.low, 1.6)}
         </div>
@@ -481,7 +481,7 @@ function stage({ svg = '', nodes = '', overlay = '', h = CH }) {
 </div>`;
 }
 
-const zoomPill = `<div style="position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:2px;height:30px;padding:0 6px;background:${rgba('#12161c', 0.92)};border:1px solid ${C.line};border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+const zoomPill = `<div style="position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:2px;height:30px;padding:0 6px;background:${rgba('#12161c', 0.94)};border:1px solid ${C.line};border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);">
   <div style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;color:${C.mid};font-size:14px;line-height:1;">&minus;</div>
   <span style="font-family:${MONO};font-size:10px;color:${C.hi};padding:0 4px;">100%</span>
   <div style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;color:${C.mid};font-size:13px;line-height:1;">+</div>
@@ -503,14 +503,14 @@ const dashedHint = (t, s, col = C.accent) => `<div style="margin:14px 16px 0;pad
   <div style="font-size:10.5px;line-height:1.55;color:${C.low};">${s}</div>
 </div>`;
 
-const emptyRow = (t, s) => `<div style="padding:12px;border:1px dashed ${C.line};border-radius:7px;text-align:center;">
+const emptyRow = (t, s) => `<div style="padding:12px;border:1px dashed ${C.line};border-radius:6px;text-align:center;">
   <div style="font-size:11px;color:${C.mid};">${t}</div>
   <div style="font-size:10px;color:${C.low};margin-top:3px;line-height:1.5;">${s}</div>
 </div>`;
 
 const plusChip = `<div style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;border:1px solid ${C.line};">${icon('plus', 10, C.mid, 2)}</div>`;
 
-const btn = (t, opt = {}) => `<div style="display:flex;align-items:center;justify-content:center;gap:7px;height:30px;border-radius:6px;${opt.primary ? `background:${C.accent};color:#08090b;` : `border:1px solid ${C.line};color:${C.hi};`}${opt.danger ? `border-color:${rgba(C.err, 0.45)};color:${C.err};` : ''}font-size:11.5px;font-weight:${opt.primary ? 600 : 500};flex:1;">${opt.icon ? icon(opt.icon, 12, opt.primary ? '#08090b' : opt.danger ? C.err : C.mid, 1.7) : ''}${t}</div>`;
+const btn = (t, opt = {}) => `<div style="display:flex;align-items:center;justify-content:center;gap:7px;height:28px;border-radius:6px;${opt.primary ? `background:${C.accent};color:#08090b;` : `border:1px solid ${C.line};color:${C.hi};`}${opt.danger ? `border-color:${rgba(C.err, 0.45)};color:${C.err};` : ''}font-size:11.5px;font-weight:${opt.primary ? 600 : 500};flex:1;">${opt.icon ? icon(opt.icon, 12, opt.primary ? '#08090b' : opt.danger ? C.err : C.mid, 1.7) : ''}${t}</div>`;
 
 const GRAPH_BODY = [
   dashedHint('Nothing selected', 'The panel falls back to graph-wide settings. Select a block, a wire, or several blocks to change what appears here.'),
@@ -556,7 +556,7 @@ const WIRE_BODY = [
   `<div style="padding:14px 16px;display:flex;gap:8px;">${btn('Insert block', { icon: 'plus' })}${btn('Delete', { danger: true })}</div>`,
 ].join('');
 
-const alignBtn = (paths) => `<div style="display:flex;align-items:center;justify-content:center;height:30px;border:1px solid ${C.line};border-radius:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${C.mid}" stroke-width="1.6" stroke-linecap="round">${paths}</svg></div>`;
+const alignBtn = (paths) => `<div style="display:flex;align-items:center;justify-content:center;height:28px;border:1px solid ${C.line};border-radius:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${C.mid}" stroke-width="1.6" stroke-linecap="round">${paths}</svg></div>`;
 
 const MULTI_BODY = [
   sect('Selection', `<div style="display:flex;flex-direction:column;gap:6px;">
@@ -570,10 +570,10 @@ const MULTI_BODY = [
     ${alignBtn('<path d="M20 4v16"/><path d="M7 8h9"/><path d="M11 16h5"/>')}
     ${alignBtn('<path d="M4 12h16"/><path d="M8 7v10"/><path d="M16 9v6"/>')}
   </div><div style="height:9px;"></div>${rowField('Spacing', '24 px between blocks', { select: true, gap: 0 })}`),
-  sect('Group', `<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid ${C.line};border-radius:7px;">
+  sect('Group', `<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid ${C.line};border-radius:6px;">
     ${icon('merge', 15, C.accent, 1.7)}
     <div style="flex:1;"><div style="font-size:11.5px;color:${C.hi};">Collapse into subgraph</div><div style="font-size:10px;color:${C.low};margin-top:2px;">one Toolbox block, ports preserved</div></div>
-    <span style="font-family:${MONO};font-size:9.5px;color:${C.faint};border:1px solid ${C.line};border-radius:3px;padding:1px 4px;">&#8984;G</span>
+    <span style="font-family:${MONO};font-size:10px;color:${C.faint};border:1px solid ${C.line};border-radius:3px;padding:1px 4px;">&#8984;G</span>
   </div>`),
   sect('Shared settings', switchRow('Enabled', true) + rowField('Retry policy', '3 attempts, backoff', { select: true, gap: 0 })
     + `<div style="margin-top:10px;font-size:10px;color:${C.low};line-height:1.5;">2 of 11 settings are common to this selection. Everything else stays per-block.</div>`),
@@ -582,14 +582,14 @@ const MULTI_BODY = [
 /* ============================================================ 1. EmptyShell */
 
 const emptyOverlay = `<div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:430px;display:flex;flex-direction:column;align-items:center;gap:20px;">
-  <div style="width:100%;height:158px;border:1.5px dashed #2b323d;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;background:${rgba(C.accent, 0.018)};">
-    <div style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid ${C.line};background:${C.block};">${icon('plus', 17, C.mid, 1.8)}</div>
+  <div style="width:100%;height:158px;border:1.5px dashed #2b323d;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;background:${rgba(C.accent, 0.018)};">
+    <div style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;border:1px solid ${C.line};background:${C.block};">${icon('plus', 17, C.mid, 1.8)}</div>
     <div style="font-size:13px;color:${C.mid};">Drag a block from the library</div>
     <div style="font-family:${MONO};font-size:10.5px;color:${C.faint};">or press &#8984;K to search all 27</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
     <span style="font-size:10.5px;color:${C.faint};">Start from</span>
-    ${['Blank agent', 'Terminal assistant', 'Python data run'].map(t => `<div style="height:26px;display:flex;align-items:center;padding:0 11px;border:1px solid ${C.line};border-radius:13px;font-size:11px;color:${C.mid};">${t}</div>`).join('')}
+    ${['Blank agent', 'Terminal assistant', 'Python data run'].map(t => `<div style="height:28px;display:flex;align-items:center;padding:0 11px;border:1px solid ${C.line};border-radius:999px;font-size:11px;color:${C.mid};">${t}</div>`).join('')}
   </div>
 </div>`;
 
@@ -611,7 +611,7 @@ const MB = {
   llm: { x: 560, y: 104, w: 236 },
 };
 const mw = W(MB);
-const toolRow = (ic, t, extra = '') => `<div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon(ic, 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">${t}</span>${extra}</div>`;
+const toolRow = (ic, t, extra = '') => `<div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:4px;background:${C.field};border:1px solid ${C.soft};">${icon(ic, 11, CAT.runtimes, 1.7)}<span style="font-family:${MONO};font-size:10px;color:${C.mid};">${t}</span>${extra}</div>`;
 
 const mainNodes = [
   blockNode({ ...MB.input, icon: 'input', color: CAT.data, title: 'Input', state: 'idle',
@@ -633,7 +633,7 @@ const mainNodes = [
     ] }),
   blockNode({ ...MB.llm, icon: 'llm', color: CAT.models, title: 'LLM', state: 'idle', selected: true,
     body: label('model') + field('llama3.2:3b', { mono: true, select: true })
-      + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">You triage build failures. Read<br>the error, run the smallest&#8230;</div>`,
+      + `<div style="margin-top:9px;font-family:${MONO};font-size:10px;line-height:1.6;color:${C.faint};">You triage build failures. Read<br>the error, run the smallest&#8230;</div>`,
     ports: [
       { kind: 'text', label: 'prompt', side: 'in', dim: true },
       { kind: 'text', label: 'context', side: 'in', dim: true },
@@ -655,7 +655,7 @@ const mainSvg = [
 
 const dragCursor = `<div style="position:absolute;left:${snapX + 4}px;top:${snapY + 4}px;">
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));"><path d="M5.5 3l12 8.2-5.4 1.1 2.6 5.6-2.4 1.1-2.6-5.6-4.2 3.6z" fill="${C.hi}" stroke="#0b0d11" stroke-width="1.2"/></svg>
-  <div style="position:absolute;right:22px;top:-4px;display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:6px;background:${rgba('#12161c', 0.96)};border:1px solid ${rgba(T.tools, 0.5)};box-shadow:0 8px 20px rgba(0,0,0,.6);white-space:nowrap;">
+  <div style="position:absolute;right:22px;top:-4px;display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:6px;background:${rgba('#12161c', 0.94)};border:1px solid ${rgba(T.tools, 0.5)};box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap;">
     <span style="width:6px;height:6px;border-radius:50%;background:${T.tools};"></span>
     <span style="font-family:${MONO};font-size:10px;color:${C.hi};">toolbox.tools &rarr; llm.tools</span>
   </div>
@@ -710,8 +710,8 @@ const runNodes = [
       <span style="font-family:${MONO};font-size:10px;color:${C.ok};">38 tok/s</span>
     </div>
     <div style="height:3px;border-radius:2px;background:${C.line};margin-bottom:10px;"><div style="width:64%;height:3px;border-radius:2px;background:${C.ok};"></div></div>
-    <div style="display:flex;align-items:center;gap:7px;height:23px;padding:0 8px;border-radius:5px;background:${rgba(T.tools, 0.1)};border:1px solid ${rgba(T.tools, 0.32)};">
-      ${icon('toolbox', 11, T.tools, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${T.tools};">calling terminal.run</span>
+    <div style="display:flex;align-items:center;gap:7px;height:23px;padding:0 8px;border-radius:4px;background:${rgba(T.tools, 0.1)};border:1px solid ${rgba(T.tools, 0.32)};">
+      ${icon('toolbox', 11, T.tools, 1.7)}<span style="font-family:${MONO};font-size:10px;color:${T.tools};">calling terminal.run</span>
     </div>`,
     ports: [
       { kind: 'text', label: 'prompt', side: 'in' },
@@ -720,7 +720,7 @@ const runNodes = [
       { kind: 'data', label: 'calls', side: 'out' },
     ] }),
   blockNode({ ...RB.report, icon: 'output', color: CAT.data, title: 'Report', state: 'queued',
-    body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.65;color:${C.faint};">waiting for llm.text<br>&#8230;</div>`,
+    body: `<div style="font-family:${MONO};font-size:10px;line-height:1.65;color:${C.faint};">waiting for llm.text<br>&#8230;</div>`,
     ports: [{ kind: 'text', label: 'text', side: 'in' }] }),
 ].join('\n');
 
@@ -735,11 +735,11 @@ const runSvg = [
 const consoleLine = (t, src, srcCol, msg) => `<div style="display:flex;gap:12px;">
   <span style="color:${C.faint};width:52px;flex:none;">${t}</span>
   <span style="color:${srcCol};width:52px;flex:none;">${src}</span>
-  <span style="color:#b3bcc7;flex:1;">${msg}</span>
+  <span style="color:#c3cad4;flex:1;">${msg}</span>
 </div>`;
 
 const consoleDrawer = `<div style="height:176px;flex:none;display:flex;flex-direction:column;background:#0a0c10;border-top:1px solid ${C.line};">
-  <div style="display:flex;align-items:center;gap:18px;height:33px;flex:none;padding:0 14px;border-bottom:1px solid ${C.soft};">
+  <div style="display:flex;align-items:center;gap:18px;height:32px;flex:none;padding:0 14px;border-bottom:1px solid ${C.soft};">
     ${['Console', 'Trace', 'Variables'].map((t, i) => `<span style="font-size:11.5px;color:${i === 0 ? C.hi : C.low};border-bottom:1.5px solid ${i === 0 ? C.accent : 'transparent'};height:33px;display:flex;align-items:center;">${t}</span>`).join('')}
     <span style="flex:1;"></span>
     ${chip('1 warning', C.warn, { dot: true })}
@@ -798,10 +798,10 @@ function panelInner(inner, m) {
   return `<div style="display:flex;flex-direction:column;height:100%;min-height:0;">
   <div style="flex:none;padding:13px 16px 0;">
     <div style="display:flex;align-items:center;gap:9px;">
-      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:${rgba(m.col, 0.14)};">${icon(m.icn, 14, m.col, 1.7)}</div>
+      <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:${rgba(m.col, 0.14)};">${icon(m.icn, 14, m.col, 1.7)}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:${C.hi};">${m.title}</div>
-        <div style="font-family:${MONO};font-size:9.5px;color:${C.low};margin-top:2px;">${m.sub}</div>
+        <div style="font-family:${MONO};font-size:10px;color:${C.low};margin-top:2px;">${m.sub}</div>
       </div>
       ${icon('dots', 15, C.low, 1.6)}
     </div>
@@ -841,19 +841,19 @@ const INSPECTOR_SHEET = doc(sheet({
       <span style="font-size:12px;font-weight:600;color:${C.hi};">${cap}</span>
       <span style="font-size:10.5px;color:${C.low};">${note}</span>
     </div>
-    <div style="height:806px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
+    <div style="height:806px;background:${C.panel};border:1px solid ${C.line};border-radius:12px;overflow:hidden;">${panelInner(body, meta)}</div>
   </div>`).join('')}
 </div>`,
 }));
 
 /* =============================================================== 5. Library */
 
-const catCard = (cat) => `<div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">
+const catCard = (cat) => `<div style="background:${C.panel};border:1px solid ${C.line};border-radius:12px;overflow:hidden;">
   <div style="display:flex;align-items:center;gap:8px;height:37px;padding:0 13px;border-bottom:1px solid ${C.soft};background:${rgba(CAT[cat.id], 0.07)};">
     <span style="width:7px;height:7px;border-radius:2px;background:${CAT[cat.id]};"></span>
     <span style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${CAT[cat.id]};">${cat.name}</span>
     <span style="flex:1;"></span>
-    <span style="font-family:${MONO};font-size:9.5px;color:${C.faint};">${cat.blocks.length}</span>
+    <span style="font-family:${MONO};font-size:10px;color:${C.faint};">${cat.blocks.length}</span>
   </div>
   <div style="padding:5px 8px 8px;">
     ${cat.blocks.map(b => `<div style="display:flex;align-items:center;gap:10px;height:33px;padding:0 5px;">
@@ -883,14 +883,14 @@ const LIBRARY_SHEET = doc(sheet({
   w: 1470, h: 1250, kicker: 'Left panel',
   title: 'Nine categories plus yours, one type system',
   body: `<div style="display:flex;gap:26px;align-items:flex-start;">
-  <div style="width:${LIB_W}px;flex:none;height:748px;border:1px solid ${C.line};border-radius:10px;overflow:hidden;display:flex;">${libraryPanel({ open: ['models', 'capabilities', 'runtimes'] })}</div>
+  <div style="width:${LIB_W}px;flex:none;height:748px;border:1px solid ${C.line};border-radius:12px;overflow:hidden;display:flex;">${libraryPanel({ open: ['models', 'capabilities', 'runtimes'] })}</div>
   <div style="flex:1;display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:18px;align-content:start;">
     <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('models'))}${catCard(byId('senses'))}${catCard(byId('human'))}${catCard(byId('custom'))}</div>
     <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('capabilities'))}${catCard(byId('memory'))}${catCard(byId('control'))}</div>
     <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('runtimes'))}${catCard(byId('actuators'))}${catCard(byId('data'))}</div>
   </div>
 </div>
-<div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:15px 18px;">
+<div style="background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:15px 18px;">
   <div style="display:flex;align-items:center;gap:9px;margin-bottom:13px;">
     <span style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${C.mid};">Port types</span>
     <span style="flex:1;height:1px;background:${C.soft};"></span>
@@ -903,7 +903,7 @@ const LIBRARY_SHEET = doc(sheet({
         <span style="font-family:${MONO};font-size:10.5px;font-weight:600;color:${T[k]};">${k}</span>
       </div>
       <div style="font-size:10.5px;line-height:1.5;color:${C.mid};margin-bottom:5px;">${d}</div>
-      <div style="font-family:${MONO};font-size:9.5px;color:${C.faint};">&rarr; ${c}</div>
+      <div style="font-family:${MONO};font-size:10px;color:${C.faint};">&rarr; ${c}</div>
     </div>`).join('')}
   </div>
 </div>`,
@@ -918,7 +918,7 @@ const anatomyBlock = blockNode({
   ...AB, toggle: true, grip: true, icon: 'llm', color: CAT.models, title: 'LLM', state: 'running',
   badge: chip('streaming', C.ok, { dot: true }),
   body: label('model') + field('llama3.2:3b', { mono: true, select: true })
-    + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">The arm64 build fails at link<br>time: ld cannot find -lssl&#8230;</div>`,
+    + `<div style="margin-top:9px;font-family:${MONO};font-size:10px;line-height:1.6;color:${C.faint};">The arm64 build fails at link<br>time: ld cannot find -lssl&#8230;</div>`,
   ports: [
     { kind: 'text', label: 'prompt', side: 'in' },
     { kind: 'text', label: 'context', side: 'in' },
@@ -939,7 +939,7 @@ const STATES = [
   ['queued', 'breakpoint', rgba(C.warn, 0.55), 'the run pauses before this block'],
 ];
 
-const ruleCard = (title, note, svg, col) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+const ruleCard = (title, note, svg, col) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:13px 15px;">
   <div style="height:34px;margin-bottom:9px;">${svg}</div>
   <div style="font-size:11.5px;font-weight:600;color:${col};margin-bottom:4px;">${title}</div>
   <div style="font-size:10.5px;line-height:1.5;color:${C.low};">${note}</div>
@@ -972,7 +972,7 @@ const ANATOMY = doc(sheet({
     <div style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${C.mid};margin-bottom:12px;">States</div>
     <div style="display:flex;flex-direction:column;gap:9px;">
       ${STATES.map(([s, name, bd, note]) => `<div style="display:flex;align-items:center;gap:14px;${name === 'disabled' ? 'opacity:.45;' : ''}">
-        <div style="width:154px;flex:none;display:flex;align-items:center;gap:7px;height:30px;padding:0 9px;background:${C.block};border:1px solid ${bd};${name === 'disabled' ? 'border-style:dashed;' : ''}border-radius:7px;${name === 'breakpoint' ? `box-shadow:inset 3px 0 0 ${C.warn};` : ''}">
+        <div style="width:154px;flex:none;display:flex;align-items:center;gap:7px;height:32px;padding:0 9px;background:${C.block};border:1px solid ${bd};${name === 'disabled' ? 'border-style:dashed;' : ''}border-radius:6px;${name === 'breakpoint' ? `box-shadow:inset 3px 0 0 ${C.warn};` : ''}">
           ${icon('llm', 12, CAT.models, 1.7)}
           <span style="font-size:11px;color:${C.hi};">LLM</span>
           <span style="flex:1;"></span>
@@ -1001,10 +1001,10 @@ function panelFlow(inner, m) {
   return `<div>
   <div style="padding:13px 16px 0;">
     <div style="display:flex;align-items:center;gap:9px;">
-      <div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:${rgba(m.col, 0.14)};">${icon(m.icn, 14, m.col, 1.7)}</div>
+      <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:${rgba(m.col, 0.14)};">${icon(m.icn, 14, m.col, 1.7)}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;letter-spacing:-.01em;color:${C.hi};">${m.title}</div>
-        <div style="font-family:${MONO};font-size:9.5px;color:${C.low};margin-top:2px;">${m.sub}</div>
+        <div style="font-family:${MONO};font-size:10px;color:${C.low};margin-top:2px;">${m.sub}</div>
       </div>
       ${icon('dots', 15, C.low, 1.6)}
     </div>
@@ -1030,7 +1030,7 @@ function iblock(o) {
   const c = o.color;
   const zone = portZone(o.ports);
   return `<div onClick="{{pick${o.h}}}" style="position:absolute;left:${o.x}px;top:${o.y}px;width:${o.w}px;background:${C.block};border:1px solid {{bd${o.h}}};border-radius:9px;box-shadow:{{sh${o.h}}};cursor:pointer;">
-  <div style="display:flex;align-items:center;gap:8px;height:31px;padding:0 10px;border-bottom:1px solid ${C.soft};border-radius:8px 8px 0 0;background:linear-gradient(180deg,${rgba(c, 0.13)},${rgba(c, 0.02)});">
+  <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-bottom:1px solid ${C.soft};border-radius:8px 8px 0 0;background:linear-gradient(180deg,${rgba(c, 0.13)},${rgba(c, 0.02)});">
     ${icon(o.icon, 13, c, 1.7)}
     <span style="font-size:12px;font-weight:600;color:${C.hi};">${o.title}</span>
     <span style="flex:1;"></span>
@@ -1063,7 +1063,7 @@ const iNodes = [
     ] }),
   iblock({ h: 'Llm', ...IB.llm, icon: 'llm', color: CAT.models, title: 'LLM',
     body: label('model') + field('llama3.2:3b', { mono: true, select: true })
-      + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">You triage build failures. Read<br>the error, run the smallest&#8230;</div>`,
+      + `<div style="margin-top:9px;font-family:${MONO};font-size:10px;line-height:1.6;color:${C.faint};">You triage build failures. Read<br>the error, run the smallest&#8230;</div>`,
     ports: [
       { kind: 'text', label: 'prompt', side: 'in' },
       { kind: 'text', label: 'context', side: 'in' },
@@ -1079,7 +1079,7 @@ const iWires = (live) => [
   iw('toolbox', 0, 'llm', 2, 'tools', live ? { live: true, dash: '7 7', width: 2.2 } : { width: 2.1 }),
 ].join('');
 
-const hintPill = `<div style="position:absolute;left:16px;top:16px;display:flex;align-items:center;gap:9px;height:30px;padding:0 13px;border-radius:15px;background:${rgba('#12161c', 0.9)};border:1px solid ${C.line};">
+const hintPill = `<div style="position:absolute;left:16px;top:16px;display:flex;align-items:center;gap:9px;height:28px;padding:0 13px;border-radius:999px;background:${rgba('#12161c', 0.94)};border:1px solid ${C.line};">
   <span style="width:6px;height:6px;border-radius:50%;background:${C.accent};"></span>
   <span style="font-size:11px;color:${C.mid};">Click a block to change the panel &middot; press Run to put the graph in flight</span>
 </div>`;
@@ -1097,7 +1097,7 @@ const INTERACTIVE = doc(`<div onClick="{{clearSel}}" style="width:${SHELL_W}px;h
       <span style="font-size:11.5px;font-weight:600;color:{{runFg}};">{{runLabel}}</span>
     </div>
     <span style="flex:1;"></span>
-    <div style="display:flex;align-items:center;gap:7px;height:26px;padding:0 9px;border-radius:6px;border:1px solid ${C.line};">
+    <div style="display:flex;align-items:center;gap:7px;height:28px;padding:0 9px;border-radius:6px;border:1px solid ${C.line};">
       <span style="width:6px;height:6px;border-radius:50%;background:${C.ok};"></span>
       <span style="font-family:${MONO};font-size:10px;color:${C.mid};">local &middot; ollama</span>
     </div>
@@ -1175,10 +1175,10 @@ class Component extends DCLogic {
 
 function loopFrame({ x, y, w, h, title, counter, inner, ports = [] }) {
   return `<div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:1.5px dashed ${rgba(CAT.control, 0.55)};border-radius:12px;background:${rgba('#ffffff', 0.018)};">
-  <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-bottom:1px dashed ${rgba(CAT.control, 0.3)};">
+  <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-bottom:1px dashed ${rgba(CAT.control, 0.3)};">
     ${icon('loop', 13, CAT.control, 1.8)}
     <span style="font-size:12px;font-weight:600;color:${C.hi};">${title}</span>
-    <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">as item</span>
+    <span style="font-family:${MONO};font-size:10px;color:${C.low};">as item</span>
     <span style="flex:1;"></span>
     ${counter}
   </div>
@@ -1206,26 +1206,26 @@ const frameInY = PY(CB.classify, 0);
 const contNodes = [
   blockNode({ ...CB.webhook, icon: 'http', color: CAT.senses, title: 'Webhook', state: 'running',
     badge: chip('listening', C.ok, { dot: true }),
-    body: field('POST /hooks/ticket', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">:8787 &middot; 0 events today</div>`,
+    body: field('POST /hooks/ticket', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">:8787 &middot; 0 events today</div>`,
     ports: [{ kind: 'data', label: 'event', side: 'out' }] }),
   blockNode({ ...CB.watch, icon: 'folder', color: CAT.senses, title: 'Watch folder', state: 'running',
     badge: chip('3/min', C.ok, { dot: true }),
-    body: field('~/inbox/*.eml', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1,204 events &middot; last 12 s ago</div>`,
+    body: field('~/inbox/*.eml', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">1,204 events &middot; last 12 s ago</div>`,
     ports: [{ kind: 'file', label: 'file', side: 'out' }] }),
   blockNode({ ...CB.schedule, icon: 'clock', color: CAT.senses, title: 'Schedule', state: 'queued',
     badge: chip('armed', C.warn),
-    body: field('every 15 min', { mono: true, select: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">next in 4:12 &middot; jitter &plusmn;2 min</div>`,
+    body: field('every 15 min', { mono: true, select: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">next in 4:12 &middot; jitter &plusmn;2 min</div>`,
     ports: [{ kind: 'exec', label: 'tick', side: 'out' }] }),
   loopFrame({ ...CB.frame, title: 'For each',
     counter: `<div style="display:flex;align-items:center;gap:6px;">${chip('3 / 7', CAT.control)}${chip('queue 4', C.warn)}${chip('parallel 2', C.mid)}</div>`,
     ports: [{ kind: 'any', label: 'items', side: 'in', top: frameInY - CB.frame.y - 7 }],
     inner: blockNode({ ...rel(CB.classify, CB.frame), icon: 'llm', color: CAT.models, title: 'Classify', state: 'running',
-        body: label('model') + field('llama3.2:3b', { mono: true, select: true }) + `<div style="margin-top:8px;font-family:${MONO};font-size:9.5px;line-height:1.55;color:${C.faint};">urgent | routine | spam</div>`,
+        body: label('model') + field('llama3.2:3b', { mono: true, select: true }) + `<div style="margin-top:8px;font-family:${MONO};font-size:10px;line-height:1.55;color:${C.faint};">urgent | routine | spam</div>`,
         ports: [{ kind: 'text', label: 'item', side: 'in' }, { kind: 'data', label: 'label', side: 'out' }] })
       + blockNode({ ...rel(CB.branch, CB.frame), icon: 'branch', color: CAT.control, title: 'Branch', state: 'ok',
-        body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.7;color:${C.faint};">label == "urgent"</div>`,
+        body: `<div style="font-family:${MONO};font-size:10px;line-height:1.7;color:${C.faint};">label == "urgent"</div>`,
         ports: [{ kind: 'any', label: 'in', side: 'in' }, { kind: 'exec', label: 'urgent', side: 'out' }, { kind: 'exec', label: 'else', side: 'out' }] })
-      + `<div style="position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:10px;font-family:${MONO};font-size:9.5px;color:${C.faint};">
+      + `<div style="position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:10px;font-family:${MONO};font-size:10px;color:${C.faint};">
           ${statusDot('running')}<span>iteration 3 &middot; re-arm64-build.eml &middot; 1.2 s</span><span style="flex:1;"></span><span>done 2 &middot; failed 0</span>
         </div>` }),
   blockNode({ ...CB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'ok',
@@ -1235,7 +1235,7 @@ const contNodes = [
     body: field('~/inbox/done/', { mono: true }),
     ports: [{ kind: 'exec', label: 'move', side: 'in' }] }),
   blockNode({ ...CB.digest, icon: 'llm', color: CAT.models, title: 'Digest', state: 'idle',
-    body: label('context') + field('results.last(15 min)', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">summarise what happened</div>`,
+    body: label('context') + field('results.last(15 min)', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">summarise what happened</div>`,
     ports: [{ kind: 'exec', label: 'trigger', side: 'in' }, { kind: 'text', label: 'text', side: 'out' }] }),
   blockNode({ ...CB.notify2, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
     body: field('email &middot; me', { mono: true, select: true }),
@@ -1253,12 +1253,12 @@ const contSvg = [
   cw('digest', 0, 'notify2', 0, 'text', { opacity: 0.45, dash: '4 5' }),
 ].join('');
 
-const segmented = (opts, on, col = C.ok) => `<div style="display:flex;gap:3px;padding:3px;background:${C.field};border:1px solid ${C.line};border-radius:7px;">${opts.map(o => `<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:24px;border-radius:5px;font-size:11px;font-weight:${o === on ? 600 : 500};color:${o === on ? '#08090b' : C.mid};background:${o === on ? col : 'transparent'};">${o === on ? `<span style="width:5px;height:5px;border-radius:50%;background:#08090b;"></span>` : ''}${o}</div>`).join('')}</div>`;
+const segmented = (opts, on, col = C.ok) => `<div style="display:flex;gap:3px;padding:3px;background:${C.field};border:1px solid ${C.line};border-radius:6px;">${opts.map(o => `<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:24px;border-radius:4px;font-size:11px;font-weight:${o === on ? 600 : 500};color:${o === on ? '#08090b' : C.mid};background:${o === on ? col : 'transparent'};">${o === on ? `<span style="width:5px;height:5px;border-radius:50%;background:#08090b;"></span>` : ''}${o}</div>`).join('')}</div>`;
 
 const srcRow = (ic, name, meta, state, count) => `<div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 8px;border-radius:6px;">
   ${icon(ic, 12, CAT.senses, 1.7)}
   <div style="flex:1;min-width:0;"><div style="font-size:11.5px;color:${C.hi};">${name}</div></div>
-  <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">${meta}</span>
+  <span style="font-family:${MONO};font-size:10px;color:${C.low};">${meta}</span>
   ${statusDot(state)}
 </div>`;
 
@@ -1287,7 +1287,7 @@ const CONTINUOUS = doc(shell({
 
 /* ============================================================== 9. RunModes */
 
-const transportCard = (chipHtml, name, note) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:14px 16px;">
+const transportCard = (chipHtml, name, note) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:14px 16px;">
   <div style="display:flex;align-items:center;height:32px;margin-bottom:10px;">${chipHtml}</div>
   <div style="font-size:12px;font-weight:600;color:${C.hi};margin-bottom:4px;">${name}</div>
   <div style="font-size:10.5px;line-height:1.5;color:${C.low};">${note}</div>
@@ -1318,7 +1318,7 @@ const LOOP_BODY = [
   sect('Iterate', rowField('Over', 'items &middot; any', { select: true }) + rowField('As', 'item', { mono: true }) + rowField('Parallel', '2', { mono: true }) + rowField('Max iterations', '500', { mono: true, gap: 0 })),
   sect('Stop when', field('branch.urgent fires', { select: true, icon: 'branch' }) + switchRow('Continue on error', true, { hint: 'failed items go to the errors port' })),
   sect('Ports', `<div style="display:flex;flex-direction:column;gap:6px;">
-    ${[['in', 'items', 'any'], ['out', 'results', 'data'], ['out', 'done', 'exec'], ['out', 'errors', 'data']].map(([d, n, k]) => `<div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;"><span style="font-family:${MONO};font-size:9.5px;color:${C.faint};width:22px;">${d}</span><span style="flex:1;font-family:${MONO};font-size:10.5px;color:${C.hi};">${n}</span>${chip(k, T[k], { dot: true })}</div>`).join('')}
+    ${[['in', 'items', 'any'], ['out', 'results', 'data'], ['out', 'done', 'exec'], ['out', 'errors', 'data']].map(([d, n, k]) => `<div style="display:flex;align-items:center;gap:9px;height:28px;padding:0 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;"><span style="font-family:${MONO};font-size:10px;color:${C.faint};width:22px;">${d}</span><span style="flex:1;font-family:${MONO};font-size:10.5px;color:${C.hi};">${n}</span>${chip(k, T[k], { dot: true })}</div>`).join('')}
   </div>`),
   sect('Live', rowField('Iteration', '3 of 7 &middot; queue 4', { mono: true, gap: 0 }), { tint: C.ok, right: chip('running', C.ok, { dot: true }) }),
 ].join('');
@@ -1342,7 +1342,7 @@ const RUNMODES_SHEET = doc(sheet({
       <span style="font-size:12px;font-weight:600;color:${C.hi};">${cap}</span>
       <span style="font-size:10.5px;color:${C.low};">${note}</span>
     </div>
-    <div style="height:680px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
+    <div style="height:680px;background:${C.panel};border:1px solid ${C.line};border-radius:12px;overflow:hidden;">${panelInner(body, meta)}</div>
   </div>`).join('')}
 </div>`,
 }));
@@ -1357,16 +1357,16 @@ const ACH = AH - TOP_H - BOT_H;     // 1006
 function libraryRail() {
   const cats = [['models', 'llm'], ['capabilities', 'toolbox'], ['runtimes', 'terminal'], ['senses', 'eye'], ['memory', 'db'], ['actuators', 'bolt'], ['data', 'braces'], ['control', 'branch'], ['human', 'approve'], ['custom', 'braces']];
   return `<div style="width:${RAIL_W}px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;background:${C.panel};border-right:1px solid ${C.line};">
-  <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:${C.field};border:1px solid ${C.line};margin-bottom:6px;">${icon('search', 13, C.low)}</div>
-  ${cats.map(([id, ic]) => `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:${rgba(CAT[id], 0.1)};">${icon(ic, 14, CAT[id], 1.7)}</div>`).join('')}
+  <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:${C.field};border:1px solid ${C.line};margin-bottom:6px;">${icon('search', 13, C.low)}</div>
+  ${cats.map(([id, ic]) => `<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:${rgba(CAT[id], 0.1)};">${icon(ic, 14, CAT[id], 1.7)}</div>`).join('')}
   <span style="flex:1;"></span>
-  <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;">${icon('chev', 13, C.low, 2)}</div>
+  <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;">${icon('chev', 13, C.low, 2)}</div>
 </div>`;
 }
 
 const meter = (heights, col) => `<div style="display:flex;align-items:flex-end;gap:2px;height:22px;">${heights.map(h => `<span style="width:5px;height:${h}px;border-radius:1px;background:${col};opacity:${0.45 + h / 40};"></span>`).join('')}</div>`;
 
-const camPreview = `<div style="position:relative;height:46px;border-radius:5px;background:linear-gradient(135deg,#1c2027,#0e1116);border:1px solid ${C.soft};overflow:hidden;">
+const camPreview = `<div style="position:relative;height:46px;border-radius:4px;background:linear-gradient(135deg,#1c2027,#0e1116);border:1px solid ${C.soft};overflow:hidden;">
   <div style="position:absolute;left:52px;top:9px;width:26px;height:30px;border:1px solid ${T.image};border-radius:2px;"></div>
   <div style="position:absolute;left:52px;top:2px;font-family:${MONO};font-size:7px;color:${T.image};">person .97</div>
   <div style="position:absolute;left:108px;top:14px;width:34px;height:26px;border:1px solid ${rgba(T.image, 0.6)};border-radius:2px;"></div>
@@ -1384,7 +1384,7 @@ function stageBlock(o) {
   const borderCol = selected ? C.accent : o.state === 'running' ? rgba(C.ok, 0.5) : C.line;
   const shadow = selected ? `0 0 0 1px ${C.accent},0 0 0 5px ${rgba(C.accent, 0.15)},0 16px 38px rgba(0,0,0,.6)` : `0 12px 30px rgba(0,0,0,.5)`;
   const ins = (o.ports || []).filter(p => p.side === 'in'), outs = (o.ports || []).filter(p => p.side === 'out');
-  const dot = (p, i, side) => `<span title="${p.label}" style="position:absolute;${side === 'in' ? 'left:-5.5px;' : 'right:-5.5px;'}top:${51 + 24 * i - 5.5}px;width:11px;height:11px;border-radius:50%;background:${T[p.kind]};box-shadow:0 0 0 3px ${rgba(T[p.kind], 0.12)};opacity:${p.dim ? 0.3 : 1};"></span>`;
+  const dot = (p, i, side) => `<span title="${p.label}" style="position:absolute;${side === 'in' ? 'left:-5.5px;' : 'right:-5.5px;'}top:${52 + 24 * i - 5.5}px;width:11px;height:11px;border-radius:50%;background:${T[p.kind]};box-shadow:0 0 0 3px ${rgba(T[p.kind], 0.12)};opacity:${p.dim ? 0.3 : 1};"></span>`;
   return `<div style="position:absolute;left:${o.x}px;top:${o.y}px;width:${o.w}px;background:${C.block};border:1px solid ${borderCol};border-radius:9px;box-shadow:${shadow};">
   <div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 8px;border-bottom:1px solid ${C.soft};border-radius:8px 8px 0 0;background:linear-gradient(180deg,${rgba(c, 0.13)},${rgba(c, 0.02)});">
     ${icon(o.icon, 12, c, 1.7)}
@@ -1481,7 +1481,7 @@ function rigFace(rig, expr, size = 64) {
     let grid = '';
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) grid += `<rect x="${8 + x * 6}" y="${8 + y * 6}" width="5" height="5" rx="1" fill="${C.soft}"/>`;
     const lit = expr === 'love' ? ROSE : led;
-    g = `<rect x="4" y="4" width="56" height="56" rx="4" fill="#07080a"/>${grid}${cells.map(([x, y]) => `<rect x="${8 + x * 6}" y="${8 + y * 6}" width="5" height="5" rx="1" fill="${lit}"/>`).join('')}`;
+    g = `<rect x="4" y="4" width="56" height="56" rx="4" fill="#0b0d11"/>${grid}${cells.map(([x, y]) => `<rect x="${8 + x * 6}" y="${8 + y * 6}" width="5" height="5" rx="1" fill="${lit}"/>`).join('')}`;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" style="display:block;flex:none;">${g}</svg>`;
 }
@@ -1509,40 +1509,40 @@ const XB = {
 };
 if (stage) Object.assign(XB, { affect: { x: 1100, y: 30, w: 180 }, avatar: { x: 1300, y: 40, w: 240 }, display: { x: 1100, y: 200, w: 180 }, tts: { x: 1100, y: 360, w: 180 }, term: { x: 1100, y: 490, w: 180 }, speaker: { x: 1330, y: 420, w: 180 } });
 const xw = W(XB);
-const hubRow = (ic, t, col, extra = '') => `<div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};">${icon(ic, 11, col, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};white-space:nowrap;">${t}</span>${extra}</div>`;
+const hubRow = (ic, t, col, extra = '') => `<div style="display:flex;align-items:center;gap:7px;height:21px;padding:0 7px;border-radius:4px;background:${C.field};border:1px solid ${C.soft};">${icon(ic, 11, col, 1.7)}<span style="font-family:${MONO};font-size:10px;color:${C.mid};white-space:nowrap;">${t}</span>${extra}</div>`;
 
 const asstNodes = [
   blockNode({ ...XB.webcam, icon: 'eye', color: CAT.senses, title: 'Webcam', state: 'running',
-    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
+    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
     ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
   blockNode({ ...XB.mic, icon: 'note', color: CAT.senses, title: 'Microphone', state: 'running',
-    body: meter([6, 12, 18, 22, 16, 20, 10, 14, 19, 8, 12, 17, 9, 5], T.audio) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">&minus;18 dB &middot; vad: speech</div>`,
+    body: meter([6, 12, 18, 22, 16, 20, 10, 14, 19, 8, 12, 17, 9, 5], T.audio) + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">&minus;18 dB &middot; vad: speech</div>`,
     ports: [{ kind: 'audio', label: 'audio', side: 'out' }] }),
   blockNode({ ...XB.keyboard, icon: 'form', color: CAT.senses, title: 'Keyboard', state: 'ok',
     body: field('&gt; check the front door_', { mono: true }),
     ports: [{ kind: 'text', label: 'text', side: 'out' }] }),
   blockNode({ ...XB.objdet, icon: 'eye', color: CAT.models, title: 'Object detection', state: 'running',
-    body: `<div style="display:flex;gap:4px;">${chip('person .97', T.image)}${chip('door .88', T.image)}</div><div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">yolo-v8n &middot; 22 ms &middot; 5 fps</div>`,
+    body: `<div style="display:flex;gap:4px;">${chip('person .97', T.image)}${chip('door .88', T.image)}</div><div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">yolo-v8n &middot; 22 ms &middot; 5 fps</div>`,
     ports: [{ kind: 'image', label: 'image', side: 'in' }, { kind: 'data', label: 'objects', side: 'out' }] }),
   blockNode({ ...XB.facerec, icon: 'approve', color: CAT.models, title: 'Face recognition', state: 'ok',
     body: `<div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:22px;border-radius:50%;background:${rgba(CAT.human, 0.25)};border:1px solid ${rgba(CAT.human, 0.5)};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${CAT.human};flex:none;">M</span><div><div style="font-size:11px;color:${C.hi};">Mykl &middot; 0.93</div><div style="font-family:${MONO};font-size:9px;color:${C.faint};">known &middot; seen 2 min ago</div></div></div>`,
     ports: [{ kind: 'image', label: 'image', side: 'in' }, { kind: 'data', label: 'person', side: 'out' }] }),
   blockNode({ ...XB.stt, icon: 'note', color: CAT.models, title: 'Speech to text', state: 'running',
-    body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.55;color:#c3cad4;white-space:nowrap;overflow:hidden;">&#8230;check the front door<span style="color:${C.ok};">&#9612;</span></div>`,
+    body: `<div style="font-family:${MONO};font-size:10px;line-height:1.55;color:#c3cad4;white-space:nowrap;overflow:hidden;">&#8230;check the front door<span style="color:${C.ok};">&#9612;</span></div>`,
     ports: [{ kind: 'audio', label: 'audio', side: 'in' }, { kind: 'text', label: 'text', side: 'out' }] }),
   blockNode({ ...XB.motors, icon: 'loop', color: CAT.actuators, title: 'Motors', state: 'ok',
     badge: chip('warns', C.warn, { dot: true }),
-    body: field('2 servos &middot; pan / tilt', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">pan &minus;40&deg; &middot; tilt 5&deg; &middot; load 12%</div>`,
+    body: field('2 servos &middot; pan / tilt', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">pan &minus;40&deg; &middot; tilt 5&deg; &middot; load 12%</div>`,
     ports: [
       { kind: 'tools', label: 'tool', side: 'out' },
       { kind: 'stream', label: 'state', side: 'out' },
       { kind: 'exec', label: 'fault', side: 'out' },
     ] }),
   blockNode({ ...XB.wm, icon: 'braces', color: CAT.memory, title: 'Working memory', state: 'ok',
-    body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.7;color:${C.faint};white-space:nowrap;"><span style="color:${C.mid};">14:02</span> Mykl at desk<br><span style="color:${C.mid};">14:03</span> asked about the door</div>`,
+    body: `<div style="font-family:${MONO};font-size:10px;line-height:1.7;color:${C.faint};white-space:nowrap;"><span style="color:${C.mid};">14:02</span> Mykl at desk<br><span style="color:${C.mid};">14:03</span> asked about the door</div>`,
     ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
   blockNode({ ...XB.ltm, icon: 'db', color: CAT.memory, title: 'Long-term memory', state: 'ok',
-    body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">Mykl &mdash; terse answers, works late</div><div style="margin-top:4px;font-family:${MONO};font-size:9.5px;color:${C.faint};">12 people &middot; 2,140 episodes</div>`,
+    body: `<div style="font-family:${MONO};font-size:10px;line-height:1.6;color:${C.faint};">Mykl &mdash; terse answers, works late</div><div style="margin-top:4px;font-family:${MONO};font-size:10px;color:${C.faint};">12 people &middot; 2,140 episodes</div>`,
     ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
   blockNode({ ...XB.toolbox, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox', state: 'ok',
     badge: chip('2 fns', T.tools),
@@ -1555,8 +1555,8 @@ const asstNodes = [
   blockNode({ ...XB.llm, icon: 'llm', color: CAT.models, title: 'Orchestrator', state: 'running', selected: !stage,
     badge: chip('thinking', C.ok, { dot: true }),
     body: label('model') + field('qwen2.5:14b &middot; local', { mono: true, select: true })
-      + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.55;color:${C.faint};">Mykl asked about the front door. Camera shows it closed, no one near it for 2 min. Pan the camera to confirm&#8230;</div>`
-      + `<div style="margin-top:8px;display:flex;align-items:center;gap:7px;height:23px;padding:0 8px;border-radius:5px;background:${rgba(T.tools, 0.1)};border:1px solid ${rgba(T.tools, 0.32)};">${icon('loop', 11, T.tools, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${T.tools};white-space:nowrap;">motor.move(pan: &minus;40)</span><span style="flex:1;"></span>${chip('warned', C.warn)}</div>`,
+      + `<div style="margin-top:9px;font-family:${MONO};font-size:10px;line-height:1.55;color:${C.faint};">Mykl asked about the front door. Camera shows it closed, no one near it for 2 min. Pan the camera to confirm&#8230;</div>`
+      + `<div style="margin-top:8px;display:flex;align-items:center;gap:7px;height:23px;padding:0 8px;border-radius:4px;background:${rgba(T.tools, 0.1)};border:1px solid ${rgba(T.tools, 0.32)};">${icon('loop', 11, T.tools, 1.7)}<span style="font-family:${MONO};font-size:10px;color:${T.tools};white-space:nowrap;">motor.move(pan: &minus;40)</span><span style="flex:1;"></span>${chip('warned', C.warn)}</div>`,
     ports: [
       { kind: 'text', label: 'prompt', side: 'in' },
       { kind: 'data', label: 'context', side: 'in' },
@@ -1567,7 +1567,7 @@ const asstNodes = [
       { kind: 'data', label: 'calls', side: 'out' },
     ] }),
   blockNode({ ...XB.affect, icon: 'face', color: CAT.models, title: 'Affect', state: 'running',
-    body: `<div style="display:flex;gap:4px;">${chip('calm .72', CAT.models)}${chip('curious .21', C.mid)}</div><div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">affect-small &middot; 4 ms</div>`,
+    body: `<div style="display:flex;gap:4px;">${chip('calm .72', CAT.models)}${chip('curious .21', C.mid)}</div><div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">affect-small &middot; 4 ms</div>`,
     ports: [{ kind: 'text', label: 'text', side: 'in' }, { kind: 'data', label: 'affect', side: 'out' }] }),
   stage
     ? stageBlock({ ...XB.avatar, h: 240, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', selected: true,
@@ -1581,7 +1581,7 @@ const asstNodes = [
         ] })
     : blockNode({ ...XB.avatar, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running',
     badge: chip('line', CAT.actuators),
-    body: `<div style="display:flex;align-items:center;gap:10px;"><div style="width:46px;height:46px;flex:none;border-radius:6px;background:${C.field};border:1px solid ${C.soft};display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 40)}</div><div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">smile &middot; speaking<br>looking at Mykl</div></div>`,
+    body: `<div style="display:flex;align-items:center;gap:10px;"><div style="width:46px;height:46px;flex:none;border-radius:6px;background:${C.field};border:1px solid ${C.soft};display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 40)}</div><div style="font-family:${MONO};font-size:10px;line-height:1.6;color:${C.faint};">smile &middot; speaking<br>looking at Mykl</div></div>`,
     ports: [
       { kind: 'audio', label: 'speech', side: 'in' },
       { kind: 'data', label: 'express', side: 'in' },
@@ -1590,14 +1590,14 @@ const asstNodes = [
       { kind: 'stream', label: 'state', side: 'out' },
     ] }),
   blockNode({ ...XB.display, icon: 'form', color: CAT.actuators, title: 'Display', state: 'ok',
-    body: `<div style="padding:7px 9px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};font-size:10.5px;line-height:1.5;color:#c3cad4;">Front door is closed. Last motion 14:01.</div><div style="margin-top:6px;font-family:${MONO};font-size:9.5px;color:${C.faint};">HDMI-1 &middot; overlay</div>`,
+    body: `<div style="padding:7px 9px;border-radius:4px;background:${C.field};border:1px solid ${C.soft};font-size:10.5px;line-height:1.5;color:#c3cad4;">Front door is closed. Last motion 14:01.</div><div style="margin-top:6px;font-family:${MONO};font-size:10px;color:${C.faint};">HDMI-1 &middot; overlay</div>`,
     ports: [{ kind: 'text', label: 'text', side: 'in' }] }),
   blockNode({ ...XB.tts, icon: 'note', color: CAT.models, title: 'Text to speech', state: 'idle',
     body: field('piper &middot; en_GB-alan', { mono: true, select: true }),
     ports: [{ kind: 'text', label: 'text', side: 'in' }, { kind: 'audio', label: 'audio', side: 'out' }] }),
   blockNode({ ...XB.term, icon: 'terminal', color: CAT.runtimes, title: 'Terminal', state: 'running',
     badge: chip('thoughts', C.mid),
-    body: `<div style="padding:6px 8px;border-radius:5px;background:#07080a;border:1px solid ${C.soft};font-family:${MONO};font-size:9px;line-height:1.65;color:#9aa4b0;white-space:nowrap;overflow:hidden;">[14:03:12] look: door closed<br>[14:03:12] recall: asked yesterday<br>[14:03:13] act: pan camera &minus;40&deg;<span style="color:${C.ok};">&#9612;</span></div>`,
+    body: `<div style="padding:6px 8px;border-radius:4px;background:#0b0d11;border:1px solid ${C.soft};font-family:${MONO};font-size:9px;line-height:1.65;color:#9aa4b0;white-space:nowrap;overflow:hidden;">[14:03:12] look: door closed<br>[14:03:12] recall: asked yesterday<br>[14:03:13] act: pan camera &minus;40&deg;<span style="color:${C.ok};">&#9612;</span></div>`,
     ports: [{ kind: 'text', label: 'text', side: 'in' }] }),
   blockNode({ ...XB.speaker, icon: 'note', color: CAT.actuators, title: 'Speaker', state: 'idle',
     body: field('default &middot; 48 kHz', { mono: true, muted: true }),
@@ -1645,7 +1645,7 @@ return doc(`<div style="width:${AW}px;height:${AH}px;display:flex;flex-direction
     <div style="flex:1;position:relative;overflow:hidden;background-color:${C.canvas};background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.055) 1px, transparent 0);background-size:22px 22px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="${ACW}" height="${ACH}" viewBox="0 0 ${ACW} ${ACH}" style="position:absolute;left:0;top:0;pointer-events:none;">${asstSvg}</svg>
       ${asstNodes}
-      <div style="position:absolute;left:24px;top:${ACH - 136}px;display:flex;flex-direction:column;gap:5px;font-family:${MONO};font-size:9.5px;color:${C.faint};">
+      <div style="position:absolute;left:24px;top:${ACH - 136}px;display:flex;flex-direction:column;gap:5px;font-family:${MONO};font-size:10px;color:${C.faint};">
         <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.image};"></span>image</div>
         <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.audio};"></span>audio</div>
         <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.memory};"></span>memory</div>
@@ -1664,7 +1664,7 @@ return doc(`<div style="width:${AW}px;height:${AH}px;display:flex;flex-direction
 
 const personRow = (initial, name, meta, col, action = '') => `<div style="display:flex;align-items:center;gap:9px;padding:7px 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;margin-bottom:6px;">
   <span style="width:22px;height:22px;border-radius:50%;background:${rgba(col, 0.22)};border:1px solid ${rgba(col, 0.5)};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:${col};flex:none;">${initial}</span>
-  <div style="flex:1;min-width:0;"><div style="font-size:11.5px;color:${C.hi};">${name}</div><div style="font-family:${MONO};font-size:9.5px;color:${C.low};margin-top:1px;">${meta}</div></div>
+  <div style="flex:1;min-width:0;"><div style="font-size:11.5px;color:${C.hi};">${name}</div><div style="font-family:${MONO};font-size:10px;color:${C.low};margin-top:1px;">${meta}</div></div>
   ${action}
 </div>`;
 
@@ -1716,7 +1716,7 @@ const SENSE_SHEET = doc(sheet({
       <span style="font-size:12px;font-weight:600;color:${C.hi};">${cap}</span>
       <span style="font-size:10.5px;color:${C.low};">${note}</span>
     </div>
-    <div style="height:850px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
+    <div style="height:850px;background:${C.panel};border:1px solid ${C.line};border-radius:12px;overflow:hidden;">${panelInner(body, meta)}</div>
   </div>`).join('')}
 </div>`,
 }));
@@ -1746,20 +1746,20 @@ const CODE = [
 ];
 
 function codeBlock(lines, { h = 214, marks = {}, fs = 10.5 } = {}) {
-  return `<div style="height:${h}px;padding:9px 0;background:#07080a;border:1px solid ${C.soft};border-radius:6px;overflow:hidden;font-family:${MONO};font-size:${fs}px;line-height:19px;">
+  return `<div style="height:${h}px;padding:9px 0;background:#0b0d11;border:1px solid ${C.soft};border-radius:6px;overflow:hidden;font-family:${MONO};font-size:${fs}px;line-height:19px;">
   ${lines.map((l, i) => `<div style="display:flex;align-items:center;gap:12px;padding:0 10px;${marks[i] ? `background:${rgba(C.accent, 0.06)};` : ''}">
-    <span style="width:14px;flex:none;text-align:right;color:${C.faint};font-size:9.5px;">${i + 1}</span>
+    <span style="width:14px;flex:none;text-align:right;color:${C.faint};font-size:10px;">${i + 1}</span>
     <span style="flex:1;white-space:nowrap;overflow:hidden;color:#c3cad4;">${l || '&nbsp;'}</span>
-    ${marks[i] ? `<span style="width:16px;height:16px;border-radius:50%;background:${C.accent};color:#08090b;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;">${marks[i]}</span>` : ''}
+    ${marks[i] ? `<span style="width:16px;height:16px;border-radius:50%;background:${C.accent};color:#08090b;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;">${marks[i]}</span>` : ''}
   </div>`).join('')}
 </div>`;
 }
 
-const ifaceChip = (dir, name, kind) => `<div style="display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:5px;background:${C.field};border:1px solid ${C.line};">
+const ifaceChip = (dir, name, kind) => `<div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:4px;background:${C.field};border:1px solid ${C.line};">
   <span style="font-family:${MONO};font-size:9px;color:${C.faint};">${dir}</span>
   <span style="font-family:${MONO};font-size:10px;color:${C.hi};">${name}</span>
   <span style="width:6px;height:6px;border-radius:50%;background:${T[kind] || C.mid};"></span>
-  <span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">${kind}</span>
+  <span style="font-family:${MONO};font-size:10px;color:${C.mid};">${kind}</span>
 </div>`;
 
 const KB = {
@@ -1776,27 +1776,27 @@ const customEditorBody = `<div style="display:flex;align-items:center;gap:8px;ma
   </div>
   ${chip('python 3.12', CAT.runtimes)}
   <span style="flex:1;"></span>
-  <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">Format</span>
-  <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">Test</span>
+  <span style="font-family:${MONO};font-size:10px;color:${C.low};">Format</span>
+  <span style="font-family:${MONO};font-size:10px;color:${C.low};">Test</span>
 </div>
 ${codeBlock(CODE, { fs: 10 })}
 <div style="display:flex;align-items:center;gap:6px;margin-top:9px;">
   <span style="font-family:${MONO};font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.low};margin-right:2px;">interface</span>
   ${ifaceChip('in', 'frame', 'image')}${ifaceChip('out', 'result', 'data')}${ifaceChip('set', 'threshold', 'float')}
   <span style="flex:1;"></span>
-  <span style="font-family:${MONO};font-size:9.5px;color:${C.ok};white-space:nowrap;">updated 0.2 s ago</span>
+  <span style="font-family:${MONO};font-size:10px;color:${C.ok};white-space:nowrap;">updated 0.2 s ago</span>
 </div>`;
 
 const customNodes = [
   blockNode({ ...KB.webcam, icon: 'eye', color: CAT.senses, title: 'Webcam', state: 'running',
-    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
+    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
     ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
   blockNode({ ...KB.custom, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok', selected: true,
     badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('reloaded', C.ok, { dot: true })}${chip('py', CAT.runtimes)}</div>`, view: 'code', third: 'code',
     body: customEditorBody,
     ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] }),
   blockNode({ ...KB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
-    body: field('slack #home', { mono: true, select: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">when result.open</div>`,
+    body: field('slack #home', { mono: true, select: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">when result.open</div>`,
     ports: [{ kind: 'data', label: 'data', side: 'in' }] }),
 ].join('\n');
 
@@ -1817,7 +1817,7 @@ const CUSTOM_BODY = [
   sect('Source', segmented(['Inline', 'File'], 'Inline', C.accent) + `<div style="height:11px;"></div>` + rowField('File', '~/blocks/door_check.py', { mono: true, icon: 'folder', suffix: chip('watching', C.ok, { dot: true }) }) + rowField('Runtime', 'Python 3.12 &middot; .venv', { select: true, gap: 0 })
     + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Switch to File to edit in your own editor. The block reloads on every save and keeps its wires.</div>`),
   sect('Interface', ifaceRow('in', 'frame', 'image', 'frame: Image') + ifaceRow('out', 'result', 'data', '-&gt; Data') + ifaceRow('set', 'threshold', 'float', '= 0.8')
-    + `<div style="margin-top:4px;font-family:${MONO};font-size:9.5px;color:${C.faint};">parsed from the signature &middot; 0.2 s ago &middot; no errors</div>`,
+    + `<div style="margin-top:4px;font-family:${MONO};font-size:10px;color:${C.faint};">parsed from the signature &middot; 0.2 s ago &middot; no errors</div>`,
     { tint: C.accent, right: chip('live', C.ok, { dot: true }) }),
   sect('Settings', slider('threshold', '0.80', 80) + `<div style="font-size:10px;line-height:1.5;color:${C.low};">Generated from the default argument. Change it here or in the code &mdash; they stay in sync.</div>`),
   sect('View', segmented(['Compact', 'Summary', 'Code'], 'Code', C.accent) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">480 wide &middot; drag the corner. Remembered for this block on this graph.</div>`),
@@ -1843,12 +1843,12 @@ const resultBlock = blockNode({ ...RB2, icon: 'shield', color: CAT.senses, title
   body: label('threshold') + field('0.80', { mono: true }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Is the front door open in this frame?</div>`,
   ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
 
-const ruleText = (title, note) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+const ruleText = (title, note) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:13px 15px;">
   <div style="font-size:11.5px;font-weight:600;color:${C.hi};margin-bottom:5px;">${title}</div>
   <div style="font-size:10.5px;line-height:1.5;color:${C.low};">${note}</div>
 </div>`;
 
-const langCard = (name, col, lines) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:12px 14px;">
+const langCard = (name, col, lines) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:12px 14px;">
   <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;"><span style="width:6px;height:6px;border-radius:2px;background:${col};"></span><span style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.mid};">${name}</span></div>
   <div style="font-family:${MONO};font-size:10px;line-height:17px;color:#c3cad4;white-space:nowrap;overflow:hidden;">${lines.join('<br>')}</div>
 </div>`;
@@ -1858,7 +1858,7 @@ const CUSTOMRULES = doc(sheet({
   title: 'The signature is the block &mdash; write code, get ports',
   body: `<div style="display:flex;gap:28px;align-items:flex-start;">
   <div style="width:700px;flex:none;">${codeBlock(CODE, { h: 214, marks: { 2: 1, 3: 2, 4: 5 } })}
-    <div style="display:flex;gap:16px;margin-top:10px;font-family:${MONO};font-size:9.5px;color:${C.low};">
+    <div style="display:flex;gap:16px;margin-top:10px;font-family:${MONO};font-size:10px;color:${C.low};">
       <span>${dc('2')}&nbsp; frame: Image &rarr; input port</span><span>${dc('3')}&nbsp; threshold = 0.8 &rarr; setting</span><span>${dc('4')}&nbsp; -&gt; Data &rarr; output port</span>
     </div>
   </div>
@@ -1914,13 +1914,13 @@ const viewCol = (cap, note, block, w, h = 240) => `<div style="flex:none;width:$
 const AV_PORTS = [{ kind: 'audio', label: 'speech', side: 'in' }, { kind: 'data', label: 'express', side: 'in' }, { kind: 'data', label: 'look', side: 'in' }, { kind: 'tools', label: 'tool', side: 'out' }, { kind: 'stream', label: 'state', side: 'out' }];
 const avCompact = blockNode({ ...VB, grip: true, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', badge: viewToggle('compact', 'stage'), ports: AV_PORTS });
 const avSummary = blockNode({ ...VB, grip: true, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', badge: viewToggle('summary', 'stage'),
-  body: `<div style="display:flex;align-items:center;gap:10px;"><div style="width:46px;height:46px;flex:none;border-radius:6px;background:${C.field};border:1px solid ${C.soft};display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 40)}</div><div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">line &middot; smile<br>speaking &middot; looking at Mykl</div></div>`,
+  body: `<div style="display:flex;align-items:center;gap:10px;"><div style="width:46px;height:46px;flex:none;border-radius:6px;background:${C.field};border:1px solid ${C.soft};display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 40)}</div><div style="font-family:${MONO};font-size:10px;line-height:1.6;color:${C.faint};">line &middot; smile<br>speaking &middot; looking at Mykl</div></div>`,
   ports: AV_PORTS });
 const avStage = stageBlock({ ...VB, w: 260, h: 236, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running',
   content: `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 190)}</div><div style="position:absolute;left:9px;bottom:7px;font-family:${MONO};font-size:9px;color:${C.faint};">260 &times; 260</div>`,
   ports: AV_PORTS });
 
-const shortcut = (k) => `<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};border:1px solid ${C.line};border-radius:3px;padding:1px 5px;white-space:nowrap;">${k}</span>`;
+const shortcut = (k) => `<span style="font-family:${MONO};font-size:10px;color:${C.mid};border:1px solid ${C.line};border-radius:3px;padding:1px 5px;white-space:nowrap;">${k}</span>`;
 
 const BLOCKVIEWS = doc(sheet({
   w: 1400, h: 1040, kicker: 'Block views',
@@ -1936,7 +1936,7 @@ const BLOCKVIEWS = doc(sheet({
   ${viewCol('Summary', 'A thumbnail and the current state. The default for a visual block on a graph.', avSummary, 250, 300)}
   ${viewCol('Stage', 'The picture fills the block. The header shrinks to a strip, port labels hide and only the dots stay on the edges, at exactly the y they had before: switching views never moves a wire.', avStage, 260, 300)}
   <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
-    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:13px 15px;">
       <div style="font-size:11.5px;font-weight:600;color:${C.hi};margin-bottom:8px;">Switching</div>
       <div style="display:flex;flex-direction:column;gap:7px;font-size:10.5px;line-height:1.5;color:${C.low};">
         <div style="display:flex;align-items:center;gap:8px;">${viewToggle('summary')}<span>the toggle in a block's header, shown while hovered or selected; two positions when there is no third view</span></div>
@@ -1945,14 +1945,14 @@ const BLOCKVIEWS = doc(sheet({
         <div>The third view is <b style="color:${C.mid};">Code</b> for a custom block and <b style="color:${C.mid};">Stage</b> for a block with a live picture: Avatar, Webcam, Display, Terminal, Object detection. The view is remembered per block, per graph.</div>
       </div>
     </div>
-    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:13px 15px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:11.5px;font-weight:600;color:${C.hi};">Resizing</span><span style="position:relative;width:18px;height:18px;border:1px solid ${C.line};border-radius:3px;">${grip}</span></div>
       <div style="display:flex;flex-direction:column;gap:7px;font-size:10.5px;line-height:1.5;color:${C.low};">
         <div><b style="color:${C.mid};">Drag the corner.</b> In Summary it sets width and the body reflows. In Stage or Code it sets width and height; the picture scales, the code scrolls.</div>
         <div>Snaps to the 22 px grid. Minimum is the compact size. Remembered per block, per graph. An Avatar keeps its aspect unless you unlock it in the inspector.</div>
       </div>
     </div>
-    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:13px 15px;">
       <div style="font-size:11.5px;font-weight:600;color:${C.hi};margin-bottom:8px;">Big programs</div>
       <div style="display:flex;flex-direction:column;gap:7px;font-size:10.5px;line-height:1.5;color:${C.low};">
         <div><b style="color:${C.mid};">Code drawer</b> &mdash; full width under the canvas, beside Console and Trace; the block stays compact above it.</div>
@@ -1995,18 +1995,18 @@ const CODE_LONG = [
 ];
 
 const codeDrawer = `<div style="height:${DRAWER_H}px;flex:none;display:flex;flex-direction:column;background:#0a0c10;border-top:1px solid ${C.line};">
-  <div style="display:flex;align-items:center;gap:18px;height:33px;flex:none;padding:0 14px;border-bottom:1px solid ${C.soft};">
+  <div style="display:flex;align-items:center;gap:18px;height:32px;flex:none;padding:0 14px;border-bottom:1px solid ${C.soft};">
     <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:${C.hi};border-bottom:1.5px solid ${C.accent};height:33px;">${icon('code', 12, C.accent, 2)}door_check.py<span style="width:5px;height:5px;border-radius:50%;background:${C.warn};"></span></span>
     ${['Console', 'Trace', 'Variables'].map(t => `<span style="font-size:11.5px;color:${C.low};height:33px;display:flex;align-items:center;">${t}</span>`).join('')}
     <span style="flex:1;"></span>
     <span style="font-family:${MONO};font-size:10px;color:${C.low};">184 lines &middot; python 3.12 &middot; saved 4 s ago</span>
     ${chip('2 blocks in file', CAT.custom)}
-    <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:5px;border:1px solid ${C.line};font-size:10.5px;color:${C.hi};">${icon('output', 11, C.mid, 1.8)}Open in editor</div>
+    <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:4px;border:1px solid ${C.line};font-size:10.5px;color:${C.hi};">${icon('output', 11, C.mid, 1.8)}Open in editor</div>
     <span style="transform:rotate(90deg);display:flex;">${icon('chev', 12, C.low, 2)}</span>
   </div>
   <div style="flex:1;display:flex;min-height:0;">
     <div style="flex:1;padding:8px 0;font-family:${MONO};font-size:10.5px;line-height:19px;overflow:hidden;">
-      ${CODE_LONG.map((l, i) => `<div style="display:flex;align-items:center;gap:12px;padding:0 14px;${i === 15 ? `background:${rgba(C.accent, 0.06)};` : ''}"><span style="width:20px;flex:none;text-align:right;color:${C.faint};font-size:9.5px;">${i + 1}</span><span style="flex:1;white-space:nowrap;overflow:hidden;color:#c3cad4;">${l || '&nbsp;'}</span>${i === 15 ? `<span style="font-size:9px;color:${C.accent};white-space:nowrap;">&larr; door_check &middot; 3 ports &middot; 1 setting</span>` : ''}</div>`).join('')}
+      ${CODE_LONG.map((l, i) => `<div style="display:flex;align-items:center;gap:12px;padding:0 14px;${i === 15 ? `background:${rgba(C.accent, 0.06)};` : ''}"><span style="width:20px;flex:none;text-align:right;color:${C.faint};font-size:10px;">${i + 1}</span><span style="flex:1;white-space:nowrap;overflow:hidden;color:#c3cad4;">${l || '&nbsp;'}</span>${i === 15 ? `<span style="font-size:9px;color:${C.accent};white-space:nowrap;">&larr; door_check &middot; 3 ports &middot; 1 setting</span>` : ''}</div>`).join('')}
     </div>
     <div style="width:10px;flex:none;position:relative;background:${C.field};border-left:1px solid ${C.soft};"><div style="position:absolute;left:2px;right:2px;top:4px;height:22px;border-radius:3px;background:${C.faint};"></div></div>
   </div>
@@ -2014,14 +2014,14 @@ const codeDrawer = `<div style="height:${DRAWER_H}px;flex:none;display:flex;flex
 
 const customDrawerNodes = [
   blockNode({ ...DB.webcam, icon: 'eye', color: CAT.senses, title: 'Webcam', state: 'running',
-    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
+    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:10px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
     ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
   blockNode({ ...DB.custom, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok', selected: true,
     badge: chip('py', CAT.runtimes), view: 'summary', third: 'code',
     body: label('threshold') + field('0.80', { mono: true }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Is the front door open, and has it been for three frames?</div><div style="margin-top:7px;font-family:${MONO};font-size:9px;color:${C.faint};">184 lines &middot; editing below</div>`,
     ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'memory', label: 'memory', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] }),
   blockNode({ ...DB.hub, icon: 'merge', color: CAT.memory, title: 'Memory hub', state: 'ok',
-    body: `<div style="font-family:${MONO};font-size:9.5px;color:${C.faint};">working &middot; long-term</div>`,
+    body: `<div style="font-family:${MONO};font-size:10px;color:${C.faint};">working &middot; long-term</div>`,
     ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
   blockNode({ ...DB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
     body: field('slack #home', { mono: true, select: true }),
@@ -2038,7 +2038,7 @@ const CUSTOM_BODY_FILE = [
   sect('Source', segmented(['Inline', 'File'], 'File', C.accent) + `<div style="height:11px;"></div>` + rowField('File', '~/blocks/door_check.py', { mono: true, icon: 'folder', suffix: chip('watching', C.ok, { dot: true }) }) + rowField('Runtime', 'Python 3.12 &middot; .venv', { select: true, gap: 0 })
     + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Edited in the drawer or in your own editor &mdash; the block reloads on every save and keeps its wires.</div>`),
   sect('Interface', ifaceRow('in', 'frame', 'image', 'frame: Image') + ifaceRow('in', 'memory', 'memory', 'memory: Memory') + ifaceRow('out', 'result', 'data', '-&gt; Data') + ifaceRow('set', 'threshold', 'float', '= 0.8')
-    + `<div style="margin-top:4px;font-family:${MONO};font-size:9.5px;color:${C.faint};">parsed from the signature &middot; 4 s ago &middot; +1 port since last save</div>`,
+    + `<div style="margin-top:4px;font-family:${MONO};font-size:10px;color:${C.faint};">parsed from the signature &middot; 4 s ago &middot; +1 port since last save</div>`,
     { tint: C.accent, right: chip('live', C.ok, { dot: true }) }),
   sect('View', segmented(['Compact', 'Summary', 'Code'], 'Summary', C.accent) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Remembered for this block on this graph.</div>`),
   sect('Settings', slider('threshold', '0.80', 80)),
@@ -2059,7 +2059,7 @@ const CUSTOMDRAWER = doc(shell({
 
 const RIGS = [['line', 'Line'], ['robot', 'Robot'], ['orb', 'Orb'], ['pixel', 'Pixel']];
 
-const rigThumb = (rig, name, on) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 4px 6px;border-radius:7px;background:${on ? rgba(CAT.actuators, 0.12) : C.field};border:1px solid ${on ? rgba(CAT.actuators, 0.5) : C.line};">${rigFace(rig, 'neutral', 40)}<span style="font-size:10.5px;color:${on ? C.hi : C.mid};">${name}</span></div>`;
+const rigThumb = (rig, name, on) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 4px 6px;border-radius:6px;background:${on ? rgba(CAT.actuators, 0.12) : C.field};border:1px solid ${on ? rgba(CAT.actuators, 0.5) : C.line};">${rigFace(rig, 'neutral', 40)}<span style="font-size:10.5px;color:${on ? C.hi : C.mid};">${name}</span></div>`;
 
 const VOCAB = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking', 'love', 'sleepy', 'look', 'nod', 'shake'];
 
@@ -2086,19 +2086,19 @@ const AVATAR_SHEET = doc(sheet({
   body: `<div style="display:flex;gap:26px;align-items:flex-start;">
   <div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
     <div style="display:flex;align-items:baseline;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:${CAT.actuators};flex:none;transform:translateY(-1px);"></span><span style="font-size:12px;font-weight:600;color:${C.hi};">Avatar</span><span style="font-size:10.5px;color:${C.low};">the assistant's presence</span></div>
-    <div style="height:1200px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(AVATAR_BODY, { title: 'Avatar', sub: 'actuators &middot; avatar.rig', icn: 'face', col: CAT.actuators, tabs: ['Settings', 'Ports', 'Runs', 'Rigs'], tab: 'Settings' })}</div>
+    <div style="height:1200px;background:${C.panel};border:1px solid ${C.line};border-radius:12px;overflow:hidden;">${panelInner(AVATAR_BODY, { title: 'Avatar', sub: 'actuators &middot; avatar.rig', icn: 'face', col: CAT.actuators, tabs: ['Settings', 'Ports', 'Runs', 'Rigs'], tab: 'Settings' })}</div>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;gap:18px;">
-    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:14px 16px 12px;">
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:12px;padding:14px 16px 12px;">
       <div style="display:grid;grid-template-columns:70px repeat(7, minmax(0, 1fr));gap:6px;align-items:center;">
         <span></span>
-        ${RIG_EXPR.map(e => `<span style="font-family:${MONO};font-size:9.5px;letter-spacing:.06em;color:${C.mid};text-align:center;">${e}</span>`).join('')}
+        ${RIG_EXPR.map(e => `<span style="font-family:${MONO};font-size:10px;letter-spacing:.06em;color:${C.mid};text-align:center;">${e}</span>`).join('')}
         ${RIGS.map(([r, n]) => `<span style="font-size:11.5px;font-weight:600;color:${C.hi};">${n}</span>` + RIG_EXPR.map(e => `<div style="display:flex;align-items:center;justify-content:center;height:96px;border-radius:8px;background:${C.field};border:1px solid ${C.soft};">${rigFace(r, e, 72)}</div>`).join('')).join('')}
       </div>
       <div style="margin-top:10px;font-size:10.5px;line-height:1.5;color:${C.low};">Same seven commands, four answers. Add a rig as a folder of states (Rive files are the natural format); it appears in the picker and its vocabulary is read from what it contains.</div>
     </div>
-    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">
-      <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:14px;padding:9px 10px;border-bottom:1px solid ${C.soft};font-family:${MONO};font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:${C.low};"><span>command</span><span>what it does</span><span>line &middot; robot &middot; orb &middot; pixel</span></div>
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:12px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:14px;padding:9px 10px;border-bottom:1px solid ${C.soft};font-family:${MONO};font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${C.low};"><span>command</span><span>what it does</span><span>line &middot; robot &middot; orb &middot; pixel</span></div>
       ${vocabRow('neutral', 'the resting face; idle returns here', ['line', 'robot', 'orb', 'pixel'])}
       ${vocabRow('smile / frown', 'valence, with an intensity 0&ndash;1', ['line', 'robot', 'orb', 'pixel'])}
       ${vocabRow('surprised', 'a beat, then settles', ['line', 'robot', 'orb', 'pixel'])}
