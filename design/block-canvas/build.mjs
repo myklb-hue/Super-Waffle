@@ -155,6 +155,9 @@ function statusDot(state) {
   return `<span style="width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 0 3px ${rgba(col, 0.16)};flex:none;${pulse ? 'animation:breathe 1.3s ease-in-out infinite;' : ''}"></span>`;
 }
 
+const viewToggle = (active, third = 'code') => `<div style="display:flex;gap:1px;padding:1px;background:${C.field};border:1px solid ${C.line};border-radius:4px;">${[['minus', 'compact'], ['form', 'summary'], ...(third ? [[third === 'stage' ? 'fit' : 'code', third]] : [])].map(([ic, v]) => `<div style="display:flex;align-items:center;justify-content:center;width:16px;height:14px;border-radius:3px;background:${v === active ? rgba(C.accent, 0.22) : 'transparent'};">${icon(ic, 10, v === active ? C.accent : C.low, 2)}</div>`).join('')}</div>`;
+const grip = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" style="position:absolute;right:3px;bottom:3px;opacity:.7;"><path d="M11 1L1 11M11 6L6 11M11 10l-1 1" stroke="${C.mid}" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+
 function portRow(p) {
   const c = T[p.kind];
   const ring = p.glow
@@ -202,10 +205,12 @@ function blockNode(o) {
     <span style="font-size:12px;font-weight:600;letter-spacing:-.005em;color:${C.hi};white-space:nowrap;">${o.title}</span>
     <span style="flex:1;"></span>
     ${o.badge || ''}
+    ${(selected || o.toggle) ? viewToggle(o.view || 'summary', o.third === undefined ? null : o.third) : ''}
     ${statusDot(o.state || 'idle')}
   </div>
   ${zone.html}
   ${o.body ? `<div style="position:relative;padding:${o.pad || (zone.n ? '4px 11px 12px' : '10px 11px 12px')};">${o.body}</div>` : ''}
+  ${(selected || o.grip) ? grip : ''}
 </div>`;
 }
 
@@ -949,7 +954,7 @@ const callout = (x, y, w, t, align) => `<div style="position:absolute;left:${x}p
 
 const AB = { x: 170, y: 60, w: 280 };
 const anatomyBlock = blockNode({
-  ...AB, icon: 'llm', color: CAT.models, title: 'LLM', state: 'running',
+  ...AB, toggle: true, grip: true, icon: 'llm', color: CAT.models, title: 'LLM', state: 'running',
   badge: chip('streaming', C.ok, { dot: true }),
   body: label('model') + field('llama3.2:3b', { mono: true, select: true })
     + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">The arm64 build fails at link<br>time: ld cannot find -lssl&#8230;</div>`,
@@ -961,7 +966,7 @@ const anatomyBlock = blockNode({
     { kind: 'data', label: 'calls', side: 'out' },
   ],
 });
-const aHead = AB.y + 15, aIn = PY(AB, 1), aOut = PY(AB, 0), aBody = AB.y + 31 + 84 + 4 + 50;
+const aHead = AB.y + 15, aIn = PY(AB, 1), aOut = PY(AB, 1), aBody = AB.y + 31 + 84 + 4 + 50, aGrip = AB.y + 31 + 84 + 4 + 109 - 8;
 
 const STATES = [
   ['idle', 'idle', C.line, 'placed, never run'],
@@ -989,17 +994,18 @@ const ANATOMY = doc(sheet({
   w: 1500, h: 760, kicker: 'Vocabulary',
   title: 'A block, its ports, and the states it moves through',
   body: `<div style="display:flex;gap:28px;align-items:flex-start;">
-  <div style="position:relative;width:620px;height:300px;flex:none;">
+  <div style="position:relative;width:620px;height:310px;flex:none;">
     <svg xmlns="http://www.w3.org/2000/svg" width="620" height="300" viewBox="0 0 620 300" style="position:absolute;left:0;top:0;">
       ${[[154, aHead, AB.x - 6], [154, aIn, AB.x - 8]].map(([x1, y, x2]) => `<path d="M${x1} ${y}H${x2}" stroke="${C.faint}" stroke-width="1"/>`).join('')}
-      ${[[466, aHead, AB.x + AB.w - 2], [466, aOut, AB.x + AB.w + 8], [466, aBody, AB.x + AB.w + 2]].map(([x1, y, x2]) => `<path d="M${x1} ${y}H${x2}" stroke="${C.faint}" stroke-width="1"/>`).join('')}
+      ${[[466, aHead, AB.x + AB.w - 2], [466, aOut, AB.x + AB.w + 8], [466, aBody, AB.x + AB.w + 2], [466, aGrip, AB.x + AB.w - 4]].map(([x1, y, x2]) => `<path d="M${x1} ${y}H${x2}" stroke="${C.faint}" stroke-width="1"/>`).join('')}
     </svg>
     ${anatomyBlock}
     ${callout(0, aHead - 22, 148, 'Category colour and icon &mdash; the block looks like its shelf in the library', 'right')}
     ${callout(0, aIn - 14, 148, 'Typed input ports &mdash; the label is the name the graph API uses', 'right')}
-    ${callout(472, aHead - 8, 148, 'Run status, mirrored in the run panel', 'left')}
+    ${callout(472, aHead - 8, 148, 'Run status; before it the view toggle (compact, summary, plus code or stage)', 'left')}
     ${callout(472, aOut - 8, 148, 'Typed output ports', 'left')}
     ${callout(472, aBody - 16, 148, 'Inline preview of the current value &mdash; no need to open the inspector', 'left')}
+    ${callout(472, aGrip - 8, 148, 'Resize grip', 'left')}
   </div>
   <div style="flex:1;">
     <div style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${C.mid};margin-bottom:12px;">States</div>
@@ -1408,7 +1414,6 @@ const camPreview = `<div style="position:relative;height:46px;border-radius:5px;
 
 const fnChip = (t) => chip(t, T.tools);
 
-const grip = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" style="position:absolute;right:3px;bottom:3px;opacity:.7;"><path d="M11 1L1 11M11 6L6 11M11 10l-1 1" stroke="${C.mid}" stroke-width="1.4" stroke-linecap="round"/></svg>`;
 
 // Stage view: a slim header, port dots only on the edges at the same y as
 // every other view (switching views never moves a port), content fills the rest.
@@ -1432,6 +1437,7 @@ function stageBlock(o) {
   ${ins.map((p, i) => dot(p, i, 'in')).join('')}${outs.map((p, i) => dot(p, i, 'out')).join('')}
 </div>`;
 }
+
 
 /* --------------------------------------------------------------- rigs */
 // Four base aesthetics, one expression vocabulary. Each returns a 64-unit SVG.
@@ -1509,7 +1515,6 @@ function rigFace(rig, expr, size = 64) {
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" style="display:block;flex:none;">${g}</svg>`;
 }
-const viewToggle = (active, third = 'code') => `<div style="display:flex;gap:1px;padding:1px;background:${C.field};border:1px solid ${C.line};border-radius:4px;">${[['minus', 'compact'], ['form', 'summary'], [third === 'stage' ? 'fit' : 'code', third]].map(([ic, v]) => `<div style="display:flex;align-items:center;justify-content:center;width:16px;height:14px;border-radius:3px;background:${v === active ? rgba(C.accent, 0.22) : 'transparent'};">${icon(ic, 10, v === active ? C.accent : C.low, 2)}</div>`).join('')}</div>`;
 
 function assistant(stage) {
 const XB = {
@@ -1697,6 +1702,7 @@ const WEBCAM_BODY = [
   sect('Device', rowField('Camera', 'Logitech C920 &middot; /dev/video0', { select: true, icon: 'eye' }) + rowField('Resolution', '1280 &times; 720', { select: true }) + rowField('Frame rate', '15 fps', { mono: true, gap: 0 })
     + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Downstream blocks sample what they need; detection runs at 5 fps.</div>`),
   sect('Emits', `<div style="display:flex;align-items:center;gap:8px;">${chip('image', T.image, { dot: true })}<span style="font-size:10.5px;color:${C.low};">every frame &middot; 2 subscribers</span></div>`),
+  sect('View', segmented(['Compact', 'Summary', 'Stage'], 'Summary', C.accent) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Stage fills the block with the live frame.</div>`),
   sect('Privacy', switchRow('Frames never leave this machine', true, { col: C.err }) + switchRow('Record to disk', false) + rowField('Retention', 'none &middot; frames are dropped after use', { muted: true, gap: 0 }), { tint: C.err, right: chip('local only', C.err, { dot: true }) }),
   sect('Live', camPreview + `<div style="margin-top:8px;font-family:${MONO};font-size:10px;color:${C.mid};">15 fps &middot; 22 ms &middot; 2 subscribers</div>`, { tint: C.ok, right: chip('capturing', C.ok, { dot: true }) }),
 ].join('');
@@ -1816,7 +1822,7 @@ const customNodes = [
     body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
     ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
   blockNode({ ...KB.custom, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok', selected: true,
-    badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('reloaded', C.ok, { dot: true })}${chip('py', CAT.runtimes)}${viewToggle('code')}</div>`,
+    badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('reloaded', C.ok, { dot: true })}${chip('py', CAT.runtimes)}</div>`, view: 'code', third: 'code',
     body: customEditorBody,
     ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] }),
   blockNode({ ...KB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
@@ -1844,6 +1850,7 @@ const CUSTOM_BODY = [
     + `<div style="margin-top:4px;font-family:${MONO};font-size:9.5px;color:${C.faint};">parsed from the signature &middot; 0.2 s ago &middot; no errors</div>`,
     { tint: C.accent, right: chip('live', C.ok, { dot: true }) }),
   sect('Settings', slider('threshold', '0.80', 80) + `<div style="font-size:10px;line-height:1.5;color:${C.low};">Generated from the default argument. Change it here or in the code &mdash; they stay in sync.</div>`),
+  sect('View', segmented(['Compact', 'Summary', 'Code'], 'Code', C.accent) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">480 wide &middot; drag the corner. Remembered for this block on this graph.</div>`),
   sect('Library', rowField('Category', 'Senses', { select: true, icon: 'eye' }) + rowField('Icon', 'shield', { select: true, icon: 'shield', gap: 0 })
     + `<div style="margin-top:12px;display:flex;gap:8px;">${btn('Save to library', { primary: true })}${btn('Export .py')}</div>`),
 ].join('');
@@ -1917,16 +1924,16 @@ const CUSTOMRULES = doc(sheet({
 /* ============================================================ 14. BlockViews */
 
 const VB = { x: 0, y: 0, w: 250 };
-const viewCompact = blockNode({ ...VB, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
+const viewCompact = blockNode({ ...VB, grip: true, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
   badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('py', CAT.runtimes)}${viewToggle('compact')}</div>`,
   ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
-const viewSummary = blockNode({ ...VB, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
+const viewSummary = blockNode({ ...VB, grip: true, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
   badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('py', CAT.runtimes)}${viewToggle('summary')}</div>`,
   body: label('threshold') + field('0.80', { mono: true }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Is the front door open in this frame?</div><div style="margin-top:7px;font-family:${MONO};font-size:9px;color:${C.faint};">12 lines &middot; reloaded 2 m ago</div>`,
   ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
-const viewCode = blockNode({ ...VB, w: 330, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
+const viewCode = blockNode({ ...VB, w: 330, grip: true, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
   badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('py', CAT.runtimes)}${viewToggle('code')}</div>`,
-  body: codeBlock(CODE.slice(0, 6), { h: 128 }) + `<div style="display:flex;align-items:center;margin-top:6px;font-family:${MONO};font-size:9px;color:${C.faint};"><span>&#8230; 4 more lines</span><span style="flex:1;"></span><span style="color:${C.low};">drag to resize &#8599;</span></div>`,
+  body: codeBlock(CODE.slice(0, 6), { h: 128 }) + `<div style="display:flex;align-items:center;margin-top:6px;font-family:${MONO};font-size:9px;color:${C.faint};"><span>&#8230; 4 more lines</span><span style="flex:1;"></span></div>`,
   ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
 
 const viewCol = (cap, note, block, w, h = 240) => `<div style="flex:none;width:${w}px;display:flex;flex-direction:column;gap:12px;">
@@ -1935,8 +1942,8 @@ const viewCol = (cap, note, block, w, h = 240) => `<div style="flex:none;width:$
 </div>`;
 
 const AV_PORTS = [{ kind: 'audio', label: 'speech', side: 'in' }, { kind: 'data', label: 'express', side: 'in' }, { kind: 'data', label: 'look', side: 'in' }, { kind: 'tools', label: 'tool', side: 'out' }, { kind: 'stream', label: 'state', side: 'out' }];
-const avCompact = blockNode({ ...VB, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', badge: viewToggle('compact', 'stage'), ports: AV_PORTS });
-const avSummary = blockNode({ ...VB, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', badge: viewToggle('summary', 'stage'),
+const avCompact = blockNode({ ...VB, grip: true, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', badge: viewToggle('compact', 'stage'), ports: AV_PORTS });
+const avSummary = blockNode({ ...VB, grip: true, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running', badge: viewToggle('summary', 'stage'),
   body: `<div style="display:flex;align-items:center;gap:10px;"><div style="width:46px;height:46px;flex:none;border-radius:6px;background:${C.field};border:1px solid ${C.soft};display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 40)}</div><div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">line &middot; smile<br>speaking &middot; looking at Mykl</div></div>`,
   ports: AV_PORTS });
 const avStage = stageBlock({ ...VB, w: 260, h: 236, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running',
@@ -1947,7 +1954,7 @@ const shortcut = (k) => `<span style="font-family:${MONO};font-size:9.5px;color:
 
 const BLOCKVIEWS = doc(sheet({
   w: 1400, h: 1040, kicker: 'Block views',
-  title: 'Three views for every block, and the third depends on what the block is',
+  title: 'Compact and Summary for every block; Code or Stage for the ones that earn it',
   body: `<div style="display:flex;gap:40px;">
   ${viewCol('Compact', 'Name and ports only &mdash; what every block looks like from a distance, and the default once a block is saved to the library.', viewCompact, 250)}
   ${viewCol('Summary', 'Settings and description, no code. The default while the block is being used on a graph. Change a setting here or in the code; they stay in sync.', viewSummary, 250)}
@@ -1962,8 +1969,8 @@ const BLOCKVIEWS = doc(sheet({
     <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
       <div style="font-size:11.5px;font-weight:600;color:${C.hi};margin-bottom:8px;">Switching</div>
       <div style="display:flex;flex-direction:column;gap:7px;font-size:10.5px;line-height:1.5;color:${C.low};">
-        <div style="display:flex;align-items:center;gap:8px;">${viewToggle('summary')}<span>the toggle in every custom block's header</span></div>
-        <div style="display:flex;align-items:center;gap:8px;">${shortcut('dbl-click')}<span>on the header cycles compact &rarr; summary &rarr; code</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">${viewToggle('summary')}<span>the toggle in a block's header, shown while hovered or selected; two positions when there is no third view</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">${shortcut('dbl-click')}<span>on the header cycles the views</span></div>
         <div style="display:flex;align-items:center;gap:8px;">${shortcut('&#8984;E')}<span>opens the third view of the selected block</span></div>
         <div>The third view is <b style="color:${C.mid};">Code</b> for a custom block and <b style="color:${C.mid};">Stage</b> for a block with a live picture: Avatar, Webcam, Display, Terminal, Object detection. The view is remembered per block, per graph.</div>
       </div>
@@ -2040,7 +2047,7 @@ const customDrawerNodes = [
     body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
     ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
   blockNode({ ...DB.custom, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok', selected: true,
-    badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('py', CAT.runtimes)}${viewToggle('summary')}</div>`,
+    badge: chip('py', CAT.runtimes), view: 'summary', third: 'code',
     body: label('threshold') + field('0.80', { mono: true }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Is the front door open, and has it been for three frames?</div><div style="margin-top:7px;font-family:${MONO};font-size:9px;color:${C.faint};">184 lines &middot; editing below</div>`,
     ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'memory', label: 'memory', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] }),
   blockNode({ ...DB.hub, icon: 'merge', color: CAT.memory, title: 'Memory hub', state: 'ok',

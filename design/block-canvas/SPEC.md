@@ -177,9 +177,9 @@ and the body is the picture.
 
 - **Header.** Category-coloured icon, title in Space Grotesk 600 at 12 px,
   a gradient tint of the category colour, optional badge chips on the
-  right, the three-icon view toggle (§3.4), and the status dot last. A
-  custom block adds its language chip (`py`, `ts`, `sh`); an Avatar adds
-  its rig chip.
+  right, the view toggle (§3.4, shown while hovered or selected), and the
+  status dot last. A custom block adds its language chip (`py`, `ts`,
+  `sh`); an Avatar adds its rig chip.
 - **Port zone.** One row per port index, 24 px tall, inputs down the left
   edge and outputs down the right. The dot of row *i* is centred
   51 + 24·*i* px from the block's top; this is what the wire router uses.
@@ -189,8 +189,8 @@ and the body is the picture.
 - **Body.** Whatever the block wants to show inline: a field, a preview of
   its current value, a level meter, a list of bundled functions. The body
   is a *preview*, not the settings; settings live in the inspector.
-- **Grip.** A 12 px diagonal grip in the bottom-right corner. Dragging it
-  resizes the block (§3.4).
+- **Grip.** A 12 px diagonal grip in the bottom-right corner, shown while
+  hovered or selected. Dragging it resizes the block (§3.4).
 
 Minimum width is 168 px; content sets the rest. Widths on the mockups run
 168–480 px.
@@ -219,9 +219,12 @@ chip on a custom block, a rig chip on an Avatar. Chips are mono 9.5 px on a 12 %
 
 ### 3.4 Views and resizing
 
-Every block has three views, switched from a three-icon toggle in its
-header, by double-clicking the header, or with `⌘E` for the third. The
-view is remembered per block, per graph.
+Every block has Compact and Summary. Custom blocks add Code; blocks with a
+live picture add Stage. Views are switched from a toggle in the header
+(two or three positions accordingly), by double-clicking the header, or
+with `⌘E` for the third. The toggle and the resize grip are shown while a
+block is hovered or selected, so an unselected graph stays quiet. The view
+is remembered per block, per graph.
 
 | View | Shows | Third view depends on the block |
 | --- | --- | --- |
