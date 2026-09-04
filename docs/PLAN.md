@@ -535,8 +535,12 @@ super-waffle/
 
 **Naming**
 
-- React components: `PascalCase.tsx`, one exported component per file,
-  colocated `PascalCase.module.css` and `PascalCase.test.tsx`.
+- React components: `PascalCase.tsx`, one exported component per file, with
+  `PascalCase.test.tsx` beside it. Styles are colocated per *set* rather than
+  per file: the primitives share `packages/ui/src/components/ui.module.css`
+  because they are atoms over the same dozen tokens, while a component with
+  real internal layout (a canvas node, an inspector panel) gets its own
+  `PascalCase.module.css`. CSS Modules scopes the names either way.
 - Hooks `useThing.ts`; stores `thing.ts` exporting `useThingStore`;
   pure modules `kebab-case.ts`.
 - Block kinds: `packages/blocks/src/kinds/<kind>.tsx` exporting

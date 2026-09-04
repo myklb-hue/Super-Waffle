@@ -1,2 +1,7 @@
 design/cyberloom/cyberloom.html
 design/cyberloom/spec.html
+
+# node
+node_modules/
+packages/*/build/
+.ladle/build/
