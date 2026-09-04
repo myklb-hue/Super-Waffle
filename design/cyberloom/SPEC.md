@@ -279,8 +279,15 @@ the frame shows the current iteration and item.
 | `any` | `#8a93a3` grey | accepts every type | everything |
 
 A wire is legal when its source type is accepted by the target port. That
-is the whole rule; there is no implicit cast. An explicit transform can be
-inserted on a wire (§5.4).
+is the whole rule; there is no implicit cast. Where two types are close but
+not identical the shell offers to insert a **Convert** block on the wire, so
+a conversion is always something you can see (§5.4, §15.5).
+
+`tools`, `memory` and `exec` are **closed**: each one meets only a port of
+its own type. In particular an `any` port does not accept them, because
+`any` means any *value* and a handle is not a value (§4.3), nor is a
+trigger. Every other type is accepted by its own type and by `any`, and a
+`stream` is additionally accepted by `text` and `data`.
 
 ### 4.2 Fan-in and fan-out
 
@@ -457,17 +464,18 @@ and keeps the graph armed (§8).
 
 | Block | Ports |
 | --- | --- |
-| Input | out `any` — the graph's entry value |
-| Output | in `any` — a named result |
-| Variable | in `any` · out `any` |
+| Input | out `value` any — the graph's entry value |
+| Output | in `value` any — a named result |
+| Variable | in `value` any · out `value` any |
 | Chunker | in `text` · out `text` |
 | Secret | out `text` — bound from the graph's env |
+| Convert | in `value` any · out `value` any — makes one type into another, visibly (§15.5) |
 
 ### 6.8 Control — slate `#8a93a3`
 
 | Block | Ports | Notes |
 | --- | --- | --- |
-| Loop | in `items` any · out `results` data, `done` exec, `errors` data | A frame, not a card. §3.4 |
+| Loop | in `items` any · out `item` any, `results` data, `done` exec, `errors` data | A frame, not a card. §3.4. `item` is how the blocks inside the frame receive the current one; a wire may land on a frame exactly as it lands on a block. |
 | Branch | in `any` · out `a`, `b` exec | Condition on the input |
 | Merge | in `any` × n · out `any` | |
 | Gate | in `any`, `open` exec · out `any` | |

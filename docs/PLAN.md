@@ -564,7 +564,7 @@ figure.
 | # | Slice | Depends on | Done when |
 | --- | --- | --- | --- |
 | 0 | **Tokens and primitives.** `tokens.css`, fonts bundled, every §2.1 primitive in Ladle with its states. Regenerate the mockups from the standardised tokens (§1) so spec and app agree. | — | Ladle shows every primitive; the artboards re-render with the 32 px header. |
-| 1 | **Graph format and types.** `graph-format` reads and writes `.loom`; `block-kinds` defines the 44 built-ins; `specta` exports TS; `graph-core` has geometry and compatibility with tests against the four fixture graphs. | 0 | `customer-triage.loom` round-trips byte-identical; `compat('data','text')` and friends match §4.1. |
+| 1 | **Graph format and types.** `graph-format` reads and writes `.loom`; `block-kinds` defines the 49 built-ins; `specta` exports TS; `graph-core` has geometry and compatibility with tests against the four fixture graphs. | 0 | `customer-triage.loom` round-trips byte-identical; `compat('data','text')` and friends match §4.1. |
 | 2 | **Static canvas.** Tauri window, `loomd` starts and serves `graph.open`; xyflow renders blocks, ports and wires from a fixture with the spec's geometry; minimap, zoom pill, library panel (read-only), status bar. No editing. | 1 | Figure 1 and Figure 3's block layout (without the drag) pixel-match. |
 | 3 | **Editing.** Drag from library, move, delete, wire drag with dim/glow/snap/tooltip, selection ring, graph and block inspectors for Input/LLM/Terminal/Toolbox, wire and multi panels, view toggle and grip, undo/redo, autosave. | 2 | Figure 3 including the drag; Figure 5 all five panels; a graph built by hand saves and reopens identically. |
 | 4 | **Engine v0 and running.** Scheduler for Once mode; LLM via Ollama with streaming; Terminal and Python runtimes; Toolbox bundling and tool calls; warnings with Continue; console drawer; Run panel; live wires and inline previews. | 3 | Figure 7; the customer-triage example runs end to end against a local model. |
@@ -666,3 +666,24 @@ Decided since this plan was written:
   at build time.
 
 Nothing is left blocking slice 0.
+
+Corrected while building slice 1, from implementing the specification rather
+than reading it:
+
+- **A wire endpoint names a node, not a block.** A loop is a frame with ports
+  of its own, and wires land on it. `Endpoint` says `node`.
+- **The Loop needs an `item` output.** SPEC §6.8 omitted it; §13.2's wire table
+  uses it, and a loop cannot pass the current item to the blocks inside the
+  frame without one. Added to §6.8.
+- **`tools`, `memory` and `exec` are closed types.** §4.1 said `any` "accepts
+  every type" while each of those rows listed only its own kind. A handle is
+  not a value and neither is a trigger, so the narrower reading wins; §4.1 now
+  says so directly rather than leaving the two rows to contradict each other.
+- **§4.1 still described the transform §15.5 removed.** Fixed to point at the
+  Convert block.
+- **The Data shelf was missing Convert**, which §15.5 added. Now in §6.7 and in
+  the catalogue.
+- **The built-in count is 49, not 44.** §6 lists 48 rows and §15.5 adds Convert.
+- **§13.4's door_check example has a type error**: the block returns `Data` and
+  Notify's `text` port takes `text`. The fixture inserts a Convert block, which
+  is what §15.5 exists for.
