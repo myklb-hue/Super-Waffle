@@ -11,7 +11,7 @@ pub mod rpc;
 pub mod workspace;
 
 pub use rpc::{
-    EngineStatus, Envelope, GraphSummary, OpenGraph, Reply, ReplyEnvelope, Request, RpcError,
+    EngineStatus, Envelope, GraphSummary, OpenGraph, Reply, ReplyEnvelope, Request, RpcError, Saved,
 };
 pub use workspace::{Workspace, WorkspaceError};
 
@@ -79,6 +79,30 @@ impl Engine {
                         }
                     }
                     Reply::Workspace(out)
+                }
+            },
+
+            Request::GraphSave { path, graph } => match self.workspace.save(&path, &graph) {
+                Err(e) => Reply::Error(RpcError::new("save", e.to_string())),
+                Ok(written) => {
+                    // Read back what was written rather than echoing what was
+                    // sent: the canonical form is the truth, and the shell
+                    // should adopt it instead of drifting from the file.
+                    match self.workspace.load(&path) {
+                        Err(e) => Reply::Error(RpcError::new("save", e.to_string())),
+                        Ok(graph) => {
+                            let problems = block_kinds::validate(&graph)
+                                .iter()
+                                .map(|p| p.to_string())
+                                .collect();
+                            Reply::Saved(Saved {
+                                path,
+                                graph: Box::new(graph),
+                                problems,
+                                written,
+                            })
+                        }
+                    }
                 }
             },
 
@@ -226,5 +250,125 @@ mod tests {
         };
         assert_eq!(kinds.len(), block_kinds::KINDS.len());
         assert!(kinds.iter().any(|k| k.id == "llm"));
+    }
+}
+
+#[cfg(test)]
+mod save_tests {
+    use super::*;
+
+    /// The acceptance criterion for slice 3: a graph edited and saved comes
+    /// back the same graph.
+    #[test]
+    fn a_saved_graph_reopens_identically() {
+        let dir = std::env::temp_dir().join(format!("loomd-save-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let source = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/graphs/customer-triage.loom"
+        );
+        std::fs::copy(source, dir.join("g.loom")).unwrap();
+
+        let engine = Engine::new(Workspace::open(&dir).unwrap());
+        let Reply::Graph(open) = engine.handle(Request::GraphOpen {
+            path: "g.loom".into(),
+        }) else {
+            panic!("expected a graph");
+        };
+
+        // Move a block by less than half a grid step and add one.
+        let mut graph = open.graph.clone();
+        graph.blocks[0].position.x += 4.0;
+        let mut added = graph.blocks[0].clone();
+        added.id = "second-input".into();
+        added.position = graph_format::Position { x: 66.0, y: 704.0 };
+        graph.blocks.push(added);
+
+        let Reply::Saved(saved) = engine.handle(Request::GraphSave {
+            path: "g.loom".into(),
+            graph: Box::new(graph),
+        }) else {
+            panic!("expected a save");
+        };
+        assert!(saved.written);
+        assert_eq!(saved.graph.blocks.len(), 7);
+        // The nudge was inside half a grid step, so it snapped back.
+        assert_eq!(
+            saved.graph.blocks[0].position.x,
+            open.graph.blocks[0].position.x
+        );
+
+        let Reply::Graph(reopened) = engine.handle(Request::GraphOpen {
+            path: "g.loom".into(),
+        }) else {
+            panic!("expected a graph");
+        };
+        assert_eq!(reopened.graph, *saved.graph);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Autosave fires on every edit, so a save that would write the same bytes
+    /// has to be free.
+    #[test]
+    fn saving_unchanged_bytes_writes_nothing() {
+        let dir = std::env::temp_dir().join(format!("loomd-nochange-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let source = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/graphs/door-watch.loom"
+        );
+        std::fs::copy(source, dir.join("g.loom")).unwrap();
+
+        let engine = Engine::new(Workspace::open(&dir).unwrap());
+        let Reply::Graph(open) = engine.handle(Request::GraphOpen {
+            path: "g.loom".into(),
+        }) else {
+            panic!("expected a graph");
+        };
+        let before = std::fs::metadata(dir.join("g.loom"))
+            .unwrap()
+            .modified()
+            .unwrap();
+
+        let Reply::Saved(saved) = engine.handle(Request::GraphSave {
+            path: "g.loom".into(),
+            graph: Box::new(open.graph.clone()),
+        }) else {
+            panic!("expected a save");
+        };
+        assert!(
+            !saved.written,
+            "an unchanged graph should not touch the file"
+        );
+        assert_eq!(
+            std::fs::metadata(dir.join("g.loom"))
+                .unwrap()
+                .modified()
+                .unwrap(),
+            before
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_save_outside_the_workspace_is_refused() {
+        let engine = Engine::new(
+            Workspace::open(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures")).unwrap(),
+        );
+        let graph = match engine.handle(Request::GraphOpen {
+            path: "graphs/door-watch.loom".into(),
+        }) {
+            Reply::Graph(open) => Box::new(open.graph),
+            _ => panic!("expected a graph"),
+        };
+        let Reply::Error(e) = engine.handle(Request::GraphSave {
+            path: "../escaped.loom".into(),
+            graph,
+        }) else {
+            panic!("expected an error");
+        };
+        assert_eq!(e.code, "save");
     }
 }

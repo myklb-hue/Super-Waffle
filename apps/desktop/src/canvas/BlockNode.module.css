@@ -146,3 +146,44 @@
   font-size: var(--fs-xs);
   color: var(--text-faint);
 }
+
+/* ---------------------------------------------- controls and drag feedback */
+
+/* The view toggle and the grip appear on hover or selection, so a canvas at
+ * rest is not covered in controls (SPEC §3.4). */
+.toggle,
+.gripSlot {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.block:hover .toggle,
+.block:hover .gripSlot,
+.toggleShown {
+  opacity: 1;
+}
+
+.gripSlot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--grip);
+  height: var(--grip);
+}
+
+/* Mid-drag: a port that cannot accept the wire recedes, and one that can is
+ * ringed in its own colour. Between them they say what the grammar allows
+ * without a word of explanation (SPEC §4.1, §5.2). */
+.dimmed {
+  opacity: var(--a-dim);
+}
+
+.glowing .dot.dot {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--ty) 30%, transparent),
+    0 0 16px color-mix(in srgb, var(--ty) 60%, transparent);
+}
+
+.glowing .portLabel {
+  color: var(--text-hi);
+}

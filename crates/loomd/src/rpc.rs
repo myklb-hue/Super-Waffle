@@ -30,6 +30,17 @@ pub enum Request {
     /// Read one graph.
     #[serde(rename = "graph.open")]
     GraphOpen { path: String },
+    /// Write one graph back, in canonical form.
+    ///
+    /// The shell sends the whole graph rather than a patch. It is a few
+    /// kilobytes, it makes the write atomic from the shell's point of view,
+    /// and it means the engine never has to reconstruct a document from a
+    /// stream of edits it might have missed.
+    #[serde(rename = "graph.save")]
+    GraphSave {
+        path: String,
+        graph: Box<graph_format::Graph>,
+    },
 }
 
 /// The envelope a request arrives in.
@@ -52,6 +63,7 @@ pub enum Reply {
     Catalogue(Vec<block_kinds::BlockKind>),
     Workspace(Vec<GraphSummary>),
     Graph(Box<OpenGraph>),
+    Saved(Saved),
     /// Not an exception: the shell shows it and carries on (SPEC §12.1).
     Error(RpcError),
 }
@@ -106,6 +118,21 @@ pub struct GraphSummary {
     pub blocks: u32,
     pub wires: u32,
     pub run_mode: graph_format::RunMode,
+}
+
+/// What a save produced.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Saved {
+    pub path: String,
+    /// The canonical form the engine wrote. Positions come back snapped to the
+    /// grid, so the shell can adopt what is actually on disk rather than
+    /// holding a document that differs from the file by a rounding.
+    pub graph: Box<graph_format::Graph>,
+    pub problems: Vec<String>,
+    /// False when the file already held these exact bytes. The shell uses it to
+    /// avoid saying "saved" when nothing changed.
+    pub written: bool,
 }
 
 /// A graph, with everything the shell needs to draw it and nothing it would

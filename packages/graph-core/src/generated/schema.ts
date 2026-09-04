@@ -247,7 +247,7 @@ export type Position = {
  *  TypeScript, reads them. Nothing in Rust parses one back, and the catalogue
  *  inside it is a table of `&'static str` that could not be parsed anyway.
  */
-export type Reply = { result: "engineStatus"; data: EngineStatus } | { result: "catalogue"; data: BlockKind[] } | { result: "workspace"; data: GraphSummary[] } | { result: "graph"; data: OpenGraph } | 
+export type Reply = { result: "engineStatus"; data: EngineStatus } | { result: "catalogue"; data: BlockKind[] } | { result: "workspace"; data: GraphSummary[] } | { result: "graph"; data: OpenGraph } | { result: "saved"; data: Saved } | 
 /**  Not an exception: the shell shows it and carries on (SPEC §12.1). */
 { result: "error"; data: RpcError };
 
@@ -265,6 +265,18 @@ export type Request =
 /**  Read one graph. */
 { method: "graph.open"; params: {
 	path: string,
+} } | 
+/**
+ *  Write one graph back, in canonical form.
+ * 
+ *  The shell sends the whole graph rather than a patch. It is a few
+ *  kilobytes, it makes the write atomic from the shell's point of view,
+ *  and it means the engine never has to reconstruct a document from a
+ *  stream of edits it might have missed.
+ */
+{ method: "graph.save"; params: {
+	path: string,
+	graph: Graph,
 } };
 
 export type RpcError = {
@@ -279,6 +291,23 @@ export type RpcError = {
  *  here (SPEC §8).
  */
 export type RunMode = "once" | "live" | "schedule";
+
+/**  What a save produced. */
+export type Saved = {
+	path: string,
+	/**
+	 *  The canonical form the engine wrote. Positions come back snapped to the
+	 *  grid, so the shell can adopt what is actually on disk rather than
+	 *  holding a document that differs from the file by a rounding.
+	 */
+	graph: Graph,
+	problems: string[],
+	/**
+	 *  False when the file already held these exact bytes. The shell uses it to
+	 *  avoid saying "saved" when nothing changed.
+	 */
+	written: boolean,
+};
 
 /**
  *  One setting a kind declares. Settings live in the inspector; ports live on
@@ -315,7 +344,7 @@ export type Side = "in" | "out";
 export type Size = {
 	w: number,
 	/**  Height is only meaningful for the views that have one: stage and code. */
-	h?: number,
+	h?: number | null,
 };
 
 /**
@@ -348,7 +377,7 @@ export type Ui = {
  *  given it; because the writer prints an integral float without its point, the
  *  file still round-trips byte for byte.
  */
-export type Value = "Null" | boolean | number | number | string | Value[] | { [key in string]: Value };
+export type Value = "Null" | boolean | number | number | null | string | Value[] | { [key in string]: Value };
 
 /**
  *  How much of a block is drawn. Every block has compact and summary; a custom

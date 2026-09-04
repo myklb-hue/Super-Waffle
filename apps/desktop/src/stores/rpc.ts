@@ -11,7 +11,7 @@
  * into the components.
  */
 
-import type { OpenGraph, Reply, Request } from '@cyberloom/graph-core';
+import type { Graph, OpenGraph, Reply, Request, Saved } from '@cyberloom/graph-core';
 
 declare global {
   interface Window {
@@ -60,6 +60,15 @@ export async function openGraph(path: string): Promise<OpenGraph> {
   const reply = await call({ method: 'graph.open', params: { path } });
   if (reply.result === 'error') throw new Error(reply.data.message);
   if (reply.result !== 'graph') throw new Error(`unexpected reply: ${reply.result}`);
+  return reply.data;
+}
+
+/** Write the graph back. The reply carries the canonical form the engine
+ *  actually wrote, which the shell adopts (see `autosave.ts`). */
+export async function saveGraph(path: string, graph: Graph): Promise<Saved> {
+  const reply = await call({ method: 'graph.save', params: { path, graph } });
+  if (reply.result === 'error') throw new Error(reply.data.message);
+  if (reply.result !== 'saved') throw new Error(`unexpected reply: ${reply.result}`);
   return reply.data;
 }
 

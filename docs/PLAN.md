@@ -697,3 +697,34 @@ than reading it:
 - **§13.4's door_check example has a type error**: the block returns `Data` and
   Notify's `text` port takes `text`. The fixture inserts a Convert block, which
   is what §15.5 exists for.
+
+Found while building slice 3, all of them in the seam between the store and
+the canvas library rather than in the specification:
+
+- **Autosave was costing an undo press.** The engine answers `graph.save` with
+  its own canonical graph, which the store installs. That is a new object, so
+  the history middleware recorded it as a step and one undo landed on the
+  moment *after* the edit. `markSaved` now pauses the history around the swap.
+  A save is not an edit.
+- **Undo did not reach the file.** Time travel restores the graph and knows
+  nothing about `dirty`, so an undone edit stayed on screen and never went
+  back to disk. The keyboard map marks the document dirty after every undo
+  and redo.
+- **Shift-click did not multi-select.** xyflow's multi-select key is Ctrl on
+  Linux and Cmd on macOS; SPEC §2.4 promises Shift. All three are accepted
+  now, so the platform habit and the documented gesture both work.
+- **The minimap drew nothing.** The nodes are rebuilt from the graph on every
+  render, which threw away the size xyflow had measured, and the minimap draws
+  from the node objects rather than from xyflow's own copy. The canvas keeps
+  the measurements and hands them back.
+- **The minimap was also being cropped.** xyflow reads its width and height off
+  the inline `style` to work out its scale; given only CSS it drew a 200×150
+  map inside a 138×88 box. That one size lives in the component, not in the
+  stylesheet, and says why.
+
+One gap left for slice 4, when settings start being read: **`SettingDef` has no
+default.** The inspector shows an unset range at its minimum and an unset
+choice as the first option, which reads as a value the user chose. Nothing runs
+yet so nothing is wrong on disk — the file correctly says nothing — but the
+panel should distinguish "unset" from "set to the bottom of the range", and it
+cannot until the catalogue declares what each setting falls back to.

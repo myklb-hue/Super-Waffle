@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { Graph } from '@cyberloom/graph-core';
 import { Shell } from '../shell/Shell';
+import { useDocument } from '../stores/document';
 import { engineStatus, listWorkspace, openGraph } from '../stores/rpc';
 import s from './App.module.css';
 
 type State =
   | { phase: 'starting' }
-  | { phase: 'ready'; graph: Graph; path: string; problems: string[]; detail: string }
+  | { phase: 'ready'; detail: string }
   | { phase: 'unreachable'; message: string };
 
 /**
@@ -38,13 +38,10 @@ export function App() {
         const chosen = graphs.find((g) => g.path.includes(wanted ?? '')) ?? graphs[0]!;
         const open = await openGraph(chosen.path);
         if (cancelled) return;
-        setState({
-          phase: 'ready',
-          graph: open.graph,
-          path: open.path,
-          problems: open.problems,
-          detail: `${status.version} · ${status.graphs} graphs`,
-        });
+        // The document store owns the graph from here; the app only decides
+        // which file to hand it.
+        useDocument.getState().load(open.path, open.graph, open.problems);
+        setState({ phase: 'ready', detail: `${status.version} · ${status.graphs} graphs` });
       } catch (error) {
         if (!cancelled) {
           setState({
@@ -74,12 +71,5 @@ export function App() {
     );
   }
 
-  return (
-    <Shell
-      graph={state.graph}
-      path={state.path}
-      problems={state.problems}
-      engine={{ state: 'ready', detail: state.detail }}
-    />
-  );
+  return <Shell engine={{ state: 'ready', detail: state.detail }} />;
 }

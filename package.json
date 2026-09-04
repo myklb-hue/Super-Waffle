@@ -20,5 +20,8 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "zustand": "4.5.7"
   }
 }

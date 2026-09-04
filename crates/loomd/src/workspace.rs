@@ -91,6 +91,39 @@ impl Workspace {
             .join("/")
     }
 
+    /// Write a graph in canonical form.
+    ///
+    /// Returns whether anything was actually written. A save that would produce
+    /// the bytes already on disk does nothing, so autosaving on every keystroke
+    /// does not churn the file's timestamp or wake a file watcher for nothing.
+    ///
+    /// The write goes to a temporary file in the same directory and is then
+    /// renamed over the target, so a crash mid-write leaves the old graph
+    /// intact rather than a truncated one.
+    pub fn save(&self, relative: &str, graph: &Graph) -> Result<bool, WorkspaceError> {
+        let path = self.resolve(relative)?;
+        let text = graph_format::to_string(graph);
+        if std::fs::read_to_string(&path).is_ok_and(|existing| existing == text) {
+            return Ok(false);
+        }
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir).map_err(|source| WorkspaceError::Io {
+                path: dir.display().to_string(),
+                source,
+            })?;
+        }
+        let temp = path.with_extension("loom.tmp");
+        std::fs::write(&temp, &text).map_err(|source| WorkspaceError::Io {
+            path: temp.display().to_string(),
+            source,
+        })?;
+        std::fs::rename(&temp, &path).map_err(|source| WorkspaceError::Io {
+            path: path.display().to_string(),
+            source,
+        })?;
+        Ok(true)
+    }
+
     pub fn load(&self, relative: &str) -> Result<Graph, WorkspaceError> {
         let path = self.resolve(relative)?;
         graph_format::load(&path).map_err(|e| match e {

@@ -37,8 +37,8 @@
 .minimap.minimap {
   right: var(--sp-5);
   bottom: var(--sp-5);
-  width: 138px;
-  height: 88px;
+  /* The box is sized in Canvas.tsx: xyflow needs the numbers to scale the map,
+   * so they cannot be set here without the two disagreeing. */
   margin: 0;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -49,4 +49,31 @@
 
 .minimap.minimap :global(.react-flow__minimap-mask) {
   fill: rgba(8, 9, 11, 0.72);
+}
+
+/* Follows the pointer during a wire drag: what is being carried, or why it
+ * cannot land here. */
+.dragTooltip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  height: var(--row-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--float) 94%, transparent);
+  box-shadow: var(--shadow-float);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-body);
+  white-space: nowrap;
+}
+
+/* The wire xyflow draws while a connection is in flight. */
+.canvas :global(.react-flow__connectionline .react-flow__edge-path) {
+  stroke: var(--accent);
+  stroke-width: 1.9;
+  stroke-dasharray: 4 4;
 }

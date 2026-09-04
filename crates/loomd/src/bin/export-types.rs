@@ -73,17 +73,25 @@ fn main() {
         .export(&types, specta_serde::Format)
         .unwrap_or_else(|e| panic!("exporting types: {e}"));
 
-    // Specta exports every f64 as `number | null`, because serde_json turns
-    // NaN and the infinities into null. Nothing in this schema can be one:
-    // `graph-format`'s reader refuses a non-finite number, so a coordinate
-    // that reached TypeScript is always a number. Without this the whole of
+    // Specta exports every f64 as `number | null`, because serde_json turns NaN
+    // and the infinities into null. Nothing in this schema can be one:
+    // `graph-format`'s reader refuses a non-finite number, so a coordinate that
+    // reached TypeScript is always a number. Without this the whole of
     // `geometry.ts` would be null checks for a case that cannot happen.
     // specta-typescript 0.0.12 does not expose `enable_lossless_floats`
     // through its public API, so the flattening happens here instead.
-    let schema = schema.replace("number | null", "number");
+    //
+    // An *optional* float is left alone. `h?: number | null` comes from
+    // `Option<f64>`, where the null is the option and not the NaN, and
+    // flattening it would claim a value is always present when it is not.
+    const OPTIONAL: &str = "?: number | null";
+    const KEEP: &str = "\u{0}OPTIONAL-FLOAT\u{0}";
+    let schema = schema.replace(OPTIONAL, KEEP);
+    let schema = schema.replace(": number | null", ": number");
+    let schema = schema.replace(KEEP, OPTIONAL);
     assert!(
-        !schema.contains("number | null"),
-        "a float slipped through the flattening"
+        !schema.contains(": number | null") || schema.contains("?: number | null"),
+        "a required float slipped through the flattening"
     );
     std::fs::write(&out, schema).unwrap();
 
