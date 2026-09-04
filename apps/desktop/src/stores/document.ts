@@ -17,6 +17,7 @@ import { temporal } from "zundo";
 import {
   BLOCK_MIN_WIDTH,
   accepts,
+  convertible,
   kind as lookupKind,
   snap,
   type Block,
@@ -87,9 +88,29 @@ export interface DocumentState {
     from: { node: string; port: string },
     to: { node: string; port: string },
   ): boolean;
+  /**
+   * Put a Convert between two ports whose types are compatible but not the
+   * same (SPEC §15.5). Answers with the new block's id, or null.
+   */
+  convertOnWire(
+    from: { node: string; port: string },
+    to: { node: string; port: string },
+  ): string | null;
   deleteSelection(): void;
 
   setGraphField<K extends keyof Graph>(key: K, value: Graph[K]): void;
+}
+
+/** Halfway between two blocks, which is where a block inserted on a wire goes. */
+function between(
+  graph: Graph,
+  a: string,
+  b: string,
+): { x: number; y: number } {
+  const one = graph.blocks.find((block) => block.id === a)?.position;
+  const two = graph.blocks.find((block) => block.id === b)?.position;
+  if (!one || !two) return { x: 0, y: 0 };
+  return { x: Math.round((one.x + two.x) / 2), y: Math.round((one.y + two.y) / 2) };
 }
 
 /** A readable id: `llm`, then `llm-2`, `llm-3`. Ids end up in the file and in
@@ -383,6 +404,50 @@ export const useDocument = create<DocumentState>()(
           dirty: true,
         }));
         return true;
+      },
+
+      convertOnWire(from, to) {
+        const graph = get().graph;
+        const fromType = portTypeOf(graph, from.node, from.port, "out");
+        const toType = portTypeOf(graph, to.node, to.port, "in");
+        if (!fromType || !toType || !convertible(fromType, toType)) return null;
+
+        // "conversion is always a visible block" (SPEC §15.5). Not a property
+        // of the wire, not a quiet coercion in the engine: a block on the
+        // canvas that a person can select, read and delete.
+        const id = freshId(graph, "convert");
+        const midpoint = between(graph, from.node, to.node);
+        const convert: Block = {
+          id,
+          kind: "convert",
+          position: midpoint,
+          view: "summary",
+          settings: { to: toType },
+          ports: [],
+          disabled: false,
+          breakpoint: false,
+        };
+        set((state) => ({
+          graph: {
+            ...state.graph,
+            blocks: [...state.graph.blocks, convert],
+            wires: [
+              ...state.graph.wires,
+              {
+                id: freshId(state.graph, `${from.node}-${id}`),
+                from: { node: from.node, port: from.port },
+                to: { node: id, port: "value" },
+              },
+              {
+                id: freshId({ ...state.graph, wires: [...state.graph.wires] }, `${id}-${to.node}`),
+                from: { node: id, port: "value" },
+                to: { node: to.node, port: to.port },
+              },
+            ],
+          },
+          dirty: true,
+        }));
+        return id;
       },
 
       deleteSelection() {

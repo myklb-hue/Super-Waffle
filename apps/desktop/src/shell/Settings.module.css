@@ -1,0 +1,97 @@
+.screen {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-0);
+  overflow: auto;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-6);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: var(--fs-lg);
+  color: var(--text-hi);
+}
+
+.path {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+  gap: var(--sp-6);
+  padding: var(--sp-5) var(--sp-6);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.found {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.foundText {
+  min-width: 0;
+}
+
+.foundName {
+  font-size: var(--fs-sm);
+  color: var(--text-hi);
+}
+
+.foundDetail {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-mid);
+  overflow-wrap: anywhere;
+}
+
+.foundFix {
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--warn);
+}
+
+.note,
+.waiting {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-prose);
+  color: var(--text-low);
+}
+
+.waiting {
+  padding: var(--sp-6);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.saved {
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+}

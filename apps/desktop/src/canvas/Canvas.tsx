@@ -16,10 +16,12 @@ import '@xyflow/react/dist/style.css';
 import {
   GRID,
   accepts,
+  convertible,
   kind as lookupKind,
   refusal,
   type PortType,
 } from '@cyberloom/graph-core';
+import { Button } from '@cyberloom/ui';
 import { BlockNode, type BlockNodeData } from './BlockNode';
 import { LoopFrame, type LoopFrameData } from './LoopFrame';
 import { Wire, type WireData } from './Wire';
@@ -55,6 +57,8 @@ export function Canvas() {
   const selection = useDocument((d) => d.selection);
   const { screenToFlowPosition } = useReactFlow();
   const [drag, setDrag] = useState<DragState | null>(null);
+  /** A wire that nearly fit, waiting on an answer about a Convert (§15.5). */
+  const [offer, setOffer] = useState<Offer | null>(null);
   /**
    * How big each node turned out to be.
    *
@@ -233,12 +237,19 @@ export function Canvas() {
 
   const onConnect = useCallback((connection: Connection) => {
     if (!connection.sourceHandle || !connection.targetHandle) return;
-    useDocument
-      .getState()
-      .connect(
-        { node: connection.source, port: connection.sourceHandle },
-        { node: connection.target, port: connection.targetHandle },
-      );
+    const from = { node: connection.source, port: connection.sourceHandle };
+    const to = { node: connection.target, port: connection.targetHandle };
+    const store = useDocument.getState();
+    if (store.connect(from, to)) return;
+
+    // The types do not match but they are convertible, so offer the block that
+    // makes one into the other (SPEC §15.5). Offered rather than inserted: a
+    // conversion is always something you can see, and something you agreed to.
+    const fromType = portTypeOf(store.graph, from.node, from.port, 'out');
+    const toType = portTypeOf(store.graph, to.node, to.port, 'in');
+    if (fromType && toType && convertible(fromType, toType)) {
+      setOffer({ from, to, fromType, toType });
+    }
   }, []);
 
   /**
@@ -331,6 +342,7 @@ export function Canvas() {
         />
       </ReactFlow>
       <ZoomPill />
+      {offer && <ConvertOffer offer={offer} onDone={() => setOffer(null)} />}
       {drag && <DragTooltip drag={drag} />}
     </div>
   );
@@ -396,6 +408,47 @@ function DragTooltip({ drag }: { drag: DragState }) {
   return (
     <div className={s.dragTooltip} style={{ left: at.x + 14, top: at.y + 14 }}>
       {message}
+    </div>
+  );
+}
+
+/** A wire the grammar refused, and the Convert that would make it fit. */
+interface Offer {
+  from: { node: string; port: string };
+  to: { node: string; port: string };
+  fromType: PortType;
+  toType: PortType;
+}
+
+/**
+ * "The shell offers to insert a Convert block on the wire" (SPEC §15.5).
+ *
+ * Offered rather than done: a conversion is always a visible block, and a block
+ * that appeared because a drag nearly landed is a block nobody put there. One
+ * click makes it; anything else leaves the graph as it was.
+ */
+function ConvertOffer({ offer, onDone }: { offer: Offer; onDone: () => void }) {
+  const convertOnWire = useDocument((d) => d.convertOnWire);
+  const select = useDocument((d) => d.select);
+
+  return (
+    <div className={s.offer} data-testid="convert-offer">
+      <div className={s.offerText}>
+        <strong>{offer.fromType}</strong> does not fit <strong>{offer.toType}</strong>, but it can
+        be converted.
+      </div>
+      <div className={s.offerRow}>
+        <Button
+          label="Insert a Convert"
+          variant="primary"
+          onClick={() => {
+            const id = convertOnWire(offer.from, offer.to);
+            if (id) select({ kind: 'block', ids: [id] });
+            onDone();
+          }}
+        />
+        <Button label="Leave it" onClick={onDone} />
+      </div>
     </div>
   );
 }

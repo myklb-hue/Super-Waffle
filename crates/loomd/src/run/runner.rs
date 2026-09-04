@@ -156,6 +156,10 @@ pub struct Bench {
     /// Toolboxes not taking calls until a person resumes or `motor.home`
     /// succeeds (SPEC §9.1).
     stopped: std::sync::Mutex<HashSet<String>>,
+    /// Whether anything has already gone to a remote service this run
+    /// (SPEC §12.2). Run-long for the same reason the stopped Toolboxes are:
+    /// "the first time in a graph" is a fact about the run, not about one pass.
+    sent_away: std::sync::atomic::AtomicBool,
     /// Set for a run whose devices are scripted rather than real, which is how
     /// a graph with motors in it runs on a machine that has none.
     pub scripted: bool,
@@ -168,6 +172,13 @@ impl Bench {
             scripted: true,
             ..Self::default()
         }
+    }
+
+    /// Whether the warning about leaving this machine has already been given,
+    /// marking it given from now on.
+    fn already_sent(&self) -> bool {
+        self.sent_away
+            .swap(true, std::sync::atomic::Ordering::Relaxed)
     }
 
     /// The device this block is, opened the first time it is asked for.
@@ -1396,6 +1407,41 @@ impl<'a> Runner<'a> {
             top_p: blocks::number(block, "topP"),
             max_tokens: blocks::number(block, "maxTokens").map(|t| t as u32),
         };
+
+        // "Sending data to a remote model or service for the first time in a
+        // graph" warrants a warning (SPEC §12.2), and the Local only switch is
+        // what governs it (§15.4). Once per run, not once per turn: a
+        // conversation is one send as far as a person is concerned, and asking
+        // eight times in a tool loop is how a prompt becomes something people
+        // click through without reading.
+        if !self.provider.local() {
+            let where_to = self.provider.name().to_owned();
+            // Local only is the user's own switch, and it is on by default. A
+            // graph with it on does not send: that is not the application
+            // overruling anybody (§12.1), it is the setting doing what it says,
+            // and the message points at the switch rather than at the model.
+            if self.graph.local_only {
+                return Err(format!(
+                    "Local only is on for this graph, so nothing goes to {where_to}.                      Turn it off in the graph panel to allow a remote model."
+                ));
+            }
+            if !self.bench.already_sent() {
+                let agreed = self.permitted(
+                    st,
+                    Warning {
+                        block: block.id.clone(),
+                        action: format!("Send this to {where_to}"),
+                        reason: format!(
+                            "{where_to} is not on this machine. The prompt, and                              everything wired into it, leaves here."
+                        ),
+                        remember: true,
+                    },
+                );
+                if !agreed {
+                    return Err(format!("stopped before sending anything to {where_to}"));
+                }
+            }
+        }
 
         let mut request = request;
         let mut answer = String::new();

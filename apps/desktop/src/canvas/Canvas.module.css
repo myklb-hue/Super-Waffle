@@ -77,3 +77,37 @@
   stroke-width: 1.9;
   stroke-dasharray: 4 4;
 }
+
+/* The Convert offer (SPEC §15.5): a wire that nearly fitted, and one click to
+   make it fit. Above the zoom pill, out of the way of the canvas itself. */
+.offer {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--bg-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+}
+
+.offerText {
+  font-size: var(--fs-sm);
+  color: var(--text-mid);
+}
+
+.offerText strong {
+  font-family: var(--font-mono);
+  color: var(--text-hi);
+  font-weight: 500;
+}
+
+.offerRow {
+  display: flex;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+}

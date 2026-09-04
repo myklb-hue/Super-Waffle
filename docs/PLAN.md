@@ -1096,3 +1096,47 @@ What this environment cannot prove:
   hand its states over, which this slice did not open — the *vocabulary* is
   already generated from whatever rig the engine loaded, including a workspace
   one, so the model side works today and only the picture would be missing.
+
+---
+
+Found while building slice 11 (Workspace):
+
+- **`ffmpeg --version` is not how you ask ffmpeg its version.** It wants
+  `-version`, answers the long form with an error, and the first probe therefore
+  reported "not on the path" about a program sitting on the path. Both spellings
+  are tried now. The general lesson is the one the test says: a detection that
+  can be wrong in the *reassuring* direction is bad, and one that is wrong in the
+  alarming direction sends people to install what they already have.
+- **Two `show` calls for the same tab both got past the check.** The first
+  check happens before an `await`, so a second call while the engine is still
+  answering the first sees no tab and adds one too. React's development
+  double-invoke found it on the first load, which is exactly what it is for; the
+  fix is to check again inside `set`, where the state is actually current.
+- **Local only did not mean local only.** The switch existed in the file and in
+  the panel and nothing read it. A graph with it on now sends nothing to a
+  service that is not on this machine, and says where the switch is rather than
+  complaining about the model. That is not the application overruling anybody
+  (§12.1) — it is the user's own setting doing what it says.
+
+Two decisions worth recording:
+
+- **Chosen and detected are kept apart.** `workspace.yaml` holds four overrides
+  and a default; the probe holds what is installed, and is run every time the
+  settings screen opens. Writing detections into the settings file would make a
+  workspace remember where Python was in March and be wrong about it in April —
+  and a workspace copied to another machine would arrive confidently wrong
+  rather than simply undetected.
+- **A second workspace is a second engine.** One workspace per engine was the
+  engine's rule from slice 2 and it stayed: the picker asks the host to serve a
+  different folder and the host replaces the child process. The dev server does
+  this for real, so the picker works in a browser; the Tauri host does the same
+  thing with the same effect.
+
+What is worse than it should be, and why:
+
+- **Undo does not survive a tab switch.** There is one document store and one
+  time-travel middleware, and a tab switch loads a different graph into it.
+  Edits survive — the tab keeps its graph — but the history does not, which is
+  short of §15.7's "unlimited within a session". Fixing it properly means a
+  document store per tab, handed to components instead of imported by them: a
+  change worth making deliberately rather than as a side effect of adding tabs.

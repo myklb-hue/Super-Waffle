@@ -27,6 +27,15 @@ pub enum Request {
     /// The graphs in the workspace, by relative path.
     #[serde(rename = "workspace.list")]
     WorkspaceList,
+    /// What the workspace chose, and what is actually installed.
+    #[serde(rename = "workspace.settings")]
+    WorkspaceSettings,
+    /// Change what the workspace chose. The probe is not writable: it is a
+    /// description of the machine, not a preference.
+    #[serde(rename = "workspace.configure")]
+    WorkspaceConfigure {
+        settings: Box<crate::settings::WorkspaceSettings>,
+    },
     /// Read one graph.
     #[serde(rename = "graph.open")]
     GraphOpen { path: String },
@@ -115,6 +124,7 @@ pub enum Reply {
     EngineStatus(EngineStatus),
     Catalogue(Vec<block_kinds::BlockKind>),
     Workspace(Vec<GraphSummary>),
+    WorkspaceInfo(Box<WorkspaceInfo>),
     Graph(Box<OpenGraph>),
     Saved(Saved),
     Running(RunStarted),
@@ -190,6 +200,16 @@ pub struct EngineStatus {
     /// The catalogue's size, so a shell can tell at a glance whether it is
     /// talking to an engine that knows the same blocks it does.
     pub kinds: u32,
+}
+
+/// What the settings screen draws: what was chosen, and what is there.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceInfo {
+    /// The folder itself, so the screen can say which workspace this is.
+    pub root: String,
+    pub settings: crate::settings::WorkspaceSettings,
+    pub probe: crate::settings::Probe,
 }
 
 /// One row of the workspace list. Enough to draw a tab without opening the file.

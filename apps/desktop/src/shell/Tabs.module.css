@@ -1,0 +1,110 @@
+.tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 30px;
+  padding: 0 var(--sp-3);
+  background: var(--bg-0);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  color: var(--text-low);
+}
+
+.tab:hover {
+  color: var(--text-mid);
+}
+
+/* The tab in front is the one the canvas is drawing, so it joins the canvas:
+   same background, no line between them. */
+.active {
+  background: var(--bg-1);
+  border-color: var(--border);
+  color: var(--text-hi);
+}
+
+.name {
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  padding: 0;
+}
+
+.close,
+.add {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  background: none;
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--text-low);
+  cursor: pointer;
+}
+
+.close:hover,
+.add:hover {
+  background: var(--bg-2);
+  color: var(--text-hi);
+}
+
+.adder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: var(--sp-2);
+}
+
+.menu {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  z-index: 20;
+  min-width: 180px;
+  padding: var(--sp-2);
+  background: var(--bg-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg, 0 8px 24px rgb(0 0 0 / 0.4));
+}
+
+.choice {
+  display: block;
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  background: none;
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--text-mid);
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice:hover {
+  background: var(--bg-1);
+  color: var(--text-hi);
+}
+
+.empty {
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--text-low);
+  font-size: var(--fs-xs);
+}
+
+.hidden {
+  display: none;
+}

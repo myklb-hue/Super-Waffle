@@ -5,6 +5,8 @@ import { Chip, Icon, StatusDot, TypeDots, type IconName } from '@cyberloom/ui';
 import { Canvas } from '../canvas/Canvas';
 import { Console } from './Console';
 import { Inspector } from './Inspector';
+import { Settings } from './Settings';
+import { Tabs } from './Tabs';
 import { RunFigures, Transport, WarningPrompt } from './Transport';
 import { useDocument } from '../stores/document';
 import { useAutosave } from '../stores/autosave';
@@ -23,6 +25,7 @@ export interface ShellProps {
  */
 export function Shell({ engine }: ShellProps) {
   const save = useAutosave();
+  const [settings, setSettings] = useState(false);
   useKeyboard();
 
   // Two subscriptions for the window: one to the engine's events, one to the
@@ -32,7 +35,8 @@ export function Shell({ engine }: ShellProps) {
 
   return (
     <div className={s.shell}>
-      <TopBar saveState={save.state} />
+      <TopBar saveState={save.state} onSettings={() => setSettings(true)} />
+      <Tabs />
       <div className={s.middle}>
         <Library />
         {/* The canvas and the console share a column: the drawer belongs to
@@ -47,11 +51,18 @@ export function Shell({ engine }: ShellProps) {
       </div>
       <StatusBar engine={engine} saveError={save.error} />
       <WarningPrompt />
+      {settings && <Settings onClose={() => setSettings(false)} />}
     </div>
   );
 }
 
-function TopBar({ saveState }: { saveState: 'saved' | 'saving' | 'dirty' | 'failed' }) {
+function TopBar({
+  saveState,
+  onSettings,
+}: {
+  saveState: 'saved' | 'saving' | 'dirty' | 'failed';
+  onSettings: () => void;
+}) {
   const graph = useDocument((d) => d.graph);
   const path = useDocument((d) => d.path);
   const label = {
@@ -79,7 +90,14 @@ function TopBar({ saveState }: { saveState: 'saved' | 'saving' | 'dirty' | 'fail
           label={graph.localOnly ? 'local only' : 'remote allowed'}
           color={graph.localOnly ? 'text-mid' : 'warn'}
         />
-        <button type="button" className={s.iconButton} aria-label="More" disabled>
+        <button
+          type="button"
+          className={s.iconButton}
+          aria-label="Workspace settings"
+          title="Workspace settings"
+          data-testid="open-settings"
+          onClick={onSettings}
+        >
           <Icon name="dots" size={14} />
         </button>
       </div>

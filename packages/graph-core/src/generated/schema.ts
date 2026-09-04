@@ -138,6 +138,17 @@ export type Execution = {
 	timeoutSec: number,
 };
 
+/**  One thing looked for, and what was found. */
+export type Found = {
+	name: string,
+	/**  Whether it is there and usable. */
+	ok: boolean,
+	/**  The version, the path, or why not — in words a person can act on. */
+	detail: string,
+	/**  What to do about it, when there is something to do. */
+	fix: string | null,
+};
+
 /**
  *  A loop: a dashed frame on the canvas, not a card. Blocks inside it repeat
  *  once per item (SPEC §8.4).
@@ -348,6 +359,15 @@ export type Position = {
 	y: number,
 };
 
+/**  What is actually on this machine (SPEC §15.13, and slice 12's first run). */
+export type Probe = {
+	python: Found,
+	ffmpeg: Found,
+	ollama: Found,
+	/**  Where perception weights would go, and whether anything is there. */
+	models: Found,
+};
+
 export type Reparsed = {
 	/**  Every function the file declares, in the order it declares them. */
 	blocks: Interface[],
@@ -363,7 +383,7 @@ export type Reparsed = {
  *  TypeScript, reads them. Nothing in Rust parses one back, and the catalogue
  *  inside it is a table of `&'static str` that could not be parsed anyway.
  */
-export type Reply = { result: "engineStatus"; data: EngineStatus } | { result: "catalogue"; data: BlockKind[] } | { result: "workspace"; data: GraphSummary[] } | { result: "graph"; data: OpenGraph } | { result: "saved"; data: Saved } | { result: "running"; data: RunStarted } | 
+export type Reply = { result: "engineStatus"; data: EngineStatus } | { result: "catalogue"; data: BlockKind[] } | { result: "workspace"; data: GraphSummary[] } | { result: "workspaceInfo"; data: WorkspaceInfo } | { result: "graph"; data: OpenGraph } | { result: "saved"; data: Saved } | { result: "running"; data: RunStarted } | 
 /**
  *  What the code says the block's interface is, or why it could not be
  *  read. A failure is a reply, not an error: the block shows the line
@@ -386,6 +406,15 @@ export type Request =
 { method: "graph.catalogue" } | 
 /**  The graphs in the workspace, by relative path. */
 { method: "workspace.list" } | 
+/**  What the workspace chose, and what is actually installed. */
+{ method: "workspace.settings" } | 
+/**
+ *  Change what the workspace chose. The probe is not writable: it is a
+ *  description of the machine, not a preference.
+ */
+{ method: "workspace.configure"; params: {
+	settings: WorkspaceSettings,
+} } | 
 /**  Read one graph. */
 { method: "graph.open"; params: {
 	path: string,
@@ -837,4 +866,29 @@ export type Wire = {
 	id: string,
 	from: Endpoint,
 	to: Endpoint,
+};
+
+/**  What the settings screen draws: what was chosen, and what is there. */
+export type WorkspaceInfo = {
+	/**  The folder itself, so the screen can say which workspace this is. */
+	root: string,
+	settings: WorkspaceSettings,
+	probe: Probe,
+};
+
+/**  What the user chose, stored in `workspace.yaml`. */
+export type WorkspaceSettings = {
+	/**  Where Python is, or none to use whatever `python3` resolves to. */
+	python: string | null,
+	/**  Where model weights live, or none for the default beside the workspace. */
+	models: string | null,
+	/**  The Ollama endpoint, or none for the local default. */
+	ollama: string | null,
+	/**
+	 *  What a new graph starts with (SPEC §15.4). On, always, unless the user
+	 *  has said otherwise for this workspace.
+	 */
+	localOnlyDefault: boolean,
+	/**  The model a new graph starts with. */
+	model: string | null,
 };

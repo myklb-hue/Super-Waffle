@@ -20,3 +20,18 @@
   font-size: var(--fs-sm);
   color: var(--err);
 }
+
+.waitingAction {
+  margin-top: var(--sp-4);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--bg-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  color: var(--text-mid);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.waitingAction:hover {
+  color: var(--text-hi);
+}

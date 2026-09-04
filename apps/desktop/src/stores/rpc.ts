@@ -26,6 +26,7 @@ import type {
   RunEvent,
   RunStarted,
   Saved,
+  WorkspaceSettings,
 } from '@cyberloom/graph-core';
 
 declare global {
@@ -96,6 +97,33 @@ export async function engineStatus() {
 export async function listWorkspace() {
   const reply = await call({ method: 'workspace.list' });
   if (reply.result !== 'workspace') throw new Error('the engine did not list the workspace');
+  return reply.data;
+}
+
+/**
+ * Ask the host to serve a different folder (SPEC §15.6).
+ *
+ * One workspace per engine, so this replaces the engine rather than switching a
+ * mode inside it. In the browser the dev server does the replacing; a packaged
+ * build has the Tauri host doing the same thing with the same effect.
+ */
+export async function useWorkspace(path: string): Promise<string> {
+  const answer = await fetch(`/workspace?path=${encodeURIComponent(path)}`);
+  if (!answer.ok) throw new Error(`could not open ${path}`);
+  const body = (await answer.json()) as { workspace: string };
+  return body.workspace;
+}
+
+/** What this workspace chose, and what is actually installed (SPEC §3). */
+export async function workspaceSettings() {
+  const reply = await call({ method: 'workspace.settings' });
+  if (reply.result !== 'workspaceInfo') throw new Error('the engine did not describe the workspace');
+  return reply.data;
+}
+
+export async function configureWorkspace(settings: WorkspaceSettings) {
+  const reply = await call({ method: 'workspace.configure', params: { settings } });
+  if (reply.result !== 'workspaceInfo') throw new Error('the engine did not save the settings');
   return reply.data;
 }
 

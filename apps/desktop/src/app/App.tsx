@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Shell } from '../shell/Shell';
-import { useDocument } from '../stores/document';
-import { engineStatus, listWorkspace, openGraph } from '../stores/rpc';
+import { Picker, remember } from '../shell/Picker';
+import { engineStatus, listWorkspace, useWorkspace } from '../stores/rpc';
+import { useTabs } from '../stores/tabs';
 import s from './App.module.css';
 
 type State =
@@ -10,19 +11,31 @@ type State =
   | { phase: 'unreachable'; message: string };
 
 /**
- * Opens the first graph in the workspace and draws it.
+ * Starts the engine, opens a graph and draws it.
  *
- * There is no workspace picker and no tabs yet: those are slice 11. What this
- * proves is the whole path — engine process, socket, format, catalogue,
- * geometry, renderer — with a real file at one end and pixels at the other.
+ * The app decides which graph opens first and nothing else: from there the tab
+ * strip owns what is open and the document store owns what is being edited.
  */
 export function App() {
   const [state, setState] = useState<State>({ phase: 'starting' });
+  // The folder to serve, from the URL. Absent means "whatever the host started
+  // with", which is how the application opens where it left off; `?pick`
+  // forces the picker (SPEC §15.6).
+  const [workspace, setWorkspace] = useState<string | null>(() => {
+    const asked = new URLSearchParams(window.location.search);
+    if (asked.has('pick')) return null;
+    return asked.get('workspace') ?? 'default';
+  });
 
   useEffect(() => {
+    if (workspace === null) return;
     let cancelled = false;
     (async () => {
       try {
+        if (workspace !== 'default') {
+          await useWorkspace(workspace);
+          remember(workspace);
+        }
         const status = await engineStatus();
         const graphs = await listWorkspace();
         if (graphs.length === 0) {
@@ -31,16 +44,13 @@ export function App() {
           }
           return;
         }
-        // Until the workspace picker and tabs exist (slice 11), `?graph=`
-        // chooses which one to open. It is also how the screenshot tests reach
-        // a fixture other than the first.
+        // `?graph=` chooses which one opens first, and is how a screenshot
+        // test reaches a fixture other than the first. Everything after that is
+        // the tab strip's business (SPEC §15.6).
         const wanted = new URLSearchParams(window.location.search).get('graph');
         const chosen = graphs.find((g) => g.path.includes(wanted ?? '')) ?? graphs[0]!;
-        const open = await openGraph(chosen.path);
+        await useTabs.getState().show(chosen.path);
         if (cancelled) return;
-        // The document store owns the graph from here; the app only decides
-        // which file to hand it.
-        useDocument.getState().load(open.path, open.graph, open.problems);
         setState({ phase: 'ready', detail: `${status.version} · ${status.graphs} graphs` });
       } catch (error) {
         if (!cancelled) {
@@ -54,7 +64,18 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [workspace]);
+
+  if (workspace === null) {
+    return (
+      <Picker
+        onOpen={(path) => {
+          setState({ phase: 'starting' });
+          setWorkspace(path);
+        }}
+      />
+    );
+  }
 
   if (state.phase === 'starting') {
     return <div className={s.waiting}>Starting the engine…</div>;
@@ -67,6 +88,11 @@ export function App() {
       <div className={s.waiting}>
         <div className={s.waitingTitle}>The engine is not answering</div>
         <div className={s.waitingDetail}>{state.message}</div>
+        {/* A workspace that will not open is a reason to choose another one,
+            not a dead end. */}
+        <button type="button" className={s.waitingAction} onClick={() => setWorkspace(null)}>
+          Open a different workspace
+        </button>
       </div>
     );
   }

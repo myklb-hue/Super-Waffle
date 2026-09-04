@@ -22,10 +22,20 @@ function engine(): Plugin {
   /** Everyone listening on /events. A run's events go to all of them. */
   const listeners = new Set<import('node:http').ServerResponse>();
   let nextId = 1;
+  /**
+   * The folder the current engine is serving.
+   *
+   * One workspace per engine is the engine's own rule, so switching workspaces
+   * is starting a different engine — which is exactly what the Tauri host does
+   * too. Here the shell asks by sending `?workspace=`, and the child is
+   * replaced.
+   */
+  let serving: string | null = null;
 
   function start(): Engine {
     if (child) return child;
-    const workspace = process.env.CYBERLOOM_WORKSPACE ?? `${root}fixtures`;
+    const workspace = serving ?? process.env.CYBERLOOM_WORKSPACE ?? `${root}fixtures`;
+    serving = workspace;
     const binary = process.env.LOOMD ?? `${root}target/debug/loomd`;
     const started = spawn(binary, ['--workspace', workspace], {
       stdio: ['pipe', 'pipe', 'inherit'],
@@ -63,6 +73,20 @@ function engine(): Plugin {
   return {
     name: 'cyberloom-engine',
     configureServer(server) {
+      // Which folder to serve. A different one replaces the child: one
+      // workspace per engine (see `Engine` in the crate), so a second workspace
+      // is a second engine rather than a mode inside this one.
+      server.middlewares.use('/workspace', (req, res) => {
+        const wanted = new URL(req.url ?? '/', 'http://x').searchParams.get('path');
+        if (wanted && wanted !== serving) {
+          serving = wanted;
+          child?.kill();
+          child = null;
+        }
+        res.setHeader('content-type', 'application/json');
+        res.end(JSON.stringify({ workspace: serving ?? `${root}fixtures` }));
+      });
+
       server.middlewares.use('/rpc', (req, res) => {
         const chunks: Buffer[] = [];
         req.on('data', (c: Buffer) => chunks.push(c));

@@ -7,6 +7,7 @@
 pub mod rpc;
 pub mod run;
 pub mod session;
+pub mod settings;
 pub mod workspace;
 
 pub use rpc::{
@@ -55,6 +56,36 @@ impl Engine {
             },
 
             Request::GraphCatalogue => Reply::Catalogue(block_kinds::KINDS.to_vec()),
+
+            Request::WorkspaceSettings => {
+                let root = self.workspace.root();
+                let settings = crate::settings::WorkspaceSettings::read(root);
+                // Probed here rather than remembered: someone who has just
+                // installed ffmpeg in another window should see that by opening
+                // this screen, not by restarting the application.
+                let probe = crate::settings::Probe::now(&settings, root);
+                Reply::WorkspaceInfo(Box::new(rpc::WorkspaceInfo {
+                    root: root.display().to_string(),
+                    settings,
+                    probe,
+                }))
+            }
+
+            Request::WorkspaceConfigure { settings } => {
+                let root = self.workspace.root();
+                match settings.write(root) {
+                    Err(e) => Reply::Error(RpcError::new("settings", e)),
+                    Ok(()) => {
+                        let settings = crate::settings::WorkspaceSettings::read(root);
+                        let probe = crate::settings::Probe::now(&settings, root);
+                        Reply::WorkspaceInfo(Box::new(rpc::WorkspaceInfo {
+                            root: root.display().to_string(),
+                            settings,
+                            probe,
+                        }))
+                    }
+                }
+            }
 
             Request::WorkspaceList => match self.workspace.graphs() {
                 Err(e) => Reply::Error(RpcError::new("workspace", e.to_string())),
