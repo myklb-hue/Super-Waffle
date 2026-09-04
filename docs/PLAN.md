@@ -855,3 +855,44 @@ per event rather than completing its archive and its Slack message. The live
 machinery is complete and proven — sources arm, events fire only what is below
 them, the loop repeats, the branch chooses, a hold holds and a stop releases
 the port. The two leaf blocks belong to §6.2 and §6.9 and to their own slices.
+
+Found while building slice 7:
+
+- **A scratch folder named by pid and run id is not unique.** Two runs of one
+  graph, a restarted run, or a test suite running in parallel all give two
+  scratches one directory, and the first to finish deletes the other's frames
+  out from under it. Same class as slice 5's driver collision, and the fix is
+  the same: a process-wide counter in the name.
+- **`f32` is the wrong width at a JSON boundary.** A detector produces `f32`
+  and a confidence of 0.88 arrives in a panel as `0.8799999952316284`. The
+  same lesson as slice 4's temperature, stated as a rule this time: the width
+  is chosen for the boundary, not for the producer.
+- **`box` is a Rust keyword and that is Rust's problem, not the protocol's.**
+  A field called `box_` was leaking the workaround into the wire format.
+
+Two decisions worth recording:
+
+- **Capture goes through ffmpeg**, not through V4L2 and PipeWire directly. The
+  alternative is unsafe ioctls, a format-negotiation dance per device and a
+  different set of both per platform, to do badly what one subprocess already
+  does well. It also gives a machine with no camera a camera: `lavfi:testsrc`
+  is a real ffmpeg source, so a graph with a Webcam in it runs on a laptop
+  with the lid shut, on a server, and in a test — which is the only reason any
+  of slice 7 could be written here.
+- **The privacy default is where the file is written.** SPEC §12.3 says frames
+  and audio are not recorded unless the user turns recording on, so capture
+  writes into a per-run folder that is deleted when the run ends, and `store`
+  is what copies it somewhere durable. Nothing has to remember to clean up,
+  because the folder going away takes everything with it.
+
+What this environment cannot prove, and what it now can:
+
+- **Capture is real.** ffmpeg is installed, frames and audio are really
+  captured, and the resolution and sample rate that come back are checked with
+  ffprobe. There is no camera here; `lavfi:` stands in for one, and the same
+  code path opens `/dev/video0` on a machine that has one.
+- **Perception is not.** `huggingface.co` and the GitHub release hosts are
+  denied by the network policy, so there are no weights. Object detection,
+  face recognition, speech and affect are a trait with a real
+  ONNX-through-Python implementation and a scripted one; every path through
+  the engine is pinned down, and whether yolo-v8n finds a door is not.

@@ -98,6 +98,8 @@ fn run(graph: &graph_format::Graph) -> (Summary, Vec<RunEvent>, Vec<Warning>) {
         provider: &provider,
         run: "frames".into(),
         cancel: Default::default(),
+        scratch: std::sync::Arc::new(loomd::run::sense::Scratch::open("t").unwrap()),
+        eye: std::sync::Arc::new(loomd::run::perceive::Scripted::default()),
     }
     .execute(&mut |e| events.push(e), &mut |w| {
         asked.push(w.clone());

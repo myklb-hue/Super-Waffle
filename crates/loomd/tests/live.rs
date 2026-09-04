@@ -55,6 +55,10 @@ impl Running {
                 run: "live".into(),
                 cancel: stop,
                 paused: hold,
+                scratch: std::sync::Arc::new(
+                    loomd::run::sense::Scratch::open("live-test").unwrap(),
+                ),
+                eye: std::sync::Arc::new(loomd::run::perceive::Scripted::default()),
             }
             .execute(
                 &mut |event| {

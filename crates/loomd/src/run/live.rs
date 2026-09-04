@@ -50,6 +50,8 @@ pub struct Live<'a> {
     /// Set while the graph is paused: events keep queueing, nothing runs
     /// (SPEC §8.1).
     pub paused: Arc<AtomicBool>,
+    pub scratch: Arc<super::sense::Scratch>,
+    pub eye: Arc<dyn super::perceive::Perception>,
 }
 
 impl Live<'_> {
@@ -283,6 +285,8 @@ impl Live<'_> {
             provider: self.provider,
             run: self.run.clone(),
             cancel: Arc::clone(&self.cancel),
+            scratch: Arc::clone(&self.scratch),
+            eye: Arc::clone(&self.eye),
         };
         let summary = runner.execute_steps(&steps, seeded, emit, ask);
 
@@ -351,6 +355,8 @@ mod tests {
             run: "r".into(),
             cancel: Default::default(),
             paused: Default::default(),
+            scratch: Arc::new(crate::run::sense::Scratch::open("absorb-test").unwrap()),
+            eye: Arc::new(crate::run::perceive::Scripted::default()),
         };
         let (tx, rx) = channel();
         for event in events {

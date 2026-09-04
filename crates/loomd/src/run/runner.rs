@@ -28,6 +28,17 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
+/// Bytes, as a person reads them.
+fn human(bytes: u32) -> String {
+    if bytes < 1024 {
+        format!("{bytes} B")
+    } else if bytes < 1024 * 1024 {
+        format!("{:.0} kB", f64::from(bytes) / 1024.0)
+    } else {
+        format!("{:.1} MB", f64::from(bytes) / (1024.0 * 1024.0))
+    }
+}
+
 /// How many times a model may call tools before answering.
 ///
 /// A model that keeps calling and never concludes is a real failure mode, and
@@ -88,6 +99,10 @@ pub struct Runner<'a> {
     /// killing a shell halfway leaves the user's machine in a state the graph
     /// never described.
     pub cancel: Arc<AtomicBool>,
+    /// Where frames and audio live while the run lasts (SPEC §12.3).
+    pub scratch: Arc<super::sense::Scratch>,
+    /// What reads a frame or a sound.
+    pub eye: Arc<dyn super::perceive::Perception>,
 }
 
 struct State<'a> {
@@ -292,6 +307,12 @@ impl<'a> Runner<'a> {
             "terminal" => self.run_terminal(block, &inputs, st),
             "python" => self.run_python(block, &inputs, st),
             "custom" => self.run_custom(block, &inputs, st),
+            "webcam" | "microphone" | "keyboard" | "display" | "speaker" => {
+                self.run_device(block, &inputs, st)
+            }
+            "objectDetection" | "object-detection" | "face-recognition" | "speechToText"
+            | "speech-to-text" | "textToSpeech" | "text-to-speech" | "classifier" | "affect"
+            | "embedding" => self.run_perception(block, &inputs, st),
             _ => blocks::pure_step(block, &inputs).map(|o| (o, None)),
         };
 
@@ -918,6 +939,235 @@ impl<'a> Runner<'a> {
         }
         let figure = Some(format!("{} ms", ran.ms));
         Ok((outputs, figure))
+    }
+
+    /// A block that reaches the world: a camera, a microphone, a screen, a
+    /// speaker (SPEC §6.4, §6.6).
+    fn run_device(
+        &self,
+        block: &Block,
+        inputs: &Outputs,
+        st: &mut State<'_>,
+    ) -> Result<(Outputs, Option<String>), String> {
+        use super::sense::{self, Input, Kind};
+        let mut out = Outputs::new();
+
+        match block.kind.as_str() {
+            "webcam" => {
+                let device = blocks::setting(block, "device").unwrap_or("lavfi:testsrc");
+                let into = self.scratch.file(&block.id, "png");
+                let frame = sense::frame(
+                    &Input::read(device, Kind::Video),
+                    blocks::setting(block, "resolution"),
+                    &into,
+                )?;
+                let frame = self.record_if_asked(block, frame, st)?;
+                let figure = format!("{} · {}", frame.mime, human(frame.bytes));
+                out.insert("frames".into(), Value::Image(frame));
+                return Ok((out, Some(figure)));
+            }
+            "microphone" => {
+                let device = blocks::setting(block, "device").unwrap_or("lavfi:sine");
+                let into = self.scratch.file(&block.id, "wav");
+                // A microphone with no length listens for a second: long
+                // enough to hold a word, short enough that a live graph is not
+                // waiting on it.
+                let seconds = blocks::number(block, "seconds").unwrap_or(1.0);
+                let heard = sense::audio(&Input::read(device, Kind::Audio), seconds, &into)?;
+                let heard = self.record_if_asked(block, heard, st)?;
+                let figure = format!("{seconds:.1}s · {}", human(heard.bytes));
+                out.insert("audio".into(), Value::Audio(heard));
+                return Ok((out, Some(figure)));
+            }
+            "keyboard" => {
+                // A Keyboard is a source in a live graph; as a step it stands
+                // for whatever was typed into its placeholder, which is what
+                // makes a graph runnable while it is being built.
+                let typed = blocks::setting(block, "placeholder").unwrap_or_default();
+                out.insert("text".into(), Value::Text(typed.to_owned()));
+                return Ok((out, None));
+            }
+            "display" => {
+                // A screen is a later slice; what a Display can honestly do
+                // now is put what it was given where a person will see it.
+                let shown = inputs.get("text").map(Value::as_text).unwrap_or_default();
+                self.console(st, Some(&block.id), Level::Info, shown.clone());
+                return Ok((out, Some(shown.chars().take(40).collect())));
+            }
+            "speaker" => {
+                let Some(Value::Audio(sound)) = inputs.get("audio") else {
+                    return Err("nothing is wired to the speaker's audio port".into());
+                };
+                sense::play(sound, blocks::setting(block, "device"))?;
+                return Ok((out, Some(human(sound.bytes))));
+            }
+            _ => {}
+        }
+        Err(format!(
+            "`{}` is not a device this engine can reach",
+            block.kind
+        ))
+    }
+
+    /// Recording is what moves a capture somewhere durable (SPEC §12.3).
+    ///
+    /// The default is off, and off means the file stays in the run's folder
+    /// and goes away with it. Nothing has to remember to delete anything.
+    fn record_if_asked(
+        &self,
+        block: &Block,
+        what: super::value::Media,
+        st: &mut State<'_>,
+    ) -> Result<super::value::Media, String> {
+        if !blocks::flag(block, "store") {
+            return Ok(what);
+        }
+        let into = self.root.join("recordings").join(&block.id);
+        let kept = super::sense::keep(&what, &into)?;
+        self.console(
+            st,
+            Some(&block.id),
+            Level::Warn,
+            format!("recorded to {}", kept.path),
+        );
+        Ok(kept)
+    }
+
+    /// A block that reads what a frame or a sound contains (SPEC §6.1).
+    fn run_perception(
+        &self,
+        block: &Block,
+        inputs: &Outputs,
+        st: &mut State<'_>,
+    ) -> Result<(Outputs, Option<String>), String> {
+        use super::perceive::{Affect, detections_as_value};
+        let mut out = Outputs::new();
+        let model = blocks::setting(block, "model").unwrap_or("");
+
+        let image = || match inputs.get("image") {
+            Some(Value::Image(media)) => Ok(media.clone()),
+            Some(other) => Err(format!(
+                "the image port was given {}, which is not a frame",
+                other.port_type().as_str()
+            )),
+            None => Err("nothing is wired to the image port".to_owned()),
+        };
+        let text = || {
+            inputs
+                .get("text")
+                .map(Value::as_text)
+                .ok_or_else(|| "nothing is wired to the text port".to_owned())
+        };
+
+        match block.kind.as_str() {
+            "objectDetection" | "object-detection" => {
+                let seen = self
+                    .eye
+                    .detect(&image()?, model)
+                    .map_err(|e| e.to_string())?;
+                let figure = if seen.is_empty() {
+                    "nothing".to_owned()
+                } else {
+                    format!("{} · {}", seen.len(), seen[0].label)
+                };
+                out.insert("objects".into(), detections_as_value(&seen));
+                Ok((out, Some(figure)))
+            }
+            "face-recognition" => {
+                // Enrolment is off by default and this engine does not enrol:
+                // §12.2 lists enrolling a new face as warranting a warning,
+                // and a warning nobody can answer is not one.
+                if blocks::flag(block, "enrolment") {
+                    self.console(
+                        st,
+                        Some(&block.id),
+                        Level::Warn,
+                        "enrolment is on, and this engine cannot enrol yet".into(),
+                    );
+                }
+                let threshold = blocks::number(block, "threshold").unwrap_or(0.6);
+                let who = self
+                    .eye
+                    .recognise(&image()?, threshold)
+                    .map_err(|e| e.to_string())?;
+                let figure = who.name.clone().unwrap_or_else(|| "someone".into());
+                out.insert(
+                    "person".into(),
+                    Value::Data(serde_json::to_value(&who).unwrap_or(serde_json::Value::Null)),
+                );
+                Ok((out, Some(figure)))
+            }
+            "speechToText" | "speech-to-text" => {
+                let Some(Value::Audio(sound)) = inputs.get("audio") else {
+                    return Err("nothing is wired to the audio port".into());
+                };
+                let heard = self
+                    .eye
+                    .transcribe(sound, model)
+                    .map_err(|e| e.to_string())?;
+                let figure = format!("{:.1}s", heard.seconds);
+                out.insert("text".into(), Value::Text(heard.text));
+                Ok((out, Some(figure)))
+            }
+            "textToSpeech" | "text-to-speech" => {
+                let into = self.scratch.file(&block.id, "wav");
+                let said = self
+                    .eye
+                    .speak(
+                        &text()?,
+                        blocks::setting(block, "voice").unwrap_or(""),
+                        &into,
+                    )
+                    .map_err(|e| e.to_string())?;
+                let figure = human(said.bytes);
+                out.insert("audio".into(), Value::Audio(said));
+                Ok((out, Some(figure)))
+            }
+            "classifier" => {
+                let labels: Vec<String> = match block.settings.get("labels") {
+                    Some(graph_format::Setting::List(items)) => items
+                        .iter()
+                        .map(|i| match i {
+                            graph_format::Setting::String(s) => s.clone(),
+                            other => format!("{other:?}"),
+                        })
+                        .collect(),
+                    _ => Vec::new(),
+                };
+                let (label, confidence) = self
+                    .eye
+                    .classify(&text()?, &labels)
+                    .map_err(|e| e.to_string())?;
+                out.insert(
+                    "data".into(),
+                    Value::Data(serde_json::json!({ "label": label, "confidence": confidence })),
+                );
+                Ok((out, Some(label)))
+            }
+            "affect" => {
+                let mood: Affect = self.eye.affect(&text()?).map_err(|e| e.to_string())?;
+                let figure = mood.expression().to_owned();
+                out.insert(
+                    "affect".into(),
+                    Value::Data(serde_json::json!({
+                        "valence": mood.valence,
+                        "arousal": mood.arousal,
+                        // The expression is carried, not inferred downstream:
+                        // an Avatar should not have to know the thresholds
+                        // (SPEC §11.2).
+                        "express": mood.expression(),
+                    })),
+                );
+                Ok((out, Some(figure)))
+            }
+            "embedding" => {
+                let vector = self.eye.embed(&text()?, model).map_err(|e| e.to_string())?;
+                let figure = format!("{} dims", vector.len());
+                out.insert("data".into(), Value::Data(serde_json::json!(vector)));
+                Ok((out, Some(figure)))
+            }
+            other => Err(format!("`{other}` is not a perception this engine has")),
+        }
     }
 
     // ------------------------------------------------------------ the model

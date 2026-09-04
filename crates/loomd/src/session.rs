@@ -126,6 +126,27 @@ impl Session {
                 // The graph says which it is. Once runs top to bottom and
                 // stops; Live and Schedule arm the sources and never finish on
                 // their own (SPEC §8.1).
+                // One scratch folder for the whole run: frames and audio live
+                // in it and go away with it (SPEC §12.3).
+                let scratch = match crate::run::sense::Scratch::open(&id) {
+                    Ok(s) => Arc::new(s),
+                    Err(e) => {
+                        session.send_event(&crate::run::event::RunEvent::Console {
+                            run: id.clone(),
+                            source: None,
+                            level: crate::run::event::Level::Error,
+                            message: format!("could not make a scratch folder: {e}"),
+                        });
+                        session.runs.lock().unwrap().remove(&id);
+                        return;
+                    }
+                };
+                let eye: Arc<dyn crate::run::perceive::Perception> =
+                    Arc::new(crate::run::perceive::Local::new(
+                        models_folder(),
+                        std::path::PathBuf::from("python3"),
+                    ));
+
                 match graph.run_mode {
                     graph_format::RunMode::Once => {
                         Runner {
@@ -134,6 +155,8 @@ impl Session {
                             provider: provider.as_ref(),
                             run: id.clone(),
                             cancel,
+                            scratch,
+                            eye,
                         }
                         .execute(emit, ask);
                     }
@@ -145,6 +168,8 @@ impl Session {
                             run: id.clone(),
                             cancel,
                             paused,
+                            scratch,
+                            eye,
                         }
                         .execute(emit, ask);
                     }
@@ -241,6 +266,20 @@ impl Session {
     pub fn finish(&self) {
         let _ = self.out.send(Outgoing::Done);
     }
+}
+
+/// Where perception models live.
+///
+/// `~/.local/share/cyberloom/models`, or `CYBERLOOM_MODELS`. Under the user's
+/// own data folder rather than the workspace: weights are large, shared
+/// between graphs, and have no business in a folder someone might commit.
+fn models_folder() -> std::path::PathBuf {
+    if let Some(set) = std::env::var_os("CYBERLOOM_MODELS") {
+        return std::path::PathBuf::from(set);
+    }
+    let home = std::env::var_os("HOME").map(std::path::PathBuf::from);
+    home.unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join(".local/share/cyberloom/models")
 }
 
 /// Which provider a graph's models should go through.
