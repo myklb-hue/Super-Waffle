@@ -177,3 +177,59 @@
   background: var(--field);
   margin-bottom: var(--sp-3);
 }
+
+/* The rig picker: a look is chosen by looking at it (SPEC §11.1). */
+.rigRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.rigChoice {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: var(--sp-2);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-mid);
+  cursor: pointer;
+}
+
+.rigChoice:hover {
+  border-color: var(--border-strong);
+}
+
+.rigChosen {
+  border-color: var(--cat-actuators);
+  color: var(--text-hi);
+}
+
+.rigName {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+.wordChip {
+  padding: 3px 8px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-mid);
+  cursor: default;
+}
+
+.wordChosen {
+  border-color: var(--accent);
+  color: var(--text-hi);
+}
+
+.faceLive {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}

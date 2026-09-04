@@ -337,6 +337,86 @@ fn describe(path: &Path, mime: &str) -> Result<Media, String> {
     })
 }
 
+/// How many buckets a lip-sync envelope has per second of audio.
+///
+/// Twelve is a mouth that moves with the syllables rather than with the
+/// waveform: fast enough to look like speech, slow enough that the shell is
+/// drawing a mouth rather than an oscilloscope.
+pub const ENVELOPE_HZ: usize = 12;
+
+/// The loudness of a sound over time, 0–255 per bucket (SPEC §11.3).
+///
+/// Lip sync never involves the model: the mouth is driven by the audio that is
+/// actually about to play. This reads that audio and hands the shell a shape it
+/// can animate, which is a few hundred bytes rather than a few hundred
+/// kilobytes — the sound itself never needs to cross the socket for the mouth
+/// to move in time with it.
+///
+/// It reads 16-bit PCM WAV, which is what `audio()` writes and what every
+/// text-to-speech in the chain produces. Anything else gets an empty envelope
+/// and a closed mouth, which is wrong but quiet — a face that will not lip sync
+/// is better than a run that stops.
+pub fn envelope(what: &Media) -> Vec<u8> {
+    let Ok(bytes) = std::fs::read(&what.path) else {
+        return Vec::new();
+    };
+    // The `data` chunk, found by walking the RIFF chunks rather than assuming
+    // it starts at byte 44: ffmpeg writes a LIST chunk before it often enough
+    // that the assumption is a bug waiting for a different encoder.
+    let (rate, data) = match riff(&bytes) {
+        Some(found) => found,
+        None => return Vec::new(),
+    };
+    let samples: Vec<i16> = data
+        .chunks_exact(2)
+        .map(|c| i16::from_le_bytes([c[0], c[1]]))
+        .collect();
+    if samples.is_empty() || rate == 0 {
+        return Vec::new();
+    }
+    let per_bucket = (rate as usize / ENVELOPE_HZ).max(1);
+    samples
+        .chunks(per_bucket)
+        .map(|bucket| {
+            // Peak rather than mean: a mouth follows the loudest thing in the
+            // frame, and a mean over a hundredth of a second of speech is
+            // mostly the silence between the consonants.
+            let peak = bucket
+                .iter()
+                .map(|s| s.unsigned_abs() as u32)
+                .max()
+                .unwrap_or(0);
+            (peak * 255 / i16::MAX as u32).min(255) as u8
+        })
+        .collect()
+}
+
+/// The sample rate and the `data` chunk of a 16-bit PCM WAV.
+fn riff(bytes: &[u8]) -> Option<(u32, &[u8])> {
+    if bytes.len() < 12 || &bytes[0..4] != b"RIFF" || &bytes[8..12] != b"WAVE" {
+        return None;
+    }
+    let mut at = 12;
+    let mut rate = 0u32;
+    let word = |b: &[u8], at: usize| u32::from_le_bytes([b[at], b[at + 1], b[at + 2], b[at + 3]]);
+    while at + 8 <= bytes.len() {
+        let id = &bytes[at..at + 4];
+        let size = word(bytes, at + 4) as usize;
+        let body = at + 8;
+        if body + size > bytes.len() {
+            return None;
+        }
+        match id {
+            b"fmt " if size >= 16 => rate = word(bytes, body + 4),
+            b"data" => return Some((rate, &bytes[body..body + size])),
+            _ => {}
+        }
+        // Chunks are word-aligned: an odd size is followed by a pad byte.
+        at = body + size + (size & 1);
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -538,5 +618,96 @@ mod tests {
         let names: Vec<PathBuf> = (0..50).map(|_| scratch.file("webcam", "png")).collect();
         let unique: std::collections::HashSet<_> = names.iter().collect();
         assert_eq!(unique.len(), names.len());
+    }
+
+    /// Lip sync is driven by the audio that is about to play, so the envelope
+    /// has to actually follow it: a second of silence and a second of tone
+    /// must not look the same.
+    #[test]
+    fn an_envelope_follows_the_sound_it_was_made_from() {
+        let scratch = Scratch::open("envelope-test").unwrap();
+        let loud = scratch.file("tone", "wav");
+        let quiet = scratch.file("hush", "wav");
+        audio(&Input::Synthetic("sine=frequency=440".into()), 1.0, &loud).unwrap();
+        audio(
+            &Input::Synthetic("anullsrc=r=16000:cl=mono".into()),
+            1.0,
+            &quiet,
+        )
+        .unwrap();
+
+        let tone = envelope(&Media {
+            path: loud.display().to_string(),
+            mime: "audio/wav".into(),
+            bytes: 0,
+        });
+        let hush = envelope(&Media {
+            path: quiet.display().to_string(),
+            mime: "audio/wav".into(),
+            bytes: 0,
+        });
+        assert!(
+            tone.len() >= ENVELOPE_HZ - 1 && tone.len() <= ENVELOPE_HZ + 1,
+            "a second of audio should be about {ENVELOPE_HZ} buckets, got {}",
+            tone.len()
+        );
+        let peak = *tone.iter().max().unwrap();
+        let hushed = *hush.iter().max().unwrap_or(&0);
+        // ffmpeg's `sine` is an eighth of full scale, so the number to assert
+        // is not "loud" in the abstract — it is that a tone and a silence do
+        // not look the same, which is the whole job.
+        assert!(peak > 8 * hushed.max(1), "tone {peak}, silence {hushed}");
+        assert!(hushed < 8, "silence should be quiet: {hush:?}");
+    }
+
+    /// And the scaling itself, against a file this test wrote, so the number is
+    /// pinned to arithmetic rather than to whatever amplitude ffmpeg felt like.
+    #[test]
+    fn full_scale_is_255_and_silence_is_0() {
+        let scratch = Scratch::open("scale-test").unwrap();
+        let path = scratch.file("made", "wav");
+        let rate = 12u32 * 100;
+        let mut samples: Vec<u8> = Vec::new();
+        for i in 0..rate {
+            // The first half is full scale, the second is silence.
+            let value: i16 = if i < rate / 2 { i16::MAX } else { 0 };
+            samples.extend(value.to_le_bytes());
+        }
+        let mut wav = Vec::new();
+        wav.extend(b"RIFF");
+        wav.extend(((36 + samples.len()) as u32).to_le_bytes());
+        wav.extend(b"WAVEfmt ");
+        wav.extend(16u32.to_le_bytes());
+        wav.extend(1u16.to_le_bytes()); // PCM
+        wav.extend(1u16.to_le_bytes()); // mono
+        wav.extend(rate.to_le_bytes());
+        wav.extend((rate * 2).to_le_bytes());
+        wav.extend(2u16.to_le_bytes());
+        wav.extend(16u16.to_le_bytes());
+        wav.extend(b"data");
+        wav.extend((samples.len() as u32).to_le_bytes());
+        wav.extend(&samples);
+        std::fs::write(&path, &wav).unwrap();
+
+        let shape = envelope(&Media {
+            path: path.display().to_string(),
+            mime: "audio/wav".into(),
+            bytes: wav.len() as u32,
+        });
+        assert_eq!(shape.len(), ENVELOPE_HZ);
+        assert_eq!(shape[0], 255, "full scale should be the top of the range");
+        assert_eq!(shape[ENVELOPE_HZ - 1], 0, "silence should be the bottom");
+    }
+
+    #[test]
+    fn something_that_is_not_a_wav_gets_a_closed_mouth_rather_than_an_error() {
+        assert!(
+            envelope(&Media {
+                path: "/nowhere/at/all.wav".into(),
+                mime: "audio/wav".into(),
+                bytes: 0,
+            })
+            .is_empty()
+        );
     }
 }

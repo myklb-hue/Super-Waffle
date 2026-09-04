@@ -210,12 +210,20 @@ pub fn plan(graph: &Graph) -> Plan {
         .iter()
         .map(|b| b.id.as_str())
         .filter(|id| {
-            // Only a block whose every wired output is a handle is excused
-            // from taking a turn: there is nothing it produces that anybody is
-            // waiting for. Anything else is a step, capability or not.
-            wired_out
+            // A block is excused from taking a turn only when no work reaches
+            // it: everything it produces is a handle somebody will call, and
+            // nothing arrives on a wire it would have to act on. Either half
+            // alone is not enough. An Avatar whose `tool` is held by a model
+            // and whose `express` is fed by an Affect block is both — it is
+            // called *and* it is driven — and §11.3 is explicit that the two
+            // paths do not wait for each other.
+            let only_handles_out = wired_out
                 .get(*id)
-                .is_none_or(|types| !types.iter().all(|t| t.is_handle()))
+                .is_some_and(|types| types.iter().all(|t| t.is_handle()));
+            let nothing_arrives = wired_in
+                .get(*id)
+                .is_none_or(|types| types.iter().all(|t| t.is_handle()));
+            !(only_handles_out && nothing_arrives)
         })
         .filter(|id| !framed.contains_key(id))
         .collect();

@@ -27,6 +27,16 @@ export interface BlockRun {
   error: string | null;
 }
 
+/** What one face is wearing right now (SPEC §11.3). */
+export interface FaceRun {
+  rig: string;
+  expression: string;
+  intensity: number;
+  /** The shape of the audio playing, 0–255 a bucket. Empty when it is quiet. */
+  mouth: number[];
+  gaze: string | null;
+}
+
 export interface ConsoleLine {
   /** Milliseconds since the run started, which is what the drawer shows. */
   at: number;
@@ -85,6 +95,8 @@ interface RunStore {
   armed: Record<string, string>;
   /** The last thing each camera saw, as a data URI (Figure 6). */
   previews: Record<string, string>;
+  /** What each face is wearing, by block id (SPEC §11.3). */
+  faces: Record<string, FaceRun>;
   frames: Record<string, FrameRun>;
   /** Whether the graph is holding: events queue, nothing runs (SPEC §8.1). */
   paused: boolean;
@@ -122,6 +134,7 @@ const EMPTY = {
   blocks: {},
   armed: {},
   previews: {},
+  faces: {},
   frames: {},
   paused: false,
   recent: [],
@@ -246,6 +259,24 @@ export const useRun = create<RunStore>((set, get) => ({
       // The engine held the graph without being asked — a hardware fault
       // (SPEC §12.1). The transport reads `paused`, so this is all it takes for
       // the button to become Resume.
+      // What the avatar's face is doing (SPEC §11.3). Kept per block, because
+      // a graph may have more than one face in it — an Avatar and a Status
+      // light are the same vocabulary in two media (§11.7).
+      case 'face':
+        set((st) => ({
+          faces: {
+            ...st.faces,
+            [event.data.block]: {
+              rig: event.data.rig,
+              expression: event.data.expression,
+              intensity: event.data.intensity,
+              mouth: event.data.mouth,
+              gaze: event.data.gaze,
+            },
+          },
+        }));
+        break;
+
       case 'held':
         set({ paused: event.data.held });
         break;

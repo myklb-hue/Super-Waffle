@@ -122,11 +122,37 @@ pub struct Runner<'a> {
     pub bench: Arc<Bench>,
 }
 
+/// What a face is doing right now (SPEC §11.3).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Face {
+    pub expression: String,
+    pub intensity: f64,
+    /// The shape of the audio about to play, or empty for a closed mouth.
+    pub mouth: Vec<u8>,
+    pub gaze: Option<String>,
+}
+
+impl Default for Face {
+    fn default() -> Self {
+        Self {
+            // "the resting face; idle returns here" (SPEC §11.2).
+            expression: "neutral".into(),
+            intensity: 1.0,
+            mouth: Vec::new(),
+            gaze: None,
+        }
+    }
+}
+
 /// The devices a run has open, and the Toolboxes a fault has stopped.
 #[derive(Default)]
 pub struct Bench {
     devices: std::sync::Mutex<HashMap<String, Arc<dyn super::actuate::Device>>>,
     aim: std::sync::Mutex<HashMap<String, super::actuate::Aim>>,
+    /// What each face is doing. Kept here rather than assembled per call
+    /// because the three channels — expression, mouth and gaze — arrive
+    /// separately and none of them waits for the others (SPEC §11.3).
+    faces: std::sync::Mutex<HashMap<String, Face>>,
     /// Toolboxes not taking calls until a person resumes or `motor.home`
     /// succeeds (SPEC §9.1).
     stopped: std::sync::Mutex<HashSet<String>>,
@@ -166,6 +192,19 @@ impl Bench {
             .unwrap()
             .insert(block.id.clone(), Arc::clone(&made));
         Ok(made)
+    }
+
+    fn face(&self, block: &str) -> Face {
+        self.faces
+            .lock()
+            .unwrap()
+            .get(block)
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    fn now_facing(&self, block: &str, face: Face) {
+        self.faces.lock().unwrap().insert(block.to_owned(), face);
     }
 
     fn aimed(&self, block: &str) -> super::actuate::Aim {
@@ -415,6 +454,7 @@ impl<'a> Runner<'a> {
             "webcam" | "microphone" | "keyboard" | "display" | "speaker" => {
                 self.run_device(block, &inputs, st)
             }
+            "avatar" | "status-light" | "sound-cue" => self.run_face(block, &inputs, st),
             "objectDetection" | "object-detection" | "face-recognition" | "speechToText"
             | "speech-to-text" | "textToSpeech" | "text-to-speech" | "classifier" | "affect"
             | "embedding" => self.run_perception(block, &inputs, st),
@@ -1336,6 +1376,9 @@ impl<'a> Runner<'a> {
         for id in &held {
             if let Some(callee) = self.block(id) {
                 for mut def in blocks::tools_of(callee) {
+                    if blocks::is_face(&callee.kind) {
+                        self.vocabulary(callee, &mut def);
+                    }
                     def.name = wire_name(&def.name);
                     tools.push(def);
                 }
@@ -1461,6 +1504,53 @@ impl<'a> Runner<'a> {
     /// exactly what the triage example is about, and the model is supposed to
     /// read it and reason. Only a call the engine cannot make at all comes back
     /// as an apology.
+    /// The rig this block is wearing (SPEC §11.1).
+    ///
+    /// Rigs live in the workspace's own `rigs/` folder when it has one, and
+    /// otherwise in the four that ship. A workspace rig with the same name wins,
+    /// because a user who has drawn their own Line meant to replace ours.
+    fn rigged(&self, block: &Block) -> Option<super::rig::Rig> {
+        let name = blocks::setting(block, "rig").unwrap_or("line");
+        let mine = self.root.join("rigs").join(name);
+        if mine.is_dir()
+            && let Ok(rig) = super::rig::load(&mine)
+        {
+            return Some(rig);
+        }
+        super::rig::load(&shipped_rigs().join(name)).ok()
+    }
+
+    /// Fill a face block's tool enums in from the rig it is wearing.
+    ///
+    /// §11.2: "when a rig is chosen, the `face.express` tool's enum is generated
+    /// from what the rig contains. The model can only ask for expressions that
+    /// exist." This is where that happens, and it happens on the way out to the
+    /// model rather than in the catalogue, because the catalogue does not know
+    /// what folder a graph points at.
+    fn vocabulary(&self, block: &Block, def: &mut super::model::ToolDef) {
+        let Some(rig) = self.rigged(block) else {
+            return;
+        };
+        let words = if def.name.ends_with(".gesture") {
+            rig.gestures.clone()
+        } else {
+            rig.vocabulary()
+        };
+        let key = if def.name.ends_with(".gesture") {
+            "name"
+        } else {
+            "emotion"
+        };
+        if let Some(slot) = def
+            .parameters
+            .get_mut("properties")
+            .and_then(|p: &mut serde_json::Value| p.get_mut(key))
+            .and_then(|p: &mut serde_json::Value| p.get_mut("enum"))
+        {
+            *slot = serde_json::json!(words);
+        }
+    }
+
     /// The memory this block holds, assembled from its slots (SPEC §9.2).
     ///
     /// A hub bundles stores; a store wired straight into a model is a hub of
@@ -1516,6 +1606,163 @@ impl<'a> Runner<'a> {
                 .max(1.0) as usize,
             cutoff: hub.and_then(|b| blocks::number(b, "cutoff")).unwrap_or(0.0),
         })
+    }
+
+    /// Set the face, and say so (SPEC §11.3).
+    ///
+    /// The three channels do not wait for each other: an expression from a tool
+    /// call goes out now with whatever mouth and gaze are current, and a mouth
+    /// arriving later goes out with whatever expression is current. That is why
+    /// the state is kept on the bench rather than assembled per call.
+    fn face(
+        &self,
+        block: &Block,
+        verb: &str,
+        word: &str,
+        intensity: f64,
+        st: &mut State<'_>,
+    ) -> Result<blocks::Output, String> {
+        let Some(rig) = self.rigged(block) else {
+            return Err(format!(
+                "`{}` is not a rig this workspace has: put a folder of that name in rigs/",
+                blocks::setting(block, "rig").unwrap_or("line")
+            ));
+        };
+        let mut face = self.bench.face(&block.id);
+        let said = match verb {
+            "look" => {
+                if !rig.gaze {
+                    return Err(format!("{} has nowhere to look", rig.name));
+                }
+                face.gaze = Some(word.to_owned());
+                format!("looking at {word}")
+            }
+            "gesture" => {
+                if !rig.gestures.iter().any(|g| g == word) {
+                    return Err(format!("{} has no `{word}` gesture", rig.name));
+                }
+                word.to_owned()
+            }
+            _ => {
+                // The enum the model was given came from the rig, so this
+                // should not happen — but a model may send anything, and
+                // "that face does not exist" is a better answer than a
+                // drawing that does not.
+                if !rig.has(word) {
+                    return Err(format!(
+                        "{} cannot look {word}. It can look: {}",
+                        rig.name,
+                        rig.vocabulary().join(", ")
+                    ));
+                }
+                face.expression = word.to_owned();
+                face.intensity = intensity;
+                format!("{word} at {intensity:.1}")
+            }
+        };
+        self.show(block, &rig, face, st);
+        Ok(said_ok(said))
+    }
+
+    /// Put the face on the wire and in the window.
+    fn show(&self, block: &Block, rig: &super::rig::Rig, face: Face, st: &mut State<'_>) {
+        self.bench.now_facing(&block.id, face.clone());
+        (st.emit)(RunEvent::Face {
+            run: self.run.clone(),
+            block: block.id.clone(),
+            rig: rig.id.clone(),
+            expression: face.expression.clone(),
+            intensity: face.intensity,
+            mouth: face.mouth.clone(),
+            gaze: face.gaze.clone(),
+        });
+        let line = match (&face.gaze, face.mouth.is_empty()) {
+            (Some(at), false) => format!("{} · speaking · looking at {at}", face.expression),
+            (Some(at), true) => format!("{} · looking at {at}", face.expression),
+            (None, false) => format!("{} · speaking", face.expression),
+            (None, true) => face.expression.clone(),
+        };
+        self.telemetry(block, "state", &line, st);
+    }
+
+    /// The avatar taking its turn: expression from `express`, mouth from
+    /// `speech`, gaze from `look` (SPEC §11.3).
+    ///
+    /// This is the flow path, for graphs that should not spend a tool call on
+    /// every smile. It is the same face as the tool path — same state, same
+    /// event — reached from wires instead of from a model.
+    fn run_face(
+        &self,
+        block: &Block,
+        inputs: &Outputs,
+        st: &mut State<'_>,
+    ) -> Result<(Outputs, Option<String>), String> {
+        let Some(rig) = self.rigged(block) else {
+            return Err(format!(
+                "`{}` is not a rig this workspace has: put a folder of that name in rigs/",
+                blocks::setting(block, "rig").unwrap_or("line")
+            ));
+        };
+        let mut face = self.bench.face(&block.id);
+
+        if let Some(value) = inputs.get("express") {
+            // An Affect model reports a mood; a Branch might send a bare word.
+            // Both are read the same way, because both are "what the face
+            // should mean".
+            let data = value.as_data();
+            // `express` first: that is the key an Affect block writes, and it
+            // writes it precisely so the Avatar does not have to know where
+            // the thresholds between a smile and a frown are (SPEC §11.2).
+            let wanted = data
+                .get("express")
+                .or_else(|| data.get("expression"))
+                .or_else(|| data.get("emotion"))
+                .or_else(|| data.get("label"))
+                .and_then(|v| v.as_str())
+                .map(str::to_owned)
+                .unwrap_or_else(|| value.as_text());
+            if rig.has(&wanted) {
+                face.expression = wanted;
+                face.intensity = data
+                    .get("intensity")
+                    .or_else(|| data.get("confidence"))
+                    .and_then(|v| v.as_f64())
+                    .unwrap_or(1.0)
+                    .clamp(0.0, 1.0);
+            }
+        }
+
+        if let Some(Value::Audio(sound)) = inputs.get("speech") {
+            // Lip sync never involves the model (§11.3): the mouth is the shape
+            // of the audio that is about to play.
+            face.mouth = super::sense::envelope(sound);
+            if face.mouth.is_empty() {
+                self.console(
+                    st,
+                    Some(&block.id),
+                    Level::Warn,
+                    "the speech audio could not be read, so the mouth stays shut".into(),
+                );
+            }
+        } else {
+            face.mouth.clear();
+        }
+
+        if let Some(value) = inputs.get("look")
+            && rig.gaze
+        {
+            let data = value.as_data();
+            let at = data
+                .get("name")
+                .and_then(|v| v.as_str())
+                .map(str::to_owned)
+                .unwrap_or_else(|| value.as_text());
+            face.gaze = (!at.trim().is_empty() && at != "null").then_some(at);
+        }
+
+        let figure = format!("{} · {}", rig.name, face.expression);
+        self.show(block, &rig, face, st);
+        Ok((Outputs::new(), Some(figure)))
     }
 
     /// Move, or go home (SPEC §6.6, §4.4).
@@ -1798,6 +2045,23 @@ impl<'a> Runner<'a> {
                     None => Err("no code was given".into()),
                     Some(code) => blocks::python(callee, &code, self.root),
                 },
+                (kind, verb @ ("express" | "look" | "gesture")) if blocks::is_face(kind) => {
+                    let word = arg("emotion").or_else(|| arg("name")).or_else(|| arg("at"));
+                    match word {
+                        None => Err("nothing was given to express".into()),
+                        Some(word) => {
+                            let how_much = call
+                                .arguments
+                                .get("intensity")
+                                .and_then(|v| v.as_f64())
+                                .unwrap_or(1.0)
+                                .clamp(0.0, 1.0);
+                            // §11.8: expressing is not a physical action and does
+                            // not warn.
+                            self.face(callee, verb, &word, how_much, st)
+                        }
+                    }
+                }
                 ("motors", verb @ ("move" | "home")) => {
                     let number = |key: &str| call.arguments.get(key).and_then(|v| v.as_f64());
                     let aim = match verb {
@@ -1947,4 +2211,22 @@ fn plural(n: usize, thing: &str) -> String {
         1 => format!("1 {thing}"),
         n => format!("{n} {many}"),
     }
+}
+
+/// The rigs that ship with the application (SPEC §11.1).
+///
+/// Beside the binary in a packaged build, and at the top of the repository
+/// while developing. A workspace's own `rigs/` folder is looked at first, so a
+/// user replacing Line with their own Line does not have to move ours.
+fn shipped_rigs() -> std::path::PathBuf {
+    if let Ok(named) = std::env::var("CYBERLOOM_RIGS") {
+        return std::path::PathBuf::from(named);
+    }
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(beside) = exe.parent().map(|d| d.join("rigs"))
+        && beside.is_dir()
+    {
+        return beside;
+    }
+    std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../rigs"))
 }

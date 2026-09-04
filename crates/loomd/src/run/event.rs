@@ -163,6 +163,29 @@ pub enum RunEvent {
         item: Option<String>,
     },
 
+    /// What the avatar's face is doing (SPEC §11.3).
+    ///
+    /// Intent from the model, timing from the wires: the expression is what a
+    /// tool call or an `express` wire asked for, the envelope is the shape of
+    /// the audio that is about to play, and the gaze is wherever the `look`
+    /// port pointed. None of the three waits for the others, so they arrive in
+    /// one event and the shell animates each on its own clock.
+    #[serde(rename = "face")]
+    Face {
+        run: String,
+        block: String,
+        /// The rig's folder name, so the shell knows which states to draw.
+        rig: String,
+        expression: String,
+        /// 0–1. A smile at 0.2 is a different face from a smile at 1.
+        intensity: f64,
+        /// Loudness over time, 0–255 per bucket, twelve buckets a second.
+        /// Empty when there is nothing to say.
+        mouth: Vec<u8>,
+        /// Who or what it is looking at, in the words the `look` port used.
+        gaze: Option<String>,
+    },
+
     /// The engine held the graph itself, or let it go again.
     ///
     /// Hold is normally the person's: they press it and the shell knows because
@@ -277,6 +300,7 @@ impl RunEvent {
             | RunEvent::BlockPreview { run, .. }
             | RunEvent::SourceArmed { run, .. }
             | RunEvent::FrameState { run, .. }
+            | RunEvent::Face { run, .. }
             | RunEvent::Held { run, .. }
             | RunEvent::WireActive { run, .. }
             | RunEvent::Console { run, .. }

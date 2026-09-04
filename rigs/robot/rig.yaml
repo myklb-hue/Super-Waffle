@@ -1,0 +1,26 @@
+# Robot: A head with LED eyes and a segmented mouth
+#
+# Content, not code (SPEC §11.1): adding a rig is a folder, not a custom
+# block. The expressions listed here are what `face.express` will offer the
+# model — the vocabulary is generated from the rig, so the model can only ask
+# for what exists.
+name: Robot
+description: A head with LED eyes and a segmented mouth
+expressions:
+  - neutral
+  - smile
+  - frown
+  - surprised
+  - thinking
+  - speaking
+  - love
+  - sleepy
+gestures:
+  - nod
+  - shake
+gaze: true
+idle:
+  blinkEvery: 4s
+  breathe: true
+  settleAfter: 6s
+  sleepAfter: 5m

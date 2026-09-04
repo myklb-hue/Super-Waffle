@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   accepts,
   convertible,
@@ -22,6 +22,8 @@ import {
   TypeDot,
   type IconName,
 } from '@cyberloom/ui';
+import { Face } from '../avatar/Face';
+import { RIGS, expressionsOf } from '../avatar/rigs';
 import { portTypeOf, useDocument, type Selection } from '../stores/document';
 import { elapsed, useRun } from '../stores/run';
 import { ago, useSource } from '../stores/source';
@@ -273,6 +275,7 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
       <SenseSections block={block} />
       <MemorySections graph={graph} block={block} />
       <ActuatorSections graph={graph} block={block} />
+      <FaceSections block={block} />
 
       <Section title="On the canvas">
         <SwitchRow
@@ -282,6 +285,108 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
           onChange={() => toggleDisabled([block.id])}
         />
       </Section>
+    </>
+  );
+}
+
+/**
+ * The Avatar's sections, and its Rigs tab (Figure 15).
+ *
+ * Rigs is a picker rather than a list, because a rig is a look and the only
+ * useful way to choose a look is to see it. The vocabulary below it is the
+ * point of §11.2: it is generated from the rig, so changing the rig changes
+ * what the model may ask for — and the panel shows that happening rather than
+ * describing it.
+ */
+function FaceSections({ block }: { block: Block }) {
+  const setSetting = useDocument((d) => d.setSetting);
+  const live = useRun((r) => r.faces[block.id]);
+  const [preview, setPreview] = useState<string | null>(null);
+  if (block.kind !== 'avatar') return null;
+
+  const rig = (block.settings.rig as string) ?? 'line';
+  const words = expressionsOf(rig).filter((e) => e !== 'speaking');
+  const showing = preview ?? live?.expression ?? 'neutral';
+
+  return (
+    <>
+      <Section title="Rigs" right={<Chip label={rig} color="cat-actuators" />}>
+        <div className={s.rigRow}>
+          {RIGS.map((name) => (
+            <button
+              key={name}
+              type="button"
+              className={`${s.rigChoice} ${name === rig ? s.rigChosen : ''}`}
+              onClick={() => setSetting(block.id, 'rig', name)}
+              title={name}
+            >
+              <Face rig={name} expression={showing} idle={false} size={48} />
+              <span className={s.rigName}>{name}</span>
+            </button>
+          ))}
+        </div>
+        <div className={s.summary}>
+          A rig is a folder of states, not code. Adding one is copying a folder
+          into the workspace.
+        </div>
+      </Section>
+
+      <Section
+        title="Vocabulary"
+        right={<Chip label={`${words.length}`} color="ok" />}
+      >
+        <div className={s.rigRow}>
+          {words.map((word) => (
+            <button
+              key={word}
+              type="button"
+              className={`${s.wordChip} ${showing === word ? s.wordChosen : ''}`}
+              onMouseEnter={() => setPreview(word)}
+              onMouseLeave={() => setPreview(null)}
+              onFocus={() => setPreview(word)}
+              onBlur={() => setPreview(null)}
+            >
+              {word}
+            </button>
+          ))}
+        </div>
+        <div className={s.summary}>
+          This is what <code>face.express</code> offers the model — generated
+          from the rig, so it can only ask for expressions that exist.
+          <code>speaking</code> is not among them: the mouth is driven by the
+          speech port, never by a command.
+        </div>
+      </Section>
+
+      {live && (
+        <Section
+          title="Live"
+          right={
+            <Chip
+              label={live.mouth.length > 0 ? 'speaking' : live.expression}
+              color="ok"
+              dot
+            />
+          }
+        >
+          <div className={s.faceLive}>
+            <Face
+              rig={live.rig}
+              expression={live.expression}
+              intensity={live.intensity}
+              mouth={live.mouth}
+              gaze={live.gaze}
+              size={96}
+            />
+            <div>
+              <div className={s.summary}>
+                {live.expression} at {live.intensity.toFixed(1)}
+              </div>
+              {live.gaze && <div className={s.summary}>looking at {live.gaze}</div>}
+            </div>
+          </div>
+        </Section>
+      )}
     </>
   );
 }

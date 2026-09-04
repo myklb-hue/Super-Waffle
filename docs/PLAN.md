@@ -1044,3 +1044,55 @@ What this environment cannot prove:
   limits, the three feedback ports, the Toolbox that stops taking calls, the
   clearing call that starts it again. The seam is one trait with two
   implementations, as it is for models, perception and capture.
+
+---
+
+Found while building slice 10 (Avatar):
+
+- **The step rule needed a second half.** Slice 9 made "a step is a block that
+  is not entirely handles on the way out". An Avatar whose `tool` is held by a
+  model and whose `express` is fed by an Affect block has only a handle out —
+  and work arriving on a wire it has to act on. It was a capability and never
+  ran, so the flow path §11.3 describes did not exist. The rule now looks at
+  both directions: a block is excused from taking a turn only when everything
+  it produces is a handle *and* nothing arrives on a wire. Either half alone is
+  not enough.
+- **A bundle in the order is a bundle that does nothing.** With the rule
+  looking at inputs, a Toolbox with a `fault` wired into its `pause` became a
+  step. That is right for ordering — the blocks reading it come after — and
+  wrong to run, so `toolbox` and `memory-hub` join the devices that take an
+  empty turn.
+- **The Affect block already carried the answer, under a different name.** It
+  writes `express` into its data precisely so an Avatar does not have to know
+  where the threshold between a smile and a frown is (§11.2). The first draft of
+  `run_face` looked for `expression`, `emotion` and `label` and would have
+  silently ignored every Affect block in existence.
+- **ffmpeg's `sine` is an eighth of full scale.** A test asserting "a sine wave
+  should be loud" failed at 31 of 255 — and the envelope was right. The number
+  worth asserting is that a tone and a silence do not look the same; the scaling
+  itself is pinned separately against a WAV the test writes, so it is arithmetic
+  rather than whatever amplitude ffmpeg felt like.
+- **ffmpeg writes a LIST chunk before the data.** Reading a WAV by assuming the
+  samples start at byte 44 would have worked on a file this project never
+  produces. The envelope walks the RIFF chunks.
+
+Two decisions worth recording:
+
+- **Lip sync crosses the socket as a shape, not a sound.** The engine reads the
+  speech audio it already has and sends twelve loudness buckets a second — a few
+  hundred bytes rather than a few hundred kilobytes — and the shell animates the
+  mouth from that. The audio itself never needs to reach the window for the
+  mouth to move in time with it, which also means the mouth is right on a
+  machine with no sound device.
+- **Every rig names `#eyes` and `#mouth`.** That one convention is what lets a
+  single animation drive four aesthetics: the blink, the gaze and the mouth are
+  the same three transforms whether the face is two dots, a robot head, a glowing
+  sphere or an 8 × 8 matrix. A rig without them still draws; it just holds still.
+
+What this environment cannot prove:
+
+- **A rig the user added.** The four reference rigs are bundled into the shell so
+  a face never arrives late. Drawing a rig from the workspace needs the engine to
+  hand its states over, which this slice did not open — the *vocabulary* is
+  already generated from whatever rig the engine loaded, including a workspace
+  one, so the model side works today and only the picture would be missing.

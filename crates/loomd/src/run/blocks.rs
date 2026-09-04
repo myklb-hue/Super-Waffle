@@ -210,6 +210,55 @@ pub fn tools_of(block: &Block) -> Vec<ToolDef> {
                 "required": ["code"]
             }),
         }],
+        // The vocabulary here is a placeholder: `Runner::rigged` replaces the
+        // enum with what the chosen rig actually contains before the model sees
+        // it (SPEC §11.2). A face that cannot smile is never offered `smile`.
+        "avatar" | "status-light" | "sound-cue" => {
+            let mut tools = vec![ToolDef {
+                name: format!("{id}.express"),
+                description: "Set what the face means. This is intent, not \
+                              timing: the mouth moves from the speech audio and \
+                              the gaze follows the look port, whatever you set here."
+                    .into(),
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "emotion": { "type": "string", "enum": [] },
+                        "intensity": {
+                            "type": "number",
+                            "minimum": 0, "maximum": 1,
+                            "description": "How much of it. Defaults to 1."
+                        }
+                    },
+                    "required": ["emotion"]
+                }),
+            }];
+            if block.kind == "avatar" {
+                tools.push(ToolDef {
+                    name: format!("{id}.look"),
+                    description: "Look at someone or something.".into(),
+                    parameters: serde_json::json!({
+                        "type": "object",
+                        "properties": {
+                            "at": { "type": "string", "description": "A name, or a place." }
+                        },
+                        "required": ["at"]
+                    }),
+                });
+                tools.push(ToolDef {
+                    name: format!("{id}.gesture"),
+                    description: "A one-shot gesture.".into(),
+                    parameters: serde_json::json!({
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string", "enum": [] }
+                        },
+                        "required": ["name"]
+                    }),
+                });
+            }
+            tools
+        }
         "motors" => vec![
             ToolDef {
                 name: format!("{id}.move"),
@@ -288,6 +337,11 @@ pub fn tools_of(block: &Block) -> Vec<ToolDef> {
         ],
         _ => Vec::new(),
     }
+}
+
+/// The blocks that wear a rig and speak the expression vocabulary (SPEC §11.7).
+pub fn is_face(kind: &str) -> bool {
+    matches!(kind, "avatar" | "status-light" | "sound-cue")
 }
 
 /// The memory kinds, which are the ones a `memory` handle can lead to.
@@ -378,6 +432,11 @@ pub fn pure_step(block: &Block, inputs: &Outputs) -> Result<Outputs, String> {
         // produces on demand (SPEC §4.4). Reporting an error here would be
         // reporting that a servo failed to be asked a question.
         "motors" | "usb-device" | "gpio" => {}
+        // A bundle is not a thing that runs. It is in the order because
+        // something is wired into it — a `fault` into a Toolbox's `pause`, a
+        // store into a hub's slot — and being in the order is what makes the
+        // blocks reading it come afterwards.
+        "toolbox" | "memory-hub" => {}
         other => return Err(format!("`{other}` is not a kind this engine can run yet")),
     }
     Ok(out)

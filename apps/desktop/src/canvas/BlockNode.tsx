@@ -12,6 +12,7 @@ import {
 import type { Block, BlockState, Port, View } from '@cyberloom/graph-core';
 import type { StatusState } from '@cyberloom/ui';
 import { Chip, Grip, Icon, StatusDot, TypeDot, ViewToggle, type IconName } from '@cyberloom/ui';
+import { Face } from '../avatar/Face';
 import { Editor } from '../code/Editor';
 import { useDocument } from '../stores/document';
 import { useRun, type BlockRun } from '../stores/run';
@@ -311,6 +312,7 @@ function Body({ block }: { block: Block }) {
   const value = primary ? block.settings[primary] : undefined;
 
   if (block.kind === 'custom') return <CustomBody block={block} />;
+  if (block.kind === 'avatar') return <AvatarBody block={block} />;
 
   if (value === undefined || value === null) return null;
 
@@ -318,6 +320,40 @@ function Body({ block }: { block: Block }) {
     <div className={s.body}>
       {primary && <div className={s.label}>{primary}</div>}
       <div className={s.value}>{preview(value)}</div>
+    </div>
+  );
+}
+
+/**
+ * The Avatar's body: a thumbnail in Summary, the rig itself in Stage
+ * (SPEC §11.6).
+ *
+ * Stage costs real canvas room, which is the trade the view toggle exists to
+ * let a person make. Summary shows the face small with what it is doing beside
+ * it, so a busy graph still says whether the assistant is smiling.
+ */
+function AvatarBody({ block }: { block: Block }) {
+  const face = useRun((r) => r.faces[block.id]);
+  const rig = face?.rig ?? (block.settings.rig as string) ?? 'line';
+  const stage = block.view === 'stage';
+  const size = stage ? (block.size?.w ?? BLOCK_MIN_WIDTH) - 24 : 44;
+
+  return (
+    <div className={stage ? s.stage : s.body}>
+      <Face
+        rig={rig}
+        expression={face?.expression}
+        intensity={face?.intensity}
+        mouth={face?.mouth}
+        gaze={face?.gaze}
+        size={size}
+      />
+      {!stage && (
+        <div className={s.stageSide}>
+          <div className={s.label}>rig</div>
+          <div className={s.value}>{rig}</div>
+        </div>
+      )}
     </div>
   );
 }

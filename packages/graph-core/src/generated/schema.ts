@@ -542,6 +542,31 @@ export type RunEvent = { event: "run.started"; data: {
 	item: string | null,
 } } | 
 /**
+ *  What the avatar's face is doing (SPEC §11.3).
+ * 
+ *  Intent from the model, timing from the wires: the expression is what a
+ *  tool call or an `express` wire asked for, the envelope is the shape of
+ *  the audio that is about to play, and the gaze is wherever the `look`
+ *  port pointed. None of the three waits for the others, so they arrive in
+ *  one event and the shell animates each on its own clock.
+ */
+{ event: "face"; data: {
+	run: string,
+	block: string,
+	/**  The rig's folder name, so the shell knows which states to draw. */
+	rig: string,
+	expression: string,
+	/**  0–1. A smile at 0.2 is a different face from a smile at 1. */
+	intensity: number,
+	/**
+	 *  Loudness over time, 0–255 per bucket, twelve buckets a second.
+	 *  Empty when there is nothing to say.
+	 */
+	mouth: number[],
+	/**  Who or what it is looking at, in the words the `look` port used. */
+	gaze: string | null,
+} } | 
+/**
  *  The engine held the graph itself, or let it go again.
  * 
  *  Hold is normally the person's: they press it and the shell knows because

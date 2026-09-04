@@ -10,6 +10,7 @@ pub mod model;
 pub mod ollama;
 pub mod perceive;
 pub mod plan;
+pub mod rig;
 pub mod runner;
 pub mod sense;
 pub mod source;

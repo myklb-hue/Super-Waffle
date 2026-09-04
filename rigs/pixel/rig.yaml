@@ -1,0 +1,23 @@
+# Pixel: An 8 by 8 LED matrix
+#
+# Content, not code (SPEC §11.1): adding a rig is a folder, not a custom
+# block. The expressions listed here are what `face.express` will offer the
+# model — the vocabulary is generated from the rig, so the model can only ask
+# for what exists.
+name: Pixel
+description: An 8 by 8 LED matrix
+expressions:
+  - neutral
+  - smile
+  - frown
+  - surprised
+  - thinking
+  - speaking
+  - love
+gestures: []
+gaze: false
+idle:
+  blinkEvery: 4s
+  breathe: true
+  settleAfter: 6s
+  sleepAfter: 5m

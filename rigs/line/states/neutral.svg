@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <rect width="240" height="240" fill="none"/>
+  <g id="eyes"><circle cx="88" cy="96" r="11" fill="#e8ebf0"/><circle cx="152" cy="96" r="11" fill="#e8ebf0"/></g>
+  <g id="mouth"><path d="M 88 156 Q 120 156 152 156" stroke="#e8ebf0" stroke-width="7" fill="none" stroke-linecap="round"/></g>
+</svg>

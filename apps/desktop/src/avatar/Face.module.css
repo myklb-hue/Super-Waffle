@@ -1,0 +1,65 @@
+/* The rig, and the four things that make it alive (SPEC §11.4). */
+.face {
+  display: block;
+  position: relative;
+  opacity: var(--intensity, 1);
+}
+
+.face svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Every rig names these two the same, which is what lets one animation drive
+   four aesthetics. A rig without them still draws; it just holds still. */
+.face :global(#eyes) {
+  transform: translate(var(--gaze-x, 0), var(--gaze-y, 0)) scaleY(var(--blink, 1));
+  transform-origin: center 40%;
+  transition:
+    transform 90ms ease-out;
+}
+
+.face :global(#mouth) {
+  /* The envelope opens the mouth. 1 is closed rather than 0 so a rig whose
+     mouth is a line still has a line to see. */
+  transform: scaleY(calc(1 + var(--mouth, 0) * 1.15));
+  transform-origin: center 65%;
+  transition: transform 70ms ease-out;
+}
+
+/* Breathing: slow, small, and never in time with the blink. */
+.alive {
+  animation: breathe 4.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-1.5px) scale(1.008);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alive {
+    animation: none;
+  }
+  .face :global(#eyes),
+  .face :global(#mouth) {
+    transition: none;
+  }
+}
+
+.missing {
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-low);
+  font-size: 11px;
+  text-align: center;
+}

@@ -351,3 +351,21 @@
   font-size: var(--fs-xs);
   color: var(--ok);
 }
+
+/* Stage view: the rig fills the block (SPEC §11.6). */
+.stage {
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+
+/* Summary view: a thumbnail with what it is doing beside it. */
+.body:has(.stageSide) {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.stageSide {
+  min-width: 0;
+}
