@@ -110,7 +110,7 @@ const page = `<title>Block Canvas Spec</title>
 <style>
 :root {
   --paper:#f2f4f6; --surface:#ffffff; --ink:#14181e; --mid:#58616e; --low:#8a93a0; --line:#d6dbe2; --soft:#e7ebef;
-  --accent:#0e7c8c; --accent-ink:#0a5c68; --amber:#9a6210; --code-bg:#e9edf1; --fig-bg:#0d0f13;
+  --accent:#0e7c8c; --accent-ink:#0a5c68; --amber:#2e7d4f; --code-bg:#e9edf1; --fig-bg:#0d0f13;
   --sans:'Space Grotesk','Helvetica Neue',Arial,sans-serif;
   --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
   --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
@@ -118,12 +118,12 @@ const page = `<title>Block Canvas Spec</title>
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper:#0d0f13; --surface:#14171c; --ink:#e8ebf0; --mid:#98a2ae; --low:#5f6875; --line:#262b33; --soft:#1a1e25;
-    --accent:#56c7d6; --accent-ink:#8fdce7; --amber:#e0a458; --code-bg:#1a1e25; --fig-bg:#08090b;
+    --accent:#56c7d6; --accent-ink:#8fdce7; --amber:#6fc98a; --code-bg:#1a1e25; --fig-bg:#08090b;
   }
 }
 :root[data-theme="dark"] {
   --paper:#0d0f13; --surface:#14171c; --ink:#e8ebf0; --mid:#98a2ae; --low:#5f6875; --line:#262b33; --soft:#1a1e25;
-  --accent:#56c7d6; --accent-ink:#8fdce7; --amber:#e0a458; --code-bg:#1a1e25; --fig-bg:#08090b;
+  --accent:#56c7d6; --accent-ink:#8fdce7; --amber:#6fc98a; --code-bg:#1a1e25; --fig-bg:#08090b;
 }
 body { background:var(--paper); color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.6; margin:0; -webkit-font-smoothing:antialiased; }
 a { color:var(--accent-ink); text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
@@ -172,7 +172,7 @@ figcaption code { font-size:.85em; }
 <div class="wrap">
   <nav><div class="k">Sections</div>${nav}<a class="canvas" href="${CANVAS}">Open the design canvas &rarr;</a></nav>
   <main>
-    <div class="banner"><span class="pill">Draft 0.1</span><span><b>For review and approval.</b> Consolidates every decision from the design sessions to 4 September 2026.</span><span>Figures are rendered from the design canvas; click any to open it.</span></div>
+    <div class="banner"><span class="pill">v1.0 approved</span><span><b>Reference specification.</b> Approved 4 September 2026; changes from here are versioned.</span><span>Figures are rendered from the design canvas; click any to open it.</span></div>
     ${body}
   </main>
 </div>

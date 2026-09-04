@@ -1,6 +1,6 @@
 # Block Canvas — Master Specification
 
-**Draft 0.1 · for review and approval · 4 September 2026**
+**Version 1.0 · approved reference specification · 4 September 2026**
 
 Block Canvas is a desktop application for building programs by dragging
 typed blocks onto a canvas and wiring them together. A block is a model, a
@@ -9,7 +9,9 @@ piece of your own code. A wire is a typed connection. A graph runs once,
 runs live against a stream of events, or runs on a schedule.
 
 This document consolidates every decision made across the design sessions
-into one specification. The visual mockups it describes live on the design
+into one specification. It was approved on 4 September 2026 and is the
+reference for implementation; changes from here are versioned, and
+`docs/PLAN.md` is the build plan derived from it. The visual mockups it describes live on the design
 canvas at <https://claude.ai/code/artifact/54c656f3-a5fe-47db-b858-e7b3794ee92e>
 and as working files under `design/block-canvas/`. Where this document and
 a mockup disagree, this document wins; §14 lists the places that happened
@@ -31,7 +33,7 @@ and what was changed.
 12. Control, warnings and privacy
 13. Worked examples
 14. Consistency review
-15. Open questions
+15. Decisions and backlog
 16. Appendix: tokens, dimensions, figures, files
 
 ---
@@ -118,7 +120,10 @@ run mode (§8.1). The runtime chip shows what will execute the graph
 (`local · ollama`, `local · ollama + cuda`) with a green dot when it is
 reachable. Zoom is a percentage; *fit* frames all blocks.
 
-*Deploy* is reserved and undefined in this draft — see §15.
+*Deploy* has two forms: run the graph headless as a service, and export
+the graph with its blocks as a standalone bundle (§15.1). Neither has a
+screen yet; both are backlog. The engine is built as a separate process
+from the start so the first form is the engine without the shell.
 
 ### 2.3 Library panel
 
@@ -359,10 +364,12 @@ reads without opening the console.
 ### 5.4 Wire inspector
 
 Selecting a wire shows: the two endpoints as block rows, the type chip
-and a compatibility note (*exact match — no cast needed*), a *Transform*
-field (default *None*; setting one inserts a mapping step on the wire), a
-*Watch value* toggle that shows the last payload, and *Insert block* /
-*Delete* actions.
+and a compatibility note (*exact match — no cast needed*), a *Watch value*
+toggle that shows the last payload, and *Insert block* / *Delete* actions.
+There is no transform on a wire: a wire either matches or it does not
+(§4.1), and a conversion is a visible block inserted on the wire (a
+*Convert* block from the Data category, §15.5). The *Transform* field on
+Figure 5 is superseded.
 
 ---
 
@@ -689,9 +696,11 @@ previous interface stays so the graph keeps running around it.
 
 ### 10.5 Languages
 
-Python (`@block` decorator), TypeScript (`export default block({...},
-fn)`), shell (`# @block`, `# @in`, `# @out` comments). A file with several
-`@block` functions makes several blocks, one per function.
+Python (`@block` decorator), TypeScript or plain JavaScript (`export
+default block({...}, fn)`; the runtime strips types, so `.js` and `.ts`
+are the same block kind), shell (`# @block`, `# @in`, `# @out` comments).
+A file with several `@block` functions makes several blocks, one per
+function. Compiled languages are backlog (§15.8).
 
 ### 10.6 Views
 
@@ -731,7 +740,10 @@ Avatar gives it a presence: something to look at, and read a mood from.
 
 ### 11.1 Rigs
 
-A rig is one aesthetic plus the animations it supports. Four ship: **Line**
+A rig is one aesthetic plus the animations it supports. The reference
+format is a folder of SVG states with a `rig.yaml` manifest naming the
+expressions, gestures and idle parameters; Rive import is backlog
+(§15.10). Four ship: **Line**
 (two eyes and a mouth, nothing else), **Robot** (a head with LED eyes and a
 segmented mouth), **Orb** (a sphere whose colour and glow carry the
 expression), **Pixel** (an 8 × 8 LED matrix). Each ships the same seven
@@ -970,40 +982,108 @@ and what was done:
 | 11 | USB device appeared in the assistant graph in one revision and not the next. | Removed from the example for space; it remains in the library with its ports defined (§6.6). |
 | 12 | Handle wires were visually identical to flow wires. | Two-way mark and heavier weight added (§4.3). |
 | 13 | The Motors panel clipped its last field. | Panel height corrected. |
-| 14 | *Deploy* sits on the top bar with no defined behaviour. | Left as an open question (§15). |
+| 14 | *Deploy* sits on the top bar with no defined behaviour. | Defined as service and bundle (§15.1); screen is backlog. |
 | 15 | The Avatar on Figure 9 shows an unwired `tool` port, which §4.5 says should be hidden. | Kept visible and dimmed on purpose, so the example shows both ways an expression can arrive. The rule stands; the mockup is the exception. |
 | 16 | The view toggle, double-click and `⌘E` were specified for custom blocks only, while the Avatar needed the same gestures. | One rule for every block (§3.4); the shell, anatomy, gestures, keyboard and inspector sections now describe it once and the custom-block and Avatar sections refer to it. |
 | 17 | Figures 9 and 16 are the same graph with one block in a different view. | Kept as two artboards: artboards on the design canvas share no state, so a view toggle cannot be shown live. The clickable prototype (Interactive) is where that would go. |
 
 ---
 
-## 15. Open questions
+## 15. Decisions and backlog
 
-Decisions this draft does not make. Each needs an answer before build.
+The questions the draft left open, resolved at approval on 4 September
+2026. *v1* means in the first build; *backlog* means designed later,
+architecture kept open for it.
 
-1. **Deploy.** What does it mean for a local app — run headless as a
-   service, export the graph and its blocks as a bundle, both?
-2. **Subgraphs.** `⌘G` collapses a selection into one block with its
-   external ports preserved. The block's appearance, how it is edited, and
-   whether it can be saved to the library need a screen.
-3. **Graph file format.** `.graph` is assumed to be a single readable file
-   (JSON or YAML) with inline custom-block code embedded. Version control
-   friendliness matters if graphs are edited by hand.
-4. **Remote models.** The examples are all local (Ollama). If a cloud model
-   is allowed, the first send should warn (§12.2). Is a per-graph
-   *local only* switch wanted?
-5. **Wire transforms.** *Transform: None* on the wire inspector implies a
-   mapping step; its editor is undesigned.
-6. **Multiple graphs.** Tabs, a workspace, or one window per graph?
-7. **Undo and history.** Canvas edits are assumed undoable; run history is
-   in the Runs tab. Is a graph version history wanted?
-8. **Custom block languages.** Python, TypeScript and shell are drawn. Rust
-   or Go would need a compile step; is that in scope?
-9. **Touch and small screens.** The shell is designed for a desktop at
-   1560 px and above. The rail (48 px) is the only concession so far.
-10. **Rig format.** Rive is the assumed format for animated rigs, with a
-    folder of SVG states as the simple alternative. Which is the reference
-    format, and is a rig editor in scope, or is authoring always external?
+### 15.1 Deploy — backlog
+
+Both forms: **run as a service** (the engine runs the graph headless,
+starts with the machine, the shell attaches to it when opened) and
+**export a bundle** (the graph, its custom blocks, rigs and a lockfile of
+model and runtime versions, as one directory or archive that another
+machine can run). The engine is a separate process from the first build
+so the service form is the engine without the shell. The screen for
+either is backlog.
+
+### 15.2 Subgraphs — backlog, with a recommendation
+
+`⌘G` collapses a selection into one block whose ports are the selection's
+external ports. Recommendation to take into the backlog screen: the block
+takes the Control category's slate with a nested-squares icon; its body
+shows a miniature of the contents; double-clicking opens the subgraph as a
+tab beside its parent, with a breadcrumb; it is stored inline in the
+parent's `.graph`; *Save to library* puts it under Custom like a custom
+block and turns the inline copy into a reference by path.
+
+### 15.3 Graph file format — v1
+
+`.graph` is one readable YAML file: strict subset, deterministic key
+order, positions rounded to the grid, custom-block code embedded as block
+scalars so diffs read as code. Subgraphs inline; library references by
+relative path. A graph edited by hand and one edited on the canvas
+produce the same file.
+
+### 15.4 Remote models — v1
+
+A per-graph **Local only** switch, on by default. Turning it off allows
+remote model providers; the first send of a run to any remote service
+warns (§12.2). The switch is shown on the graph panel and in the status
+bar's runtime chip.
+
+### 15.5 Wire transforms — resolved by removal
+
+The *Transform* field in the first draft implied a mapping step living
+on a wire, invisible on the canvas. That contradicts the grammar: a wire
+matches or it does not. Removed. When a drag lands on a compatible-but-
+not-identical pair (`data` to `text`, `stream` to `data`) the shell
+offers to insert a **Convert** block on the wire; conversion is always a
+visible block. Convert joins the Data category (backlog for its panel;
+the insert-on-wire action is v1).
+
+### 15.6 Multiple graphs — v1
+
+A **workspace** is a folder. Open graphs are tabs across the top of the
+canvas, one window. Subgraphs open as tabs beside their parent. The
+library is per workspace.
+
+### 15.7 Undo and history — v1 undo, backlog history
+
+Undo and redo per graph, unlimited within a session, covering every
+canvas edit including view and size changes. Autosave on every change.
+Version history is delegated to git: when the workspace is a repository
+the shell offers *Snapshots* (a commit on every run and on demand) and a
+*Restore* list; that panel is backlog. The YAML format (§15.3) is what
+makes this work.
+
+### 15.8 Custom block languages — v1 Python, TypeScript/JavaScript, shell
+
+JavaScript is covered: the TypeScript block kind runs plain `.js` too.
+Rust and Go are backlog as a **compiled block**: a manifest pointing at a
+built binary or shared library, no compile step in the shell. The value
+is real for perception and actuator code that needs to be fast; the cost
+is a toolchain the shell cannot manage. The engine is Rust, so a Rust
+block can become an in-process plugin when it comes.
+
+### 15.9 Touch and small screens — backlog
+
+Desktop at 1560 px and above for v1. On small screens the deployed state
+matters more than editing: a **Presence view** (the Avatar's stage plus
+status and the run transport) is the small-screen face of a running
+graph. Backlog, after Deploy.
+
+### 15.10 Rig format — v1 SVG states, backlog editor and Rive
+
+Reference format is a folder of SVG states with a `rig.yaml` manifest.
+The four built-in rigs (Line, Robot, Orb, Pixel) ship in that format
+with all seven expressions and their gestures, drawn from the mockups. A
+rig editor and Rive import are in scope and on the backlog.
+
+### 15.11 Platform
+
+Linux first, CachyOS as the reference distribution; Wayland and X11.
+Devices through the kernel's usual interfaces (V4L2 for cameras,
+PipeWire for audio, `/dev/tty*` for serial). GPU acceleration for models
+through the model runtime, not the shell.
 
 ---
 
@@ -1093,4 +1173,6 @@ design/block-canvas/
   canvas.json        artboard layout, pages, notes
   fig/*.png          rendered figures
   README.md          orientation
+docs/
+  PLAN.md            the build plan derived from this specification
 ```
