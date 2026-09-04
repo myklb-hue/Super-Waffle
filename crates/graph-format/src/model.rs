@@ -23,7 +23,7 @@ pub struct Graph {
     pub version: u32,
     pub id: String,
     pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub description: Option<String>,
     pub run_mode: RunMode,
     /// On by default. Turning it off allows remote model providers; the first
@@ -161,7 +161,7 @@ impl Position {
 pub struct Size {
     pub w: f64,
     /// Height is only meaningful for the views that have one: stage and code.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub h: Option<f64>,
 }
 
@@ -173,31 +173,27 @@ pub struct Block {
     /// A key into the built-in catalogue, or `custom`.
     pub kind: String,
     /// Overrides the kind's own title when the user renames the block.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub title: Option<String>,
     pub position: Position,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub size: Option<Size>,
     pub view: View,
     /// Validated against the kind's setting definitions.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[serde(default)]
     pub settings: BTreeMap<String, Value>,
     /// A custom block's parsed interface: the ports its signature produced.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub ports: Vec<Port>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub source: Option<Source>,
-    #[serde(default, skip_serializing_if = "is_false")]
+    #[serde(default)]
     pub disabled: bool,
-    #[serde(default, skip_serializing_if = "is_false")]
+    #[serde(default)]
     pub breakpoint: bool,
     /// The loop frame that contains this block, if any.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub frame: Option<String>,
-}
-
-fn is_false(b: &bool) -> bool {
-    !*b
 }
 
 /// A port declared by a custom block, derived from its signature (SPEC §10.2).
@@ -208,7 +204,7 @@ pub struct Port {
     #[serde(rename = "type")]
     pub port_type: PortType,
     pub side: Side,
-    #[serde(default, skip_serializing_if = "is_false")]
+    #[serde(default)]
     pub optional: bool,
 }
 
@@ -219,10 +215,10 @@ pub struct Port {
 pub struct Source {
     pub mode: SourceMode,
     pub language: Language,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub code: Option<String>,
     /// Relative to the workspace folder, so a graph moves with its files.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub path: Option<String>,
 }
 
@@ -273,7 +269,7 @@ pub struct Frame {
     pub as_name: String,
     pub parallel: u32,
     pub max: u32,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub stop_when: Option<Endpoint>,
     pub continue_on_error: bool,
 }
@@ -295,12 +291,19 @@ impl FrameKind {
 
 /// A setting value. Deliberately small: a setting is a scalar, a list or a
 /// record, and nothing in the format needs more than that.
+///
+/// `Int` is 32-bit rather than 64. A setting holds a port number, a count, a
+/// timeout — never something that needs more — and JSON, which is what carries
+/// these over the socket, has one number type anyway. A whole number too large
+/// for `Int` is read as a `Float`, which is the same precision JSON would have
+/// given it; because the writer prints an integral float without its point, the
+/// file still round-trips byte for byte.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
 #[serde(untagged)]
 pub enum Value {
     Null,
     Bool(bool),
-    Int(i64),
+    Int(i32),
     Float(f64),
     String(String),
     List(Vec<Value>),
@@ -313,8 +316,8 @@ impl From<bool> for Value {
     }
 }
 
-impl From<i64> for Value {
-    fn from(v: i64) -> Self {
+impl From<i32> for Value {
+    fn from(v: i32) -> Self {
         Value::Int(v)
     }
 }

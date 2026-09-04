@@ -10,7 +10,7 @@ repository.workspace = true
 graph-format = { path = "../graph-format" }
 serde.workspace = true
 specta.workspace = true
-thiserror.workspace = true
-
-[dev-dependencies]
 specta-typescript.workspace = true
+specta-serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

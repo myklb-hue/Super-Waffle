@@ -308,7 +308,12 @@ fn value_from(y: &Yaml) -> R<Value> {
         return Ok(Value::Bool(b));
     }
     if let Some(i) = y.as_integer() {
-        return Ok(Value::Int(i));
+        // Out of i32 range degrades to a float, which is the precision JSON
+        // would have given it anyway; see the note on Value.
+        return Ok(match i32::try_from(i) {
+            Ok(i) => Value::Int(i),
+            Err(_) => Value::Float(i as f64),
+        });
     }
     if let Some(f) = y.as_floating_point() {
         return Ok(Value::Float(f));

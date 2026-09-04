@@ -11,6 +11,8 @@
   },
   "scripts": {
     "ui": "npm run dev -w @cyberloom/ui",
+    "test": "npm run test --workspaces --if-present",
+    "gen": "cargo run -q -p block-kinds --bin export-types",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
