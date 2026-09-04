@@ -22,10 +22,20 @@ import {
   type Block,
   type Graph,
   type PortType,
+  type Port,
   type Position,
+  type SourceMode,
   type View,
   type Wire,
 } from "@cyberloom/graph-core";
+
+/** What a reparse changed (SPEC §10.3). */
+export interface Reload {
+  added: string[];
+  removed: string[];
+  retyped: string[];
+  dropped: Wire[];
+}
 
 export type Selection =
   | { kind: "none" }
@@ -59,6 +69,18 @@ export interface DocumentState {
   resizeBlock(id: string, w: number, h: number | null): void;
   setSetting(id: string, name: string, value: unknown): void;
   renameBlock(id: string, title: string | null): void;
+  /** Replace a custom block's inline code. */
+  setCode(id: string, code: string): void;
+  /** Point a custom block at a file instead, or back at inline code. */
+  setSourceMode(id: string, mode: SourceMode, path?: string): void;
+  /**
+   * Apply a freshly parsed interface (SPEC §10.3).
+   *
+   * Ports that still exist keep their wires; a removed port drops its wire.
+   * Both happen in one update, because a render between them would draw a
+   * wire hanging off a port that is not there.
+   */
+  applyInterface(id: string, ports: Port[]): Reload;
   toggleDisabled(ids: string[]): void;
 
   connect(
@@ -238,6 +260,70 @@ export const useDocument = create<DocumentState>()(
           }),
           dirty: true,
         }));
+      },
+
+      setCode(id, code) {
+        set((state) => ({
+          graph: mapBlocks(state.graph, [id], (block) => ({
+            ...block,
+            source: block.source
+              ? { ...block.source, mode: 'inline', code }
+              : { mode: 'inline', language: 'python', code, path: null },
+          })),
+          dirty: true,
+        }));
+      },
+
+      setSourceMode(id, mode, path) {
+        set((state) => ({
+          graph: mapBlocks(state.graph, [id], (block) => ({
+            ...block,
+            source: block.source
+              ? {
+                  ...block.source,
+                  mode,
+                  // Switching to File keeps the code: someone who moves a
+                  // block to a file and back should find their work still
+                  // there rather than an empty editor.
+                  path: mode === 'file' ? (path ?? block.source.path) : block.source.path,
+                }
+              : { mode, language: 'python', code: null, path: path ?? null },
+          })),
+          dirty: true,
+        }));
+      },
+
+      applyInterface(id, ports) {
+        const before = get().graph.blocks.find((b) => b.id === id)?.ports ?? [];
+        const key = (p: Port) => `${p.side}.${p.name}`;
+        const had = new Set(before.map(key));
+        const has = new Set(ports.map(key));
+        const added = ports.filter((p) => !had.has(key(p))).map((p) => p.name);
+        const removed = before.filter((p) => !has.has(key(p))).map((p) => p.name);
+        const retyped = ports
+          .filter((p) => before.some((was) => key(was) === key(p) && was.type !== p.type))
+          .map((p) => p.name);
+
+        const surviving = new Set(ports.map((p) => p.name));
+        const gone = (end: { node: string; port: string }) =>
+          end.node === id && !surviving.has(end.port);
+        const dropped = get().graph.wires.filter((w) => gone(w.from) || gone(w.to));
+
+        if (added.length === 0 && removed.length === 0 && retyped.length === 0) {
+          // Nothing changed, so nothing is written: a reparse that agrees with
+          // what is already there must not mark the document dirty and set
+          // autosave going for no reason.
+          return { added, removed, retyped, dropped: [] };
+        }
+
+        set((state) => ({
+          graph: {
+            ...mapBlocks(state.graph, [id], (block) => ({ ...block, ports })),
+            wires: state.graph.wires.filter((w) => !gone(w.from) && !gone(w.to)),
+          },
+          dirty: true,
+        }));
+        return { added, removed, retyped, dropped };
       },
 
       renameBlock(id, title) {

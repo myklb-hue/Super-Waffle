@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import {
   accepts,
   convertible,
   kind as lookupKind,
   type Block,
+  type Generated,
   type Graph,
   type SettingDef,
 } from '@cyberloom/graph-core';
@@ -22,6 +24,7 @@ import {
 } from '@cyberloom/ui';
 import { portTypeOf, useDocument, type Selection } from '../stores/document';
 import { useRun } from '../stores/run';
+import { ago, useSource } from '../stores/source';
 import { RunPanel } from './RunPanel';
 import s from './Inspector.module.css';
 
@@ -239,6 +242,8 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
         {kind && <div className={s.summary}>{kind.summary}</div>}
       </Section>
 
+      {block.kind === 'custom' && <CustomSections block={block} />}
+
       {kind && kind.settings.length > 0 && (
         <Section title="Settings">
           {kind.settings.map((def) => (
@@ -264,6 +269,190 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
           onChange={() => toggleDisabled([block.id])}
         />
       </Section>
+    </>
+  );
+}
+
+/**
+ * The sections only a custom block has (SPEC §10).
+ *
+ * Source says where the code lives; Interface says what the signature made,
+ * live; Settings are generated from the defaults the code wrote. The order is
+ * the order of the questions: where is it, what did it produce, what can I
+ * change.
+ */
+function CustomSections({ block }: { block: Block }) {
+  const setSourceMode = useDocument((d) => d.setSourceMode);
+  const setSetting = useDocument((d) => d.setSetting);
+  const source = useSource((s) => s.blocks[block.id]);
+  const reload = useSource((s) => s.reload);
+  const derived = source?.interface;
+
+  // Read once when the block is first shown, so the panel is not empty until
+  // somebody types.
+  useEffect(() => {
+    if (!source) void reload(block.id);
+  }, [block.id, source, reload]);
+
+  const inFile = block.source?.mode === 'file';
+
+  return (
+    <>
+      <Section title="Source">
+        <Segmented
+          options={['inline', 'file']}
+          value={block.source?.mode ?? 'inline'}
+          label="Source mode"
+          onChange={(mode) => setSourceMode(block.id, mode as 'inline' | 'file')}
+        />
+        {inFile && (
+          <>
+            <Label>File</Label>
+            <Field
+              value={block.source?.path ?? ''}
+              icon="folder"
+              mono
+              placeholder="~/blocks/door_check.py"
+              onChange={(path) => setSourceMode(block.id, 'file', path)}
+            />
+          </>
+        )}
+        <div className={s.summary}>
+          {inFile
+            ? 'Edit in your own editor. The block reloads on every save and keeps its wires.'
+            : 'The code lives in the graph file. Switch to File to edit it elsewhere.'}
+        </div>
+      </Section>
+
+      <Section
+        title="Interface"
+        right={
+          source?.error ? (
+            <Chip label={`line ${source.error.line}`} color="err" dot />
+          ) : (
+            <Chip label="live" color="ok" dot />
+          )
+        }
+      >
+        {source?.error && (
+          <Callout
+            title={`Line ${source.error.line}`}
+            body={source.error.message}
+            color="err"
+          />
+        )}
+        {derived?.ports.map((port) => (
+          <div key={`${port.side}.${port.name}`} className={s.derived}>
+            <span className={s.derivedSide}>{port.side}</span>
+            <span className={s.derivedName}>{port.name}</span>
+            <TypeDot kind={port.type} />
+            <span className={s.derivedType}>{port.type}</span>
+          </div>
+        ))}
+        {derived?.settings.map((setting) => (
+          <div key={setting.name} className={s.derived}>
+            <span className={s.derivedSide}>set</span>
+            <span className={s.derivedName}>{setting.name}</span>
+            <span className={s.derivedType}>= {setting.default}</span>
+          </div>
+        ))}
+        <div className={s.summary}>
+          {derived
+            ? `parsed from the signature · ${ago(source?.at ?? null)}${
+                source?.error ? ' · showing the last good read' : ' · no errors'
+              }`
+            : 'nothing parsed yet'}
+        </div>
+      </Section>
+
+      {derived && derived.settings.length > 0 && (
+        <Section title="Settings">
+          {derived.settings.map((setting) => (
+            <GeneratedControl
+              key={setting.name}
+              setting={setting}
+              value={block.settings[setting.name]}
+              onChange={(v) => setSetting(block.id, setting.name, v)}
+            />
+          ))}
+          <div className={s.summary}>
+            Generated from the default argument. Changing it here does not
+            change the code; changing the code changes what this falls back to.
+          </div>
+        </Section>
+      )}
+
+      <Section title="Library">
+        <Label>Category</Label>
+        <Field value={derived?.category ?? 'custom'} mono />
+        <Label>Icon</Label>
+        <Field value={derived?.icon ?? '—'} mono />
+        <div className={s.summary}>
+          Both come from the `@block` decorator, so the shelf a block lands on
+          is in its code like everything else about it.
+        </div>
+      </Section>
+    </>
+  );
+}
+
+/** One control for a setting the code asked for (SPEC §10.1). */
+function GeneratedControl({
+  setting,
+  value,
+  onChange,
+}: {
+  setting: Generated;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  // The default written in the code is the fallback, so an untouched setting
+  // shows what the function would actually use rather than an empty box.
+  const fallback = setting.default.replace(/^['"]|['"]$/g, '');
+
+  if (setting.kind === 'bool') {
+    return (
+      <SwitchRow
+        label={setting.label}
+        on={value === undefined ? /true/i.test(fallback) : value === true}
+        onChange={onChange}
+      />
+    );
+  }
+  if (setting.kind === 'range') {
+    return (
+      <Slider
+        label={setting.label}
+        value={typeof value === 'number' ? value : (Number(fallback) || 0)}
+        min={setting.min ?? 0}
+        max={setting.max ?? 1}
+        step={0.01}
+        onChange={onChange}
+      />
+    );
+  }
+  if (setting.kind === 'select' && setting.options.length > 0) {
+    return (
+      <>
+        <Label>{setting.label}</Label>
+        <Segmented
+          options={[...setting.options]}
+          value={typeof value === 'string' ? value : fallback}
+          label={setting.label}
+          onChange={onChange}
+        />
+      </>
+    );
+  }
+  return (
+    <>
+      <Label>{setting.label}</Label>
+      <Field
+        value={value === undefined || value === null ? '' : String(value)}
+        placeholder={fallback}
+        mono={setting.kind === 'number' || setting.kind === 'path'}
+        onChange={(v) => onChange(setting.kind === 'number' ? (Number(v) || 0) : v)}
+      />
     </>
   );
 }

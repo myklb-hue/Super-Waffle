@@ -9,11 +9,13 @@ import {
   thirdView,
   visiblePorts,
 } from '@cyberloom/graph-core';
-import type { Block, BlockState, Port } from '@cyberloom/graph-core';
+import type { Block, BlockState, Port, View } from '@cyberloom/graph-core';
 import type { StatusState } from '@cyberloom/ui';
-import { Chip, Grip, Icon, StatusDot, ViewToggle, type IconName } from '@cyberloom/ui';
+import { Chip, Grip, Icon, StatusDot, TypeDot, ViewToggle, type IconName } from '@cyberloom/ui';
+import { Editor } from '../code/Editor';
 import { useDocument } from '../stores/document';
 import { useRun, type BlockRun } from '../stores/run';
+import { ago, useSource } from '../stores/source';
 import type { DragState } from './Canvas';
 import s from './BlockNode.module.css';
 
@@ -40,6 +42,9 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
   // re-rendering for each one is the difference between a live graph and a
   // slideshow.
   const live = useRun((r) => r.blocks[block.id]);
+  // A custom block whose code will not parse goes red (SPEC §10.4). Its ports
+  // and its wires stay exactly as they were, so the graph runs around it.
+  const broken = useSource((s) => !!s.blocks[block.id]?.error);
   const setView = useDocument((d) => d.setBlockView);
   const resize = useDocument((d) => d.resizeBlock);
   const kind = lookupKind(block.kind);
@@ -74,6 +79,7 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
       className={[
         s.block,
         selected && s.selected,
+        broken && s.broken,
         live?.state === 'running' && s.running,
         reporting(live) && s.reporting,
       ]
@@ -83,7 +89,16 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
       data-testid={`block-${block.id}`}
       data-kind={block.kind}
     >
-      <header className={s.header}>
+      <header
+        className={s.header}
+        // Double-clicking the header cycles the views (SPEC §2.4). The toggle
+        // does the same thing with a click; this is the gesture for someone
+        // who is already dragging the block around by its header.
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          setView(block.id, nextView(block.view, third));
+        }}
+      >
         <Icon name={(kind?.icon ?? 'note') as IconName} size={12} strokeWidth={1.7} />
         <span className={s.title}>{title}</span>
         {block.kind === 'custom' && block.source && (
@@ -128,6 +143,7 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
       </div>
 
       {block.view !== 'compact' && <Body block={block} />}
+      {block.kind === 'custom' && block.view !== 'compact' && <InterfaceStrip block={block} />}
 
       {/* What the block is doing, while it is doing it (SPEC §3.2). */}
       {live && <Figures live={live} />}
@@ -147,6 +163,18 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
       )}
     </div>
   );
+}
+
+/**
+ * The next view in the cycle: compact → summary → the block's third view.
+ *
+ * A block with no third view cycles between two, which is why this cannot be
+ * a fixed list of three (SPEC §3.4).
+ */
+function nextView(current: View, third: 'code' | 'stage' | null): View {
+  const cycle: View[] = third ? ['compact', 'summary', third] : ['compact', 'summary'];
+  const at = cycle.indexOf(current);
+  return cycle[(at + 1) % cycle.length] ?? 'summary';
 }
 
 /** Whether this block has anything to say below itself. */
@@ -278,16 +306,7 @@ function Body({ block }: { block: Block }) {
   const primary = kind?.settings[0]?.name;
   const value = primary ? block.settings[primary] : undefined;
 
-  if (block.kind === 'custom' && block.source?.code) {
-    const lines = block.source.code.split('\n');
-    return (
-      <div className={s.body}>
-        <div className={s.label}>{block.source.mode === 'file' ? 'file' : 'inline'}</div>
-        <pre className={s.code}>{lines.slice(0, 3).join('\n')}</pre>
-        {lines.length > 3 && <div className={s.more}>{lines.length} lines</div>}
-      </div>
-    );
-  }
+  if (block.kind === 'custom') return <CustomBody block={block} />;
 
   if (value === undefined || value === null) return null;
 
@@ -295,6 +314,120 @@ function Body({ block }: { block: Block }) {
     <div className={s.body}>
       {primary && <div className={s.label}>{primary}</div>}
       <div className={s.value}>{preview(value)}</div>
+    </div>
+  );
+}
+
+/**
+ * A custom block's body: the code, or a summary of it.
+ *
+ * Code view holds a real editor; summary holds the first lines and a count.
+ * Past a screenful the code leaves the block entirely for the drawer
+ * (SPEC §10.7), and this says so rather than showing a scrolling sliver of a
+ * 184-line function in a 300px box.
+ */
+export const DRAWER_AFTER_LINES = 24;
+
+function CustomBody({ block }: { block: Block }) {
+  const setCode = useDocument((d) => d.setCode);
+  const setSourceMode = useDocument((d) => d.setSourceMode);
+  const source = useSource((s) => s.blocks[block.id]);
+  const reload = useSource((s) => s.reload);
+  const schedule = useSource((s) => s.schedule);
+
+  const code = block.source?.code ?? '';
+  const lines = code.split('\n');
+  const language = block.source?.language ?? 'python';
+  const inFile = block.source?.mode === 'file';
+
+  if (block.view !== 'code') {
+    return (
+      <div className={s.body}>
+        <div className={s.label}>{inFile ? (block.source?.path ?? 'file') : 'inline'}</div>
+        <pre className={s.code}>{lines.slice(0, 3).join('\n')}</pre>
+        <div className={s.more}>
+          {lines.length} line{lines.length === 1 ? '' : 's'}
+          {source?.at ? ` · reloaded ${ago(source.at)}` : ''}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={s.codeBody}>
+      <div className={s.codeBar}>
+        <span className={s.modes}>
+          {(['inline', 'file'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              className={`${s.mode} ${block.source?.mode === mode ? s.modeOn : ''}`}
+              onClick={() => setSourceMode(block.id, mode)}
+            >
+              {mode}
+            </button>
+          ))}
+        </span>
+        <Chip label={language} color="cat-custom" />
+        {source?.error && <Chip label={`line ${source.error.line}`} color="err" dot />}
+      </div>
+
+      {lines.length > DRAWER_AFTER_LINES ? (
+        // Past a screenful the code belongs in the drawer, and the block stays
+        // summary-sized (SPEC §10.7).
+        <div className={s.tooBig}>
+          {lines.length} lines — too many for the block. Open the code drawer below.
+        </div>
+      ) : (
+        <Editor
+          value={code}
+          language={language}
+          errorLine={source?.error?.line ?? null}
+          onChange={
+            inFile
+              ? undefined
+              : (next) => {
+                  setCode(block.id, next);
+                  schedule(block.id);
+                }
+          }
+          onSettle={() => void reload(block.id)}
+          className={s.codeEditor}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * The strip under a custom block: what its signature produced.
+ *
+ * `in frame ● image · out result ● data · set threshold ● float`, and when it
+ * last reloaded. It is the answer to "what did my edit do to the block", which
+ * is the question the whole of §10.1 exists to make answerable at a glance.
+ */
+function InterfaceStrip({ block }: { block: Block }) {
+  const source = useSource((s) => s.blocks[block.id]);
+  const derived = source?.interface;
+  if (!derived) return null;
+
+  return (
+    <div className={s.interface}>
+      <span className={s.interfaceLabel}>interface</span>
+      {derived.ports.map((port) => (
+        <span key={`${port.side}.${port.name}`} className={s.chipRow}>
+          <span className={s.chipSide}>{port.side}</span>
+          <span className={s.chipName}>{port.name}</span>
+          <TypeDot kind={port.type} />
+        </span>
+      ))}
+      {derived.settings.map((setting) => (
+        <span key={setting.name} className={s.chipRow}>
+          <span className={s.chipSide}>set</span>
+          <span className={s.chipName}>{setting.name}</span>
+        </span>
+      ))}
+      {source.note && <span className={s.note}>{source.note}</span>}
     </div>
   );
 }

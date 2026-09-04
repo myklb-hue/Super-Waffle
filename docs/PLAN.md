@@ -766,3 +766,45 @@ usage arithmetic, the event stream and the whole UI. What is untested is
 whether a real model, handed these tool definitions, chooses to call them.
 That is a question about the model rather than about this code, and it wants a
 run on the CachyOS machine.
+
+Found while building slice 5:
+
+- **Double-clicking a block header did nothing.** SPEC §2.4 promises it cycles
+  the views; only the toggle button did. Wired now, which is also how a custom
+  block reaches its Code view.
+- **A code change had to remember to re-parse.** The editors called `schedule`
+  themselves, which made the reparse a thing every caller had to remember —
+  and the first one that forgot (a paste, a format, an undo) would leave the
+  block's interface quietly describing code that is no longer there. The
+  source store subscribes to the document instead, so the change itself is the
+  trigger.
+- **The scratch file name collided.** Pid and block id are not enough: two runs
+  of one graph, or two windows, overwrite each other's driver halfway through
+  reading it.
+- **Every input was coerced with `as_data`**, which reads text that happens to
+  be JSON as the record it describes. Right for a `data` port, wrong
+  everywhere else. The port's declared type decides the coercion now.
+- **The screenshot scripts were writing to the real fixtures.** Autosave does
+  exactly what it should; the scripts were pointed at the workspace under
+  version control. They run against a copy now
+  (`CYBERLOOM_WORKSPACE=/tmp/cl-ws`), which is worth keeping for every future
+  run rather than relying on remembering to restore a file.
+
+Two decisions the specification implies without stating, both recorded at the
+code:
+
+- **A float default between zero and one is a proportion**, and a slider is the
+  right control for one — this is what makes §13.4's threshold a slider. A
+  float outside that range is a quantity and gets a number field, because a
+  slider needs bounds the code never gave.
+- **The runtime provides the type names.** §10.1 writes annotations as `Image`,
+  `Data`, `Text`; Python has never heard of them and evaluates annotations when
+  the `def` runs, so a block written exactly as the specification writes it
+  would fail on its first line. Providing them is what makes them the type
+  system's names rather than a convention the parser happens to recognise.
+
+Still open from slice 3, and now overdue: **`SettingDef` has no default.** The
+generated settings a custom block produces *do* carry one, read from the code,
+and the difference is visible side by side in the same inspector — a custom
+block's threshold shows 0.6 because its code says so, while a built-in LLM's
+top-p shows 0 because nothing does.

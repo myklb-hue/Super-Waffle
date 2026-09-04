@@ -104,3 +104,33 @@
   color: var(--text-low);
   white-space: nowrap;
 }
+
+/* A row of the Interface section: what the signature produced (SPEC §10.1). */
+.derived {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--row-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--field);
+  margin-bottom: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+.derivedSide {
+  color: var(--text-faint);
+  width: 22px;
+}
+
+.derivedName {
+  flex: 1;
+  color: var(--text-body);
+}
+
+.derivedType {
+  color: var(--text-low);
+  font-size: var(--fs-xs);
+}

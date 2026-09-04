@@ -9,6 +9,7 @@ import { RunFigures, Transport, WarningPrompt } from './Transport';
 import { useDocument } from '../stores/document';
 import { useAutosave } from '../stores/autosave';
 import { listenToRuns } from '../stores/run';
+import { watchDocument } from '../stores/source';
 import { useKeyboard } from './keyboard';
 import s from './Shell.module.css';
 
@@ -24,9 +25,10 @@ export function Shell({ engine }: ShellProps) {
   const save = useAutosave();
   useKeyboard();
 
-  // One subscription for the window. Every component reads the run store;
-  // nothing else listens to the engine.
+  // Two subscriptions for the window: one to the engine's events, one to the
+  // document. Every component reads the stores; nothing else listens.
   useEffect(() => listenToRuns(), []);
+  useEffect(() => watchDocument(), []);
 
   return (
     <div className={s.shell}>

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Chip, Icon } from '@cyberloom/ui';
-import { kind as lookupKind } from '@cyberloom/graph-core';
+import { kind as lookupKind, type Block } from '@cyberloom/graph-core';
 import { useDocument } from '../stores/document';
 import { CONSOLE_LIMIT, elapsed, useRun } from '../stores/run';
+import { ago, useSource } from '../stores/source';
+import { Editor } from '../code/Editor';
 import s from './Console.module.css';
 
-type Tab = 'console' | 'trace' | 'variables';
+type Tab = 'console' | 'trace' | 'variables' | 'code';
 
 /**
  * The drawer under the canvas (SPEC §8.6).
@@ -15,6 +17,11 @@ type Tab = 'console' | 'trace' | 'variables';
  * what each block's ports are holding now. They are three readings of one
  * event stream rather than three sources, so nothing here can disagree with
  * the canvas.
+ *
+ * A fourth tab appears when a custom block is selected: its code, full width
+ * (SPEC §10.7). Past a screenful the code leaves the block and lives here, and
+ * the block on the canvas stays summary-sized — which is the whole point,
+ * because a 184-line function has no business being a card on a canvas.
  */
 export function Console() {
   const [tab, setTab] = useState<Tab>('console');
@@ -24,6 +31,23 @@ export function Console() {
   const phase = useRun((r) => r.phase);
   const clear = useRun((r) => r.clearConsole);
   const warnings = lines.filter((l) => l.level === 'warn').length;
+
+  // The code tab exists only while there is code to show in it.
+  const graph = useDocument((d) => d.graph);
+  const selection = useDocument((d) => d.selection);
+  const selected =
+    selection.kind === 'block' && selection.ids.length === 1
+      ? graph.blocks.find((b) => b.id === selection.ids[0])
+      : undefined;
+  const editable = selected?.kind === 'custom' ? selected : undefined;
+  const tabs: Tab[] = editable
+    ? ['console', 'trace', 'variables', 'code']
+    : ['console', 'trace', 'variables'];
+
+  // A tab that has gone away cannot stay chosen.
+  useEffect(() => {
+    if (tab === 'code' && !editable) setTab('console');
+  }, [tab, editable]);
 
   // A run opens the drawer the first time it has something to say. After that
   // it is the user's: reopening it on every event would fight anyone who
@@ -38,9 +62,13 @@ export function Console() {
   }, [phase]);
 
   return (
-    <section className={`${s.drawer} ${open ? s.open : ''}`}>
+    <section
+      className={[s.drawer, open && s.open, open && tab === 'code' && s.tall]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <header className={s.tabs}>
-        {(['console', 'trace', 'variables'] as const).map((name) => (
+        {tabs.map((name) => (
           <button
             key={name}
             type="button"
@@ -50,7 +78,7 @@ export function Console() {
               setOpen(true);
             }}
           >
-            {name[0]!.toUpperCase() + name.slice(1)}
+            {name === 'code' ? (editable?.title ?? 'Code') : name[0]!.toUpperCase() + name.slice(1)}
             {name === 'trace' && trace.length > 0 && (
               <span className={s.count}>{trace.length}</span>
             )}
@@ -78,6 +106,7 @@ export function Console() {
           {tab === 'console' && <Lines />}
           {tab === 'trace' && <Trace />}
           {tab === 'variables' && <Variables />}
+          {tab === 'code' && editable && <Code block={editable} />}
         </div>
       )}
     </section>
@@ -187,6 +216,54 @@ function Variables() {
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * A custom block's code, full width (SPEC §10.7).
+ *
+ * The same editor the block holds, in a place with room for it. It edits the
+ * same document, so what is typed here and what is typed on the block are one
+ * thing — there is no copy to keep in step.
+ */
+function Code({ block }: { block: Block }) {
+  const setCode = useDocument((d) => d.setCode);
+  const source = useSource((s) => s.blocks[block.id]);
+  const reload = useSource((s) => s.reload);
+  const schedule = useSource((s) => s.schedule);
+  const code = block.source?.code ?? '';
+  const inFile = block.source?.mode === 'file';
+
+  return (
+    <div className={s.code}>
+      <div className={s.codeHead}>
+        <span className={s.codePath}>
+          {inFile ? (block.source?.path ?? 'a file') : `${block.title ?? block.id} · inline`}
+        </span>
+        <span className={s.codeState}>
+          {source?.error
+            ? `line ${source.error.line}: ${source.error.message}`
+            : source?.at
+              ? `reloaded ${ago(source.at)}${source.note ? ` · ${source.note}` : ' · interface unchanged'}`
+              : 'not parsed yet'}
+        </span>
+      </div>
+      <Editor
+        value={code}
+        language={block.source?.language ?? 'python'}
+        errorLine={source?.error?.line ?? null}
+        onChange={
+          inFile
+            ? undefined
+            : (next) => {
+                setCode(block.id, next);
+                schedule(block.id);
+              }
+        }
+        onSettle={() => void reload(block.id)}
+        className={s.codeEditor}
+      />
     </div>
   );
 }

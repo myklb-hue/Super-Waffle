@@ -17,6 +17,14 @@
   box-shadow: var(--shadow-selected);
 }
 
+/* Code that will not parse (SPEC §10.4). The border is the whole signal: the
+ * ports, the wires and the interface strip are all still the last good read,
+ * because the graph keeps running around a block someone is mid-edit on. */
+.broken.broken {
+  border-color: var(--err);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--err) 40%, transparent);
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -247,4 +255,99 @@
 .figureError {
   color: var(--err);
   text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------- a custom block's code */
+
+.codeBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  min-height: 0;
+}
+
+.codeBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.modes {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.mode {
+  border: 0;
+  background: transparent;
+  padding: 0 var(--sp-3);
+  height: 20px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  cursor: pointer;
+}
+
+.modeOn {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.codeEditor {
+  max-height: 320px;
+}
+
+.tooBig {
+  padding: var(--sp-4);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--text-low);
+}
+
+/* What the signature produced, under the block (SPEC §10.1). */
+.interface {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.interfaceLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tr-port);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.chipRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 1px var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+.chipSide {
+  color: var(--text-faint);
+}
+
+.chipName {
+  color: var(--text-body);
+}
+
+.note {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--ok);
 }

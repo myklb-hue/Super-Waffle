@@ -238,3 +238,84 @@ describe('adding a block', () => {
     expect(block.source?.mode).toBe('inline');
   });
 });
+
+describe('a custom block reloading', () => {
+  /** The door-watch fixture's block, as the store would hold it. */
+  function withCustom() {
+    const graph = doc().graph;
+    doc().addBlock({
+      id: 'door-check',
+      kind: 'custom',
+      title: 'door_check',
+      position: { x: 0, y: 0 },
+      size: null,
+      view: 'summary',
+      settings: {},
+      ports: [
+        { name: 'frame', type: 'image', side: 'in', optional: false },
+        { name: 'result', type: 'data', side: 'out', optional: false },
+      ],
+      source: { mode: 'inline', language: 'python', code: 'def door_check(): pass', path: null },
+      disabled: false,
+      breakpoint: false,
+      frame: null,
+    });
+    doc().connect({ node: 'input', port: 'value' }, { node: 'door-check', port: 'frame' });
+    expect(graph).toBeDefined();
+  }
+
+  beforeEach(withCustom);
+
+  const ports = () => doc().graph.blocks.find((b) => b.id === 'door-check')!.ports;
+
+  it('keeps the wires of ports that are still there', () => {
+    const before = doc().graph.wires.length;
+    const reload = doc().applyInterface('door-check', [
+      // Reordered, and one added.
+      { name: 'result', type: 'data', side: 'out', optional: false },
+      { name: 'memory', type: 'memory', side: 'in', optional: true },
+      { name: 'frame', type: 'image', side: 'in', optional: false },
+    ]);
+    expect(reload.added).toEqual(['memory']);
+    expect(reload.removed).toEqual([]);
+    expect(doc().graph.wires).toHaveLength(before);
+  });
+
+  /** A removed port drops its wire and says which (SPEC §10.3). */
+  it('drops the wire of a port that is gone', () => {
+    const reload = doc().applyInterface('door-check', [
+      { name: 'result', type: 'data', side: 'out', optional: false },
+    ]);
+    expect(reload.removed).toEqual(['frame']);
+    expect(reload.dropped).toHaveLength(1);
+    expect(reload.dropped[0]!.to.port).toBe('frame');
+    expect(doc().graph.wires.some((w) => w.to.node === 'door-check')).toBe(false);
+  });
+
+  /** Retyping keeps the wires: whether one is still legal is the grammar's
+   *  business, reported rather than silently repaired. */
+  it('keeps the wires of a port that changed type', () => {
+    const before = doc().graph.wires.length;
+    const reload = doc().applyInterface('door-check', [
+      { name: 'frame', type: 'text', side: 'in', optional: false },
+      { name: 'result', type: 'data', side: 'out', optional: false },
+    ]);
+    expect(reload.retyped).toEqual(['frame']);
+    expect(doc().graph.wires).toHaveLength(before);
+    expect(ports().find((p) => p.name === 'frame')!.type).toBe('text');
+  });
+
+  /** A reparse that agrees with what is already there must not mark the
+   *  document dirty, or every editor blur would set autosave going. */
+  it('is silent when nothing changed', () => {
+    doc().markSaved(doc().graph, []);
+    expect(doc().dirty).toBe(false);
+    const reload = doc().applyInterface('door-check', [
+      { name: 'frame', type: 'image', side: 'in', optional: false },
+      { name: 'result', type: 'data', side: 'out', optional: false },
+    ]);
+    expect(reload.added).toEqual([]);
+    expect(reload.removed).toEqual([]);
+    expect(doc().dirty).toBe(false);
+  });
+});

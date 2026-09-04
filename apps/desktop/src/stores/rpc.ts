@@ -18,6 +18,8 @@
 import type {
   Decision,
   Graph,
+  Language,
+  Reparsed,
   OpenGraph,
   Reply,
   Request,
@@ -160,4 +162,19 @@ export async function stopRun(run?: string): Promise<number> {
 export async function answerWarning(warning: string, decision: Decision): Promise<boolean> {
   const reply = await call({ method: 'run.continue', params: { warning, decision } });
   return reply.result === 'acknowledged' && reply.data.ok;
+}
+
+/** Re-read a custom block's signature (SPEC §10.3). */
+export async function reparse(
+  language: Language,
+  code: string,
+  fn?: string,
+): Promise<Reparsed> {
+  const reply = await call({
+    method: 'block.reparse',
+    params: { language, code, function: fn ?? null },
+  });
+  if (reply.result === 'error') throw new Error(reply.data.message);
+  if (reply.result !== 'interface') throw new Error(`unexpected reply: ${reply.result}`);
+  return reply.data;
 }
