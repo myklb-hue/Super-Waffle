@@ -12,7 +12,7 @@ This document consolidates every decision made across the design sessions
 into one specification. The visual mockups it describes live on the design
 canvas at <https://claude.ai/code/artifact/54c656f3-a5fe-47db-b858-e7b3794ee92e>
 and as working files under `design/block-canvas/`. Where this document and
-a mockup disagree, this document wins; §13 lists the places that happened
+a mockup disagree, this document wins; §14 lists the places that happened
 and what was changed.
 
 ## Contents
@@ -27,11 +27,12 @@ and what was changed.
 8. Running a graph
 9. Bundling: Toolbox and Memory hub
 10. Custom blocks
-11. Control, warnings and privacy
-12. Worked examples
-13. Consistency review
-14. Open questions
-15. Appendix: tokens, dimensions, figures, files
+11. Presence: the Avatar
+12. Control, warnings and privacy
+13. Worked examples
+14. Consistency review
+15. Open questions
+16. Appendix: tokens, dimensions, figures, files
 
 ---
 
@@ -84,6 +85,9 @@ explicitly in review.
 8. **The code is one view of a block, not the block.** A custom block is a
    function whose signature is its interface. It shows as compact,
    summary or code; a big program lives in the drawer, not in a big block.
+9. **Presence is a block.** The assistant's face is an actuator like any
+   other: a rig declares the expressions it supports, the model may call
+   only those, and timing comes from the wires, not from the model.
 
 ---
 
@@ -112,7 +116,7 @@ run mode (§8.1). The runtime chip shows what will execute the graph
 (`local · ollama`, `local · ollama + cuda`) with a green dot when it is
 reachable. Zoom is a percentage; *fit* frames all blocks.
 
-*Deploy* is reserved and undefined in this draft — see §14.
+*Deploy* is reserved and undefined in this draft — see §15.
 
 ### 2.3 Library panel
 
@@ -345,6 +349,7 @@ shelf in the library and the header of every block in it.
 | Text to speech | in `text` · out `audio` | |
 | Embedding | in `text` · out `data` | |
 | Classifier | in `text` · out `data` | A label with a confidence |
+| Affect | in `text` · out `affect` data | Valence and arousal read from a stream of text; feeds an Avatar's `express` port so a smile costs no tool call |
 
 ### 6.2 Capabilities — amber `#e0a458`
 
@@ -400,6 +405,9 @@ and keeps the graph armed (§8).
 | USB device | out `tool` tools, `read` stream | Serial device; `usb.send`, `usb.read` |
 | Motors | out `tool` tools, `state` stream, `fault` exec | Servo controller; `motor.move`, `motor.home`; limits and warn-before-move |
 | GPIO | out `tool` tools, `pins` stream | |
+| Avatar | in `speech` audio, `express` data, `look` data · out `tool` tools, `state` stream | The assistant's presence. §11 |
+| Status light | in `express` data · out `tool` tools | A lamp or LED that breathes a colour on the same vocabulary |
+| Sound cue | in `express` data · out `tool` tools | A chime per expression |
 
 ### 6.7 Data — violet `#a78bd0`
 
@@ -425,7 +433,7 @@ and keeps the graph armed (§8).
 
 | Block | Ports | Notes |
 | --- | --- | --- |
-| Approval | in `any` · out `any`, `halt` exec | A human step the *user* chooses to place. Consistent with §11: it is not imposed. |
+| Approval | in `any` · out `any`, `halt` exec | A human step the *user* chooses to place. Consistent with §12: it is not imposed. |
 | Form | out `data` | |
 | Notify | in `send` exec, `text` | Slack, email, desktop |
 
@@ -612,7 +620,7 @@ interface:
 Annotations use the type system (§4.1): `Image`, `Audio`, `Text`, `Data`,
 `File`, `Tools`, `Memory`. An untyped parameter becomes `any`. A parameter
 typed `Tools` makes the block a tool host of its own; one typed `Memory`
-gives it a memory handle. There is no gating on this (§11).
+gives it a memory handle. There is no gating on this (§12).
 
 ### 10.2 Source modes
 
@@ -672,9 +680,80 @@ library* puts the block under Custom (or the category it names); *Export
 
 ---
 
-## 11. Control, warnings and privacy
+## 11. Presence: the Avatar
 
-### 11.1 Warn, never block
+![Figure 15 — The Avatar panel, four rigs running the same six expressions, and the command vocabulary.](fig/Avatar.png)
+
+Everything else on the assistant graph gives it senses and hands. The
+Avatar gives it a presence: something to look at, and read a mood from.
+
+### 11.1 Rigs
+
+A rig is one aesthetic plus the animations it supports. Four ship: **Line**
+(two eyes and a mouth, nothing else), **Robot** (a head with LED eyes and a
+segmented mouth), **Orb** (a sphere whose colour and glow carry the
+expression), **Pixel** (an 8 × 8 LED matrix). A user adds a rig as a folder
+of states; Rive files are the natural format because their state machines
+take inputs directly. Rigs are content, not code: adding one is not a
+custom block.
+
+### 11.2 The vocabulary is generated from the rig
+
+| Command | Behaviour | Line | Robot | Orb | Pixel |
+| --- | --- | --- | --- | --- | --- |
+| `neutral` | the resting face; idle returns here | ● | ● | ● | ● |
+| `smile` / `frown` | valence, with an intensity 0–1 | ● | ● | ● | ● |
+| `surprised` | a beat, then settles | ● | ● | ● | ● |
+| `thinking` | held while the orchestrator streams thoughts | ● | ● | ● | ● |
+| `speaking` | driven by the speech port, never by a command | ● | ● | ● | ● |
+| `sleepy` | after the sleep timeout; any event wakes it | ● | ● | ● | |
+| `look(at)` | gaze to a point or a person | ● | ● | ● | |
+| `nod` / `shake` | one-shot gestures | ● | ● | | |
+
+When a rig is chosen, the `face.express` tool's enum is generated from what
+the rig contains. The model can only ask for expressions that exist. This
+is the custom-block rule (§10.1) applied to animation: the interface is
+derived, never typed by hand.
+
+### 11.3 Ports
+
+| Port | Type | Typically fed by | Drives |
+| --- | --- | --- | --- |
+| `tool` (out) | `tools` | Toolbox or `llm.tools` | `face.express(emotion, intensity)`, `face.look(at)`, `face.gesture(name)`; the model sets *intent* |
+| `speech` | `audio` | Text to speech, fanned out alongside the Speaker | Mouth movement from the actual audio; lip sync never involves the model |
+| `express` | `data` | An Affect model on the orchestrator's text, or a Branch | Expression as a flow, for graphs that should not spend a tool call on every smile |
+| `look` | `data` | Face recognition `person` | Gaze follows whoever is in frame |
+| `state` (out) | `stream` | | Current expression, speaking or idle, gaze target |
+
+Intent from the model, timing from the wires: a tool call sets what the
+face means, the speech audio sets when the mouth moves, the look port sets
+where it looks. None of the three waits for the others.
+
+### 11.4 Idle
+
+Blink cadence, breathing, gaze drift and a settle-to-neutral timer are the
+block's own, so the avatar is alive between turns. After a configurable
+period with no events it sleeps; the next event wakes it.
+
+### 11.5 Output
+
+A window (optionally always on top), a specific screen, or a physical face:
+the avatar can call `face.render` on a USB device block to drive an LED
+matrix. The target is a setting, not a wire.
+
+### 11.6 A family
+
+The Avatar is one of a small family of expression actuators. A **Status
+light** breathes a colour and a **Sound cue** plays a chime, each on the
+same command vocabulary. Same pattern, different medium.
+
+### 11.7 Warnings
+
+`face.express` is not a physical action and does not warn.
+
+## 12. Control, warnings and privacy
+
+### 12.1 Warn, never block
 
 The user owns their tools. The application may warn before a truly
 dangerous action; it may not prevent one.
@@ -688,7 +767,7 @@ dangerous action; it may not prevent one.
   footnote.
 - A hardware fault *pauses*; one click resumes.
 
-### 11.2 What warrants a warning by default
+### 12.2 What warrants a warning by default
 
 - Running a shell command outside the allowed list.
 - A physical action (motor move, GPIO write).
@@ -696,7 +775,7 @@ dangerous action; it may not prevent one.
 - Enrolling a new face.
 - Sending data to a remote model or service for the first time in a graph.
 
-### 11.3 Privacy defaults
+### 12.3 Privacy defaults
 
 - Frames and audio never leave the machine and are not recorded unless
   the user turns recording on.
@@ -709,9 +788,9 @@ dangerous action; it may not prevent one.
 
 ---
 
-## 12. Worked examples
+## 13. Worked examples
 
-### 12.1 Customer triage — a five-block run
+### 13.1 Customer triage — a five-block run
 
 Figures 3 and 7. The smallest complete program: an Input, an LLM, and two
 runtimes offered to it through a Toolbox.
@@ -729,7 +808,7 @@ the model reads the linker error and answers. Everything is visible on the
 canvas as it happens: the live wire, the token rate on the LLM, the exit
 code on the terminal, the console lines below.
 
-### 12.2 Inbox triage — a live graph
+### 13.2 Inbox triage — a live graph
 
 Figure 8. The same idea that never finishes.
 
@@ -750,11 +829,11 @@ Every fifteen minutes a second LLM digests the last quarter hour and emails
 it. The transport reads *live*; the graph panel shows the overlap policy
 and the recent events.
 
-### 12.3 Home assistant — an embodied graph
+### 13.3 Home assistant — an embodied graph
 
 ![Figure 9 — The home assistant as one graph, library collapsed to the rail. Senses feed specialist models, which feed an orchestrator; memory bundles through a hub; actions go to motors as a warned tool call; feedback returns on the motors' own ports.](fig/Assistant.png)
 
-Sixteen blocks, eighteen wires. Left to right:
+Eighteen blocks, twenty-two wires. Left to right:
 
 | Wire | From | To | Type | Note |
 | --- | --- | --- | --- | --- |
@@ -776,6 +855,10 @@ Sixteen blocks, eighteen wires. Left to right:
 | 16 | Orchestrator `text` | Text to speech `text` | text | fan-out |
 | 17 | Text to speech `audio` | Speaker `audio` | audio | |
 | 18 | Orchestrator `thoughts` | Terminal `text` | text | prints thoughts |
+| 19 | Orchestrator `text` | Affect `text` | text | fan-out |
+| 20 | Affect `affect` | Avatar `express` | data | expression as a flow |
+| 21 | Text to speech `audio` | Avatar `speech` | audio | lip sync; fan-out with the Speaker |
+| 22 | Face recognition `person` | Avatar `look` | data | gaze |
 
 What the example demonstrates:
 
@@ -790,12 +873,17 @@ What the example demonstrates:
 - **Acting on the world.** Motors are offered as a tool; a move warns
   first and then runs; the motors report position continuously and raise a
   fault that pauses the Toolbox.
+- **A face.** The Avatar's mouth moves from the speech audio, its
+  expression follows an Affect model reading the orchestrator's own words,
+  and its gaze follows whoever face recognition sees. Its `tool` port is
+  left unbound in this example: the model could call `face.express`
+  directly, but here expression is a flow.
 
 The narrative in the mockup: Mykl asks about the front door; the camera
 shows it closed and empty for two minutes; the orchestrator decides to pan
 the camera to confirm and calls `motor.move(pan: −40)` after a warning.
 
-### 12.4 door_check — a custom block
+### 13.4 door_check — a custom block
 
 Figures 10–13. A Python function with an `Image` parameter, a `float`
 default and a `Data` return becomes a block with one input port, one
@@ -806,7 +894,7 @@ the code is edited in the drawer.
 
 ---
 
-## 13. Consistency review
+## 14. Consistency review
 
 The fifteen artboards were reviewed against each other before this
 document was written. Findings, and what was done:
@@ -819,18 +907,19 @@ document was written. Findings, and what was done:
 | 4 | In the first draft, runtime blocks' tool ports were typed `stream` and `data`, so a Terminal could not legally reach `llm.tools`. | Runtime and actuator tool ports are typed `tools` (§6.3). Fixed in all screens. |
 | 5 | Port labels overlaid block content in the first draft. | Blocks restructured with a port zone above the body (§3.1). |
 | 6 | Toolbox input labels differed (terminal/python vs motors/pause). | Toolbox inputs are dynamic, one slot per connection, named after the connected block (§9.1). |
-| 7 | Approval gates (*Require approval*, *awaiting ok*, *confirm?*, a Toolbox that *locks*) contradicted the no-blocking decision. | Relabelled as warnings throughout (§11). The Toolbox pauses and resumes. |
+| 7 | Approval gates (*Require approval*, *awaiting ok*, *confirm?*, a Toolbox that *locks*) contradicted the no-blocking decision. | Relabelled as warnings throughout (§12). The Toolbox pauses and resumes. |
 | 8 | The custom block's header chip read *custom* on one sheet, *reloaded* on another, *py* on a third. | The header carries the language chip; transient state chips (*reloaded*) show briefly beside it. Sheets updated. |
 | 9 | Notify had a `send` (exec) input on one screen and a `text` input on another. | Both are canonical (§6.9); hidden-optional rule applies. |
 | 10 | The Loop frame showed only `items`; the Loop panel listed four ports. | All four are canonical; the frame hides unwired outputs. |
 | 11 | USB device appeared in the assistant graph in one revision and not the next. | Removed from the example for space; it remains in the library with its ports defined (§6.6). |
 | 12 | Handle wires were visually identical to flow wires. | Two-way mark and heavier weight added (§4.3). |
 | 13 | The Motors panel clipped its last field. | Panel height corrected. |
-| 14 | *Deploy* sits on the top bar with no defined behaviour. | Left as an open question (§14). |
+| 14 | *Deploy* sits on the top bar with no defined behaviour. | Left as an open question (§15). |
+| 15 | The Avatar on Figure 9 shows an unwired `tool` port, which §4.5 says should be hidden. | Kept visible and dimmed on purpose, so the example shows both ways an expression can arrive. The rule stands; the mockup is the exception. |
 
 ---
 
-## 14. Open questions
+## 15. Open questions
 
 Decisions this draft does not make. Each needs an answer before build.
 
@@ -843,7 +932,7 @@ Decisions this draft does not make. Each needs an answer before build.
    (JSON or YAML) with inline custom-block code embedded. Version control
    friendliness matters if graphs are edited by hand.
 4. **Remote models.** The examples are all local (Ollama). If a cloud model
-   is allowed, the first send should warn (§11.2). Is a per-graph
+   is allowed, the first send should warn (§12.2). Is a per-graph
    *local only* switch wanted?
 5. **Wire transforms.** *Transform: None* on the wire inspector implies a
    mapping step; its editor is undesigned.
@@ -857,9 +946,9 @@ Decisions this draft does not make. Each needs an answer before build.
 
 ---
 
-## 15. Appendix
+## 16. Appendix
 
-### 15.1 Colour tokens
+### 16.1 Colour tokens
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -880,7 +969,7 @@ Category colours: models `#56c7d6`, capabilities `#e0a458`, runtimes
 `#a78bd0`, control `#8a93a3`, human `#d97f8f`, custom `#c3ccd8`. Port type
 colours are in §4.1.
 
-### 15.2 Type
+### 16.2 Type
 
 - **Space Grotesk** 400–700 for UI: block titles, panel titles, section
   headings, buttons, body copy in panels.
@@ -892,7 +981,7 @@ Sizes on the reference frame: block title 12 px; port label 9.5 px; field
 11.5 px; panel section label 9.5 px uppercase; console 10.5 px on 1.85
 line height; code 10.5 px on 19 px lines.
 
-### 15.3 Dimensions
+### 16.3 Dimensions
 
 | Element | Value |
 | --- | --- |
@@ -907,7 +996,7 @@ line height; code 10.5 px on 19 px lines.
 | Minimum block width | 168 px |
 | Hit targets | ≥ 44 px on touch; 26–30 px controls on desktop |
 
-### 15.4 Figures
+### 16.4 Figures
 
 | Figure | Artboard | Canvas page |
 | --- | --- | --- |
@@ -925,9 +1014,10 @@ line height; code 10.5 px on 19 px lines.
 | 12 | BlockViews | Custom blocks |
 | 13 | CustomDrawer | Custom blocks |
 | 14 | RunModes | Live and embodied |
+| 15 | Avatar | Live and embodied |
 | — | Interactive (clickable) | Clickable |
 
-### 15.5 Files
+### 16.5 Files
 
 ```
 design/block-canvas/

@@ -116,6 +116,8 @@ human rose.
 - `SensePanels` — inspector panels for a Webcam, Face recognition, the
   Memory hub, and Motors. Each leads with the boundary that matters
   (privacy, enrolment, what is stored, physical limits).
+- `Avatar` — the Avatar panel, four rigs (Line, Robot, Orb, Pixel) running
+  the same six expressions, and the command vocabulary.
 
 **Custom blocks**
 

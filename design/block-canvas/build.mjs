@@ -87,6 +87,9 @@ const ICONS = {
   dots:'<circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/>',
   fit:'<path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9"/><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9"/><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/>',
   minus:'<path d="M6 12h12"/>',
+  face:'<circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10.2" r="1.1" fill="currentColor" stroke="none"/><path d="M8.5 14.3c1 1.4 2.2 2.1 3.5 2.1s2.5-.7 3.5-2.1"/>',
+  lamp:'<path d="M12 3a6 6 0 0 0-3.4 10.9c.6.5.9 1.2.9 2.1h5c0-.9.3-1.6.9-2.1A6 6 0 0 0 12 3z"/><path d="M9.5 19h5"/><path d="M10.5 21.5h3"/>',
+  bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
   code:'<path d="M9 8L5.5 12 9 16"/><path d="M15 8l3.5 4-3.5 4"/>',
   mark:'<circle cx="5.5" cy="6" r="2.2"/><circle cx="5.5" cy="18" r="2.2"/><circle cx="18.5" cy="12" r="2.6"/><path d="M7.7 6.9L16 11"/><path d="M7.7 17.1L16 13"/>',
 };
@@ -354,6 +357,7 @@ const LIB = [
     { n:'Text to speech', i:'form', sig:'text &rarr; audio', t:['text','audio'] },
     { n:'Embedding', i:'embed', sig:'text &rarr; data', t:['text','data'] },
     { n:'Classifier', i:'shield', sig:'text &rarr; data', t:['text','data'] },
+    { n:'Affect', i:'face', sig:'text &rarr; data', t:['text','data'] },
   ]},
   { id:'capabilities', name:'Capabilities', blocks:[
     { n:'Toolbox', i:'toolbox', sig:'tools[] &rarr; tools', t:['tools'] },
@@ -388,6 +392,9 @@ const LIB = [
     { n:'USB device', i:'plug', sig:'&rarr; tools', t:['tools'] },
     { n:'Motors', i:'loop', sig:'&rarr; tools', t:['tools'] },
     { n:'GPIO', i:'bolt', sig:'&rarr; tools', t:['tools'] },
+    { n:'Avatar', i:'face', sig:'audio, data &rarr; tools, stream', t:['audio','data','tools','stream'] },
+    { n:'Status light', i:'lamp', sig:'data &rarr;', t:['data'] },
+    { n:'Sound cue', i:'bell', sig:'data &rarr;', t:['data'] },
   ]},
   { id:'data', name:'Data', blocks:[
     { n:'Input', i:'input', sig:'&rarr; any', t:['any'] },
@@ -907,7 +914,7 @@ const TYPE_DOC = [
 const byId = (id) => LIB.find(c => c.id === id);
 
 const LIBRARY_SHEET = doc(sheet({
-  w: 1470, h: 1190, kicker: 'Left panel',
+  w: 1470, h: 1250, kicker: 'Left panel',
   title: 'Nine categories plus yours, one type system',
   body: `<div style="display:flex;gap:26px;align-items:flex-start;">
   <div style="width:${LIB_W}px;flex:none;height:748px;border:1px solid ${C.line};border-radius:10px;overflow:hidden;display:flex;">${libraryPanel({ open: ['models', 'capabilities', 'runtimes'] })}</div>
@@ -1400,6 +1407,83 @@ const camPreview = `<div style="position:relative;height:46px;border-radius:5px;
 </div>`;
 
 const fnChip = (t) => chip(t, T.tools);
+
+/* --------------------------------------------------------------- rigs */
+// Four base aesthetics, one expression vocabulary. Each returns a 64-unit SVG.
+const RIG_EXPR = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking'];
+function rigFace(rig, expr, size = 64) {
+  const W = C.hi, cy = C.accent, am = T.tools, vi = T.data;
+  let g = '';
+  if (rig === 'line') {
+    const eyes = {
+      neutral: `<circle cx="22" cy="26" r="2.6" fill="${W}"/><circle cx="42" cy="26" r="2.6" fill="${W}"/>`,
+      smile: `<path d="M17 27q5-6 10 0" /><path d="M37 27q5-6 10 0"/>`,
+      frown: `<circle cx="22" cy="27" r="2.6" fill="${W}"/><circle cx="42" cy="27" r="2.6" fill="${W}"/><path d="M16 19l9 3"/><path d="M48 19l-9 3"/>`,
+      surprised: `<circle cx="22" cy="25" r="4.2"/><circle cx="42" cy="25" r="4.2"/>`,
+      thinking: `<circle cx="22" cy="26" r="2.6" fill="${W}"/><circle cx="43" cy="22" r="2.6" fill="${W}"/><path d="M37 16q5-3 10 0"/>`,
+      speaking: `<circle cx="22" cy="26" r="2.6" fill="${W}"/><circle cx="42" cy="26" r="2.6" fill="${W}"/>`,
+    }[expr];
+    const mouth = {
+      neutral: `<path d="M25 43h14"/>`,
+      smile: `<path d="M21 40q11 11 22 0"/>`,
+      frown: `<path d="M21 46q11-9 22 0"/>`,
+      surprised: `<ellipse cx="32" cy="44" rx="4.5" ry="6.5"/>`,
+      thinking: `<path d="M25 44q5-4 10 0"/><circle cx="43" cy="45" r="1.4" fill="${W}"/><circle cx="48" cy="45" r="1.4" fill="${W}"/>`,
+      speaking: `<ellipse cx="32" cy="43" rx="7" ry="4"/>`,
+    }[expr];
+    g = `<g fill="none" stroke="${W}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${eyes}${mouth}</g>`;
+  } else if (rig === 'robot') {
+    const eye = (x, h, skew = 0) => `<rect x="${x}" y="${28 - h / 2}" width="11" height="${h}" rx="2" fill="${cy}" transform="skewY(${skew}) translate(0 ${-skew * 0.2})"/>`;
+    const eyes = {
+      neutral: eye(17, 6) + eye(36, 6),
+      smile: `<path d="M17 30q5.5-7 11 0" fill="none" stroke="${cy}" stroke-width="3.5" stroke-linecap="round"/><path d="M36 30q5.5-7 11 0" fill="none" stroke="${cy}" stroke-width="3.5" stroke-linecap="round"/>`,
+      frown: `<rect x="17" y="24" width="11" height="6" rx="2" fill="${cy}" transform="rotate(12 22.5 27)"/><rect x="36" y="24" width="11" height="6" rx="2" fill="${cy}" transform="rotate(-12 41.5 27)"/>`,
+      surprised: eye(17, 11) + eye(36, 11),
+      thinking: eye(17, 6) + `<rect x="36" y="22" width="11" height="4" rx="2" fill="${cy}"/>`,
+      speaking: eye(17, 6) + eye(36, 6),
+    }[expr];
+    const bars = {
+      neutral: [[0, 3], [0, 3], [0, 3], [0, 3], [0, 3]],
+      smile: [[-3, 3], [0, 3], [1.5, 3], [0, 3], [-3, 3]],
+      frown: [[1.5, 3], [0, 3], [-2, 3], [0, 3], [1.5, 3]],
+      surprised: null,
+      thinking: [[0, 3], [0, 3], [0, 3], null, null],
+      speaking: [[0, 3], [0, 7], [0, 5], [0, 8], [0, 4]],
+    }[expr];
+    const mouth = bars === null
+      ? `<rect x="28" y="38" width="8" height="8" rx="2" fill="${cy}"/>`
+      : bars.map((b, i) => b ? `<rect x="${20 + i * 5.2}" y="${42 - b[0] - b[1] / 2}" width="3.6" height="${b[1]}" rx="1" fill="${cy}"/>` : '').join('');
+    g = `<rect x="10" y="12" width="44" height="42" rx="9" fill="${C.block}" stroke="${C.mid}" stroke-width="2"/><path d="M32 12V6" stroke="${C.mid}" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="5" r="2" fill="${C.mid}"/>${eyes}${mouth}`;
+  } else if (rig === 'orb') {
+    const col = { neutral: cy, smile: am, frown: '#4e6392', surprised: W, thinking: vi, speaking: cy }[expr];
+    const r = expr === 'surprised' ? 23 : 20;
+    const ink = '#0b0d11';
+    const eyes = {
+      neutral: `<circle cx="26" cy="30" r="2.2" fill="${ink}"/><circle cx="38" cy="30" r="2.2" fill="${ink}"/>`,
+      smile: `<path d="M22 31q4-5 8 0M34 31q4-5 8 0" fill="none" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>`,
+      frown: `<path d="M22 28l7 3M42 28l-7 3" fill="none" stroke="${W}" stroke-width="2.2" stroke-linecap="round"/>`,
+      surprised: `<circle cx="25" cy="29" r="3.4" fill="${ink}"/><circle cx="39" cy="29" r="3.4" fill="${ink}"/>`,
+      thinking: `<circle cx="26" cy="31" r="2.2" fill="${ink}"/><circle cx="39" cy="27" r="2.2" fill="${ink}"/><circle cx="50" cy="16" r="2.4" fill="${vi}"/>`,
+      speaking: `<circle cx="26" cy="30" r="2.2" fill="${ink}"/><circle cx="38" cy="30" r="2.2" fill="${ink}"/><circle cx="32" cy="32" r="26" fill="none" stroke="${cy}" stroke-width="1.2" opacity=".55"/><circle cx="32" cy="32" r="30" fill="none" stroke="${cy}" stroke-width="1" opacity=".25"/>`,
+    }[expr];
+    g = `<circle cx="32" cy="32" r="${r + 6}" fill="${col}" opacity=".16"/><circle cx="32" cy="32" r="${r}" fill="${col}"/><circle cx="26" cy="24" r="6" fill="#ffffff" opacity=".16"/>${eyes}`;
+  } else if (rig === 'pixel') {
+    const led = T.tools;
+    const eyesN = [[2, 2], [5, 2]];
+    const cells = {
+      neutral: [...eyesN, [2, 5], [3, 5], [4, 5], [5, 5]],
+      smile: [...eyesN, [1, 5], [2, 6], [3, 6], [4, 6], [5, 6], [6, 5]],
+      frown: [...eyesN, [1, 6], [2, 5], [3, 5], [4, 5], [5, 5], [6, 6]],
+      surprised: [[2, 1], [2, 2], [5, 1], [5, 2], [3, 5], [4, 5], [3, 6], [4, 6]],
+      thinking: [[2, 2], [5, 1], [2, 5], [3, 5], [4, 5], [7, 3]],
+      speaking: [...eyesN, [2, 5], [3, 5], [4, 5], [5, 5], [3, 6], [4, 6]],
+    }[expr];
+    let grid = '';
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) grid += `<rect x="${8 + x * 6}" y="${8 + y * 6}" width="5" height="5" rx="1" fill="${C.soft}"/>`;
+    g = `<rect x="4" y="4" width="56" height="56" rx="4" fill="#07080a"/>${grid}${cells.map(([x, y]) => `<rect x="${8 + x * 6}" y="${8 + y * 6}" width="5" height="5" rx="1" fill="${led}"/>`).join('')}`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" style="display:block;flex:none;">${g}</svg>`;
+}
 const viewToggle = (active) => `<div style="display:flex;gap:1px;padding:1px;background:${C.field};border:1px solid ${C.line};border-radius:4px;">${[['minus', 'compact'], ['form', 'summary'], ['code', 'code']].map(([ic, v]) => `<div style="display:flex;align-items:center;justify-content:center;width:16px;height:14px;border-radius:3px;background:${v === active ? rgba(C.accent, 0.22) : 'transparent'};">${icon(ic, 10, v === active ? C.accent : C.low, 2)}</div>`).join('')}</div>`;
 
 const XB = {
@@ -1415,6 +1499,8 @@ const XB = {
   toolbox: { x: 520, y: 610, w: 200 },
   hub: { x: 520, y: 806, w: 210 },
   llm: { x: 780, y: 300, w: 260 },
+  affect: { x: 1100, y: 30, w: 200 },
+  avatar: { x: 1340, y: 40, w: 200 },
   display: { x: 1100, y: 200, w: 200 },
   tts: { x: 1100, y: 360, w: 200 },
   term: { x: 1100, y: 490, w: 200 },
@@ -1478,6 +1564,19 @@ const asstNodes = [
       { kind: 'text', label: 'thoughts', side: 'out' },
       { kind: 'data', label: 'calls', side: 'out' },
     ] }),
+  blockNode({ ...XB.affect, icon: 'face', color: CAT.models, title: 'Affect', state: 'running',
+    body: `<div style="display:flex;gap:4px;">${chip('calm .72', CAT.models)}${chip('curious .21', C.mid)}</div><div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">affect-small &middot; 4 ms</div>`,
+    ports: [{ kind: 'text', label: 'text', side: 'in' }, { kind: 'data', label: 'affect', side: 'out' }] }),
+  blockNode({ ...XB.avatar, icon: 'face', color: CAT.actuators, title: 'Avatar', state: 'running',
+    badge: chip('line', CAT.actuators),
+    body: `<div style="display:flex;align-items:center;gap:10px;"><div style="width:46px;height:46px;flex:none;border-radius:6px;background:${C.field};border:1px solid ${C.soft};display:flex;align-items:center;justify-content:center;">${rigFace('line', 'smile', 40)}</div><div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">smile &middot; speaking<br>looking at Mykl</div></div>`,
+    ports: [
+      { kind: 'audio', label: 'speech', side: 'in' },
+      { kind: 'data', label: 'express', side: 'in' },
+      { kind: 'data', label: 'look', side: 'in' },
+      { kind: 'tools', label: 'tool', side: 'out', dim: true },
+      { kind: 'stream', label: 'state', side: 'out' },
+    ] }),
   blockNode({ ...XB.display, icon: 'form', color: CAT.actuators, title: 'Display', state: 'ok',
     body: `<div style="padding:7px 9px;border-radius:5px;background:${C.field};border:1px solid ${C.soft};font-size:10.5px;line-height:1.5;color:#c3cad4;">Front door is closed. Last motion 14:01.</div><div style="margin-top:6px;font-family:${MONO};font-size:9.5px;color:${C.faint};">HDMI-1 &middot; overlay</div>`,
     ports: [{ kind: 'text', label: 'text', side: 'in' }] }),
@@ -1512,12 +1611,16 @@ const asstSvg = [
   xw('llm', 0, 'tts', 0, 'text', { opacity: 0.5 }),
   xw('tts', 0, 'speaker', 0, 'audio', { opacity: 0.5 }),
   xw('llm', 1, 'term', 0, 'text', { live: true, dash: '6 6' }),
+  xw('llm', 0, 'affect', 0, 'text', { live: true, dash: '6 6' }),
+  xw('affect', 0, 'avatar', 1, 'data', { live: true, dash: '6 6' }),
+  xw('tts', 0, 'avatar', 0, 'audio', { opacity: 0.5 }),
+  xw('facerec', 0, 'avatar', 2, 'data'),
 ].join('');
 
 const ORCH_BODY = [
   sect('Model', rowField('Provider', 'Ollama &middot; local &middot; cuda', { select: true, icon: 'llm' }) + rowField('Model', 'qwen2.5:14b', { select: true }) + rowField('Role', 'Orchestrator', { select: true, gap: 0 })
     + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Coordinates the specialists below. It never sees raw frames or audio &mdash; only what they report.</div>`),
-  sect('Specialists', connRow('eye', 'Object detection', 'yolo-v8n &rarr; context', 'data', 'running') + connRow('approve', 'Face recognition', 'insightface &rarr; context', 'data', 'ok') + connRow('note', 'Speech to text', 'whisper-small &rarr; prompt', 'text', 'running'), { tint: CAT.models, right: chip('3', CAT.models) }),
+  sect('Specialists', connRow('eye', 'Object detection', 'yolo-v8n &rarr; context', 'data', 'running') + connRow('approve', 'Face recognition', 'insightface &rarr; context', 'data', 'ok') + connRow('note', 'Speech to text', 'whisper-small &rarr; prompt', 'text', 'running') + connRow('face', 'Affect', 'text &rarr; avatar.express', 'data', 'running'), { tint: CAT.models, right: chip('4', CAT.models) }),
   sect('Memory', connRow('merge', 'Memory hub', 'working + long-term', 'memory', 'ok') + switchRow('May write memories', true, { hint: 'remember() and forget() offered as tools', col: T.memory }), { tint: T.memory, right: chip('hub', T.memory) }),
   sect('Tools', connRow('toolbox', 'Toolbox', 'motor.move, motor.home &middot; pauses on fault', 'tools', 'ok') + switchRow('Warn on physical actions', true, { hint: 'a warning, never a block &mdash; you own your tools', col: C.warn }), { tint: T.tools, right: chip('3', T.tools) }),
   sect('Thoughts', switchRow('Print thoughts', true, { hint: '&rarr; Terminal, one line per step' }) + rowField('Detail', 'look / recall / act', { select: true, gap: 0 })),
@@ -1537,11 +1640,11 @@ const ASSISTANT = doc(`<div style="width:${AW}px;height:${AH}px;display:flex;fle
         <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.tools};"></span>tools &middot; two-way</div>
         <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.exec};"></span>exec &middot; fault</div>
       </div>
-      ${minimap([[8, 9, 12, 8, CAT.senses], [8, 22, 12, 7, CAT.senses], [8, 32, 12, 6, CAT.senses], [24, 8, 13, 8, CAT.models], [24, 18, 13, 8, CAT.models], [24, 27, 13, 7, CAT.models], [24, 37, 13, 12, CAT.actuators], [24, 51, 13, 8, CAT.memory], [24, 60, 13, 9, CAT.memory], [41, 46, 13, 11, CAT.capabilities], [41, 59, 13, 11, CAT.memory], [59, 26, 17, 13, CAT.models], [80, 19, 13, 7, CAT.actuators], [80, 28, 13, 6, CAT.models], [80, 37, 13, 7, CAT.runtimes], [96, 28, 12, 6, CAT.actuators]])}
+      ${minimap([[8, 9, 12, 8, CAT.senses], [8, 22, 12, 7, CAT.senses], [8, 32, 12, 6, CAT.senses], [24, 8, 13, 8, CAT.models], [24, 18, 13, 8, CAT.models], [24, 27, 13, 7, CAT.models], [24, 37, 13, 12, CAT.actuators], [24, 51, 13, 8, CAT.memory], [24, 60, 13, 9, CAT.memory], [41, 46, 13, 11, CAT.capabilities], [41, 59, 13, 11, CAT.memory], [59, 26, 17, 13, CAT.models], [80, 8, 13, 6, CAT.models], [96, 9, 13, 10, CAT.actuators], [80, 19, 13, 7, CAT.actuators], [80, 28, 13, 6, CAT.models], [80, 37, 13, 7, CAT.runtimes], [96, 28, 12, 6, CAT.actuators]])}
     </div>
     ${inspector(ORCH_BODY, { title: 'Orchestrator', sub: 'models &middot; llm.chat &middot; role: orchestrator', icn: 'llm', col: CAT.models, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' })}
   </div>
-  ${statusbar('16 blocks &middot; 18 wires &middot; 3 specialists', 'live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 warning')}
+  ${statusbar('18 blocks &middot; 22 wires &middot; 4 specialists', 'live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 warning')}
 </div>`);
 
 /* =========================================================== 11. SensePanels */
@@ -1915,6 +2018,66 @@ const CUSTOMDRAWER = doc(shell({
   status: statusbar('4 blocks &middot; 3 wires &middot; 1 custom', 'door_check.py &middot; 184 lines &middot; reloaded 4 s ago &middot; +1 port'),
 }));
 
+/* ================================================================ 16. Avatar */
+
+const RIGS = [['line', 'Line'], ['robot', 'Robot'], ['orb', 'Orb'], ['pixel', 'Pixel']];
+
+const rigThumb = (rig, name, on) => `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 4px 6px;border-radius:7px;background:${on ? rgba(CAT.actuators, 0.12) : C.field};border:1px solid ${on ? rgba(CAT.actuators, 0.5) : C.line};">${rigFace(rig, 'neutral', 40)}<span style="font-size:10.5px;color:${on ? C.hi : C.mid};">${name}</span></div>`;
+
+const VOCAB = ['neutral', 'smile', 'frown', 'surprised', 'thinking', 'speaking', 'sleepy', 'look', 'nod', 'shake'];
+
+const AVATAR_BODY = [
+  sect('Rig', `<div style="display:flex;gap:6px;">${RIGS.map(([r, n]) => rigThumb(r, n, r === 'line')).join('')}</div><div style="margin-top:9px;display:flex;align-items:center;gap:8px;"><span style="font-size:10px;color:${C.low};">Rigs are content, not code.</span><span style="flex:1;"></span>${chip('add rig&#8230;', C.mid)}</div>`, { tint: CAT.actuators, right: chip('line', CAT.actuators) }),
+  sect('Vocabulary', `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px;">${VOCAB.map(v => chip(v, T.tools)).join('')}</div>` + rowField('Offered as', 'face.express, face.look, face.gesture', { mono: true, gap: 0 }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Generated from the rig. A rig without <span style="font-family:${MONO};">frown</span> simply doesn't offer it.</div>`, { right: chip('10', T.tools) }),
+  sect('Inputs', connRow('note', 'speech', 'Text to speech &middot; lip sync from amplitude', 'audio', 'ok') + connRow('face', 'express', 'Affect &middot; from the orchestrator\'s own words', 'data', 'running') + connRow('approve', 'look', 'Face recognition &middot; gaze follows a person', 'data', 'ok') + switchRow('Auto-affect from speech', false, { hint: 'off &mdash; an Affect block feeds express instead' })),
+  sect('Idle', rowField('Blink', 'every 3&ndash;6 s', { mono: true }) + rowField('Breathe', 'on &middot; 12 / min', { mono: true }) + rowField('Settle to neutral after', '4 s', { mono: true }) + rowField('Sleep after', '10 min without events', { select: true, gap: 0 })),
+  sect('Output', rowField('Target', 'Window &middot; always on top', { select: true, icon: 'form' }) + rowField('Size', '480 &times; 480', { mono: true, gap: 0 }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Or a physical face over USB &mdash; the avatar calls <span style="font-family:${MONO};">face.render</span> on a device block.</div>`),
+  sect('Live', `<div style="display:flex;align-items:center;gap:10px;">${rigFace('line', 'smile', 44)}<div style="font-family:${MONO};font-size:10px;line-height:1.7;color:${C.mid};">smile &middot; 0.8<br>speaking &middot; looking at Mykl</div></div>`, { tint: C.ok, right: chip('running', C.ok, { dot: true }) }),
+].join('');
+
+const vocabRow = (name, note, rigs) => `<div style="display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:14px;align-items:center;height:30px;padding:0 10px;border-bottom:1px solid ${C.soft};">
+  <span style="font-family:${MONO};font-size:10.5px;color:${C.hi};">${name}</span>
+  <span style="font-size:10.5px;color:${C.low};">${note}</span>
+  <span style="display:flex;gap:4px;">${RIGS.map(([r]) => `<span style="width:8px;height:8px;border-radius:2px;background:${rigs.includes(r) ? CAT.actuators : C.line};"></span>`).join('')}</span>
+</div>`;
+
+const AVATAR_SHEET = doc(sheet({
+  w: 1200, h: 1260, kicker: 'Presence',
+  title: 'Four rigs, one vocabulary &mdash; the rig decides what the model may ask for',
+  body: `<div style="display:flex;gap:26px;align-items:flex-start;">
+  <div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:baseline;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:${CAT.actuators};flex:none;transform:translateY(-1px);"></span><span style="font-size:12px;font-weight:600;color:${C.hi};">Avatar</span><span style="font-size:10.5px;color:${C.low};">the assistant's presence</span></div>
+    <div style="height:1090px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(AVATAR_BODY, { title: 'Avatar', sub: 'actuators &middot; avatar.rig', icn: 'face', col: CAT.actuators, tabs: ['Settings', 'Ports', 'Runs', 'Rigs'], tab: 'Settings' })}</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:18px;">
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:14px 16px 12px;">
+      <div style="display:grid;grid-template-columns:70px repeat(6, minmax(0, 1fr));gap:6px;align-items:center;">
+        <span></span>
+        ${RIG_EXPR.map(e => `<span style="font-family:${MONO};font-size:9.5px;letter-spacing:.06em;color:${C.mid};text-align:center;">${e}</span>`).join('')}
+        ${RIGS.map(([r, n]) => `<span style="font-size:11.5px;font-weight:600;color:${C.hi};">${n}</span>` + RIG_EXPR.map(e => `<div style="display:flex;align-items:center;justify-content:center;height:96px;border-radius:8px;background:${C.field};border:1px solid ${C.soft};">${rigFace(r, e, 72)}</div>`).join('')).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:10.5px;line-height:1.5;color:${C.low};">Same six commands, four answers. Add a rig as a folder of states (Rive files are the natural format); it appears in the picker and its vocabulary is read from what it contains.</div>
+    </div>
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 150px;gap:14px;padding:9px 10px;border-bottom:1px solid ${C.soft};font-family:${MONO};font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:${C.low};"><span>command</span><span>what it does</span><span>line &middot; robot &middot; orb &middot; pixel</span></div>
+      ${vocabRow('neutral', 'the resting face; idle returns here', ['line', 'robot', 'orb', 'pixel'])}
+      ${vocabRow('smile / frown', 'valence, with an intensity 0&ndash;1', ['line', 'robot', 'orb', 'pixel'])}
+      ${vocabRow('surprised', 'a beat, then settles', ['line', 'robot', 'orb', 'pixel'])}
+      ${vocabRow('thinking', 'held while the orchestrator streams thoughts', ['line', 'robot', 'orb', 'pixel'])}
+      ${vocabRow('speaking', 'driven by the speech port, not by a command', ['line', 'robot', 'orb', 'pixel'])}
+      ${vocabRow('sleepy', 'after the sleep timeout; any event wakes it', ['line', 'robot', 'orb'])}
+      ${vocabRow('look(at)', 'gaze to a point or a person; from the look port or a call', ['line', 'robot', 'orb'])}
+      ${vocabRow('nod / shake', 'gestures; a one-shot animation', ['line', 'robot'])}
+    </div>
+    <div style="display:flex;gap:16px;">
+      ${ruleText('Intent from the model, timing from the wires', 'A tool call sets what the face means; the speech audio sets when the mouth moves; the look port sets where it looks. None of the three waits for the others.')}
+      ${ruleText('Alive between turns', 'Blink, breathe, drift and settle are the block\'s own. With no events for ten minutes it sleeps; the next event wakes it.')}
+      ${ruleText('One of a family', 'A Status light breathes a colour and a Sound cue plays a chime on the same commands. Same vocabulary pattern, different medium.')}
+    </div>
+  </div>
+</div>`,
+}));
+
 /* =================================================================== write */
 
 const files = {
@@ -1931,6 +2094,7 @@ const files = {
   'CustomBlock.dc.html': CUSTOMBLOCK,
   'CustomRules.dc.html': CUSTOMRULES,
   'BlockViews.dc.html': BLOCKVIEWS,
+  'Avatar.dc.html': AVATAR_SHEET,
   'CustomDrawer.dc.html': CUSTOMDRAWER,
   'Interactive.dc.html': INTERACTIVE,
 };
@@ -1941,12 +2105,13 @@ const canvas = {
     { file: 'Main.dc.html', x: 1680, y: 0, w: 1560, h: 900, page: 'page-1', title: 'Wiring a block in' },
     { file: 'Running.dc.html', x: 3360, y: 0, w: 1560, h: 900, page: 'page-1', title: 'Graph running' },
     { file: 'Inspector.dc.html', x: 0, y: 1080, w: 1800, h: 980, page: 'page-1', title: 'Inspector states' },
-    { file: 'Library.dc.html', x: 1920, y: 1080, w: 1470, h: 1190, page: 'page-1', title: 'Block library' },
+    { file: 'Library.dc.html', x: 1920, y: 1080, w: 1470, h: 1250, page: 'page-1', title: 'Block library' },
     { file: 'BlockAnatomy.dc.html', x: 3510, y: 1080, w: 1500, h: 760, page: 'page-1', title: 'Block anatomy' },
     { file: 'Continuous.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-2', title: 'Live graph' },
     { file: 'RunModes.dc.html', x: 1680, y: 0, w: 1120, h: 980, page: 'page-2', title: 'Run modes' },
     { file: 'Assistant.dc.html', x: 0, y: 1160, w: 1920, h: 1080, page: 'page-2', title: 'Home assistant' },
     { file: 'SensePanels.dc.html', x: 2040, y: 1160, w: 1460, h: 1020, page: 'page-2', title: 'Embodied panels' },
+    { file: 'Avatar.dc.html', x: 3620, y: 1160, w: 1200, h: 1260, page: 'page-2', title: 'Avatar and rigs' },
     { file: 'CustomBlock.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-3', title: 'Custom block' },
     { file: 'CustomRules.dc.html', x: 1680, y: 0, w: 1400, h: 820, page: 'page-3', title: 'Code becomes a block' },
     { file: 'CustomDrawer.dc.html', x: 0, y: 1080, w: 1560, h: 900, page: 'page-3', title: 'Big program, small block' },
@@ -1965,9 +2130,11 @@ const canvas = {
     { id: 'live-note', x: 0, y: -200, w: 720, page: 'page-2',
       text: 'Continuous running.\n\nA graph with a source block (Senses: watch folder, webhook, schedule, webcam...) never finishes - it stays armed and every event runs downstream. The transport chip switches from Run to live, and the inspector with nothing selected becomes the run-mode panel.\n\nA Loop is a dashed frame on the canvas: blocks inside repeat once per item.' },
     { id: 'asst-note', x: 0, y: 1010, w: 760, page: 'page-2',
-      text: 'The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model\'s text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that warns first and then runs.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator\'s context, and raises a fault on an exec port that pauses the Toolbox until you resume it.\n\nWarn, never block: the user owns their tools. A truly dangerous action gets a prompt; the prompt always has a Continue.' },
+      text: 'The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model\'s text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that warns first and then runs. An Avatar gives it a face: lip sync from the speech audio, expression from an Affect model on its own words, gaze from face recognition.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator\'s context, and raises a fault on an exec port that pauses the Toolbox until you resume it.\n\nWarn, never block: the user owns their tools. A truly dangerous action gets a prompt; the prompt always has a Continue.' },
     { id: 'custom-note', x: 0, y: -170, w: 700, page: 'page-3',
       text: 'Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in.\n\nThe code is one view of the block, not the block: compact, summary or code, per block. A big program lives in the drawer under the canvas, or in your own editor, while the block on the canvas stays small.' },
+    { id: 'avatar-note', x: 3620, y: 1010, w: 620, page: 'page-2',
+      text: 'Avatar: the block that gives the assistant a presence. A rig is one aesthetic plus the expressions it supports; the vocabulary the model can call is generated from the rig. Lip sync comes from the speech audio, never from the model.' },
     { id: 'proto-note', x: 0, y: -150, w: 620, page: 'page-4',
       text: 'Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports.' },
   ],
@@ -1977,7 +2144,7 @@ const canvas = {
     { id: 'page-3', name: 'Custom blocks' },
     { id: 'page-4', name: 'Clickable' },
   ],
-  launch: { view: 'canvas', page: 'page-3' },
+  launch: { view: 'canvas', page: 'page-2' },
 };
 
 for (const [name, html] of Object.entries(files)) writeFileSync(name, html);
