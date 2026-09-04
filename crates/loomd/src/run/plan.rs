@@ -14,7 +14,12 @@
 //! would run `cargo build` before the model had decided it wanted to.
 //!
 //! A block is a capability when it has wired outputs and every one of them is
-//! a closed type (SPEC §4.3: `tools` and `memory` are handles, not values).
+//! a *handle* — `tools` or `memory`, the types whose holder makes the calls
+//! (SPEC §4.3). Not merely a closed type: `exec` is closed too, and it is
+//! control flow rather than something to call, so a Branch whose only outputs
+//! are `exec` is a step that sets other steps going. Reading `exec` as a handle
+//! made every Branch a tool nobody held, and it never ran.
+//!
 //! A block with no wired outputs at all is a *step*, not a capability: it was
 //! placed to do something, and having nowhere to send the result does not make
 //! it a handle.
@@ -41,6 +46,9 @@ pub struct Plan {
     /// Which wire connects a producing port to a consuming one, so the runner
     /// can say which wire lit up.
     pub wires: HashMap<Endpoint, Vec<(String, Endpoint)>>,
+    /// The blocks that emit on their own initiative, in file order. A graph
+    /// with one of these never finishes by itself (SPEC §8.2).
+    pub sources: Vec<String>,
     /// What the plan could not do. Reported, never fatal: a graph with a
     /// problem still runs, minus the part that could not be ordered
     /// (SPEC §12.1).
@@ -51,6 +59,46 @@ impl Plan {
     /// Whether this block answers calls rather than taking a turn.
     pub fn is_capability(&self, id: &str) -> bool {
         self.capabilities.contains(id)
+    }
+
+    /// The steps an event on this port sets going, in the order they run.
+    ///
+    /// A live graph does not run top to bottom; it runs the part of itself
+    /// downstream of whatever just happened (SPEC §8.2). Two sources in one
+    /// graph are two programs sharing a canvas, and this is what keeps a file
+    /// arriving in a folder from also firing the fifteen-minute digest.
+    ///
+    /// Reachability follows every wire, `exec` included. Exec is control flow
+    /// rather than a value (SPEC §4.3), and control flow is precisely what
+    /// decides which blocks run — a Schedule's `tick` carries nothing and
+    /// still sets the whole branch below it going.
+    pub fn downstream_of(&self, node: &str, port: &str) -> Vec<String> {
+        let mut reached: HashSet<String> = HashSet::new();
+        let mut frontier: Vec<Endpoint> = vec![Endpoint::new(node, port)];
+        while let Some(from) = frontier.pop() {
+            let Some(targets) = self.wires.get(&from) else {
+                continue;
+            };
+            for (_, to) in targets {
+                if !reached.insert(to.node.clone()) {
+                    continue;
+                }
+                // Everything that block produces carries on downstream.
+                for end in self.wires.keys().filter(|e| e.node == to.node) {
+                    frontier.push(end.clone());
+                }
+            }
+        }
+        self.order
+            .iter()
+            .filter(|id| reached.contains(*id))
+            .cloned()
+            .collect()
+    }
+
+    /// Every source in the graph, in file order.
+    pub fn sources(&self) -> &[String] {
+        &self.sources
     }
 }
 
@@ -88,7 +136,7 @@ pub fn plan(graph: &Graph) -> Plan {
             match outs {
                 // Nowhere to send a result is not the same as having no result.
                 None => false,
-                Some(types) => types.iter().all(|t| t.is_closed()),
+                Some(types) => types.iter().all(|t| t.is_handle()),
             }
         })
         .map(|b| b.id.clone())
@@ -127,7 +175,7 @@ pub fn plan(graph: &Graph) -> Plan {
         let (from, to) = (block_of(&wire.from), block_of(&wire.to));
         // A handle wire is a binding, not a dependency: the holder does not
         // wait for the tool, it is handed the ability to call it.
-        let handle = port_type(&by_id, &wire.from, Side::Out).is_some_and(PortType::is_closed);
+        let handle = port_type(&by_id, &wire.from, Side::Out).is_some_and(PortType::is_handle);
         if handle || !step_set.contains(from) || !step_set.contains(to) || from == to {
             continue;
         }
@@ -179,12 +227,20 @@ pub fn plan(graph: &Graph) -> Plan {
         ));
     }
 
+    let sources = graph
+        .blocks
+        .iter()
+        .filter(|b| block_kinds::kind(&b.kind).is_some_and(|k| k.source))
+        .map(|b| b.id.clone())
+        .collect();
+
     let _ = wired_in;
     Plan {
         order,
         capabilities,
         bindings,
         wires,
+        sources,
         problems,
     }
 }
@@ -248,7 +304,7 @@ fn resolve_handles(
         if wire.to.node != holder {
             continue;
         }
-        if !port_type(by_id, &wire.from, Side::Out).is_some_and(PortType::is_closed) {
+        if !port_type(by_id, &wire.from, Side::Out).is_some_and(PortType::is_handle) {
             continue;
         }
         let source = &wire.from.node;
@@ -411,6 +467,43 @@ mod tests {
                 plan.problems
             );
         }
+    }
+
+    /// A live graph runs the part of itself downstream of what just happened,
+    /// not the whole thing. Two sources on one canvas are two programs.
+    #[test]
+    fn an_event_sets_going_only_what_is_below_it() {
+        let plan = plan(&fixture("inbox-triage"));
+
+        // A file arriving runs the triage branch and nothing else.
+        let from_folder = plan.downstream_of("watch", "file");
+        assert!(
+            from_folder.contains(&"classify".to_owned()),
+            "{from_folder:?}"
+        );
+        assert!(from_folder.contains(&"branch".to_owned()));
+        assert!(
+            !from_folder.contains(&"digest".to_owned()),
+            "a file must not fire the quarter-hourly digest: {from_folder:?}"
+        );
+
+        // The schedule runs the digest and nothing else. Its `tick` is an exec
+        // port carrying no value, and it still sets the branch below it going.
+        let from_clock = plan.downstream_of("schedule", "tick");
+        assert!(from_clock.contains(&"digest".to_owned()), "{from_clock:?}");
+        assert!(from_clock.contains(&"notify-email".to_owned()));
+        assert!(!from_clock.contains(&"classify".to_owned()));
+    }
+
+    /// Every source the graph holds, so the panel can list what is armed.
+    #[test]
+    fn the_plan_knows_which_blocks_are_sources() {
+        assert_eq!(
+            plan(&fixture("inbox-triage")).sources(),
+            ["webhook", "watch", "schedule"]
+        );
+        // The triage example has none, which is why it finishes.
+        assert!(plan(&fixture("customer-triage")).sources().is_empty());
     }
 
     /// A loop frame is named as something this slice does not do, rather than

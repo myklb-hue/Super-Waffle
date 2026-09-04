@@ -66,6 +66,10 @@ pub struct Summary {
     /// What the Output blocks were given, in file order.
     pub results: Vec<PortValue>,
     pub errors: Vec<String>,
+    /// What every port held when the run ended. A Once run has no use for it;
+    /// a live one carries it into the next event when the graph keeps state
+    /// (SPEC §8.4).
+    pub values: HashMap<Endpoint, Value>,
 }
 
 pub struct Runner<'a> {
@@ -106,25 +110,56 @@ impl<'a> Runner<'a> {
         emit: &mut dyn FnMut(RunEvent),
         ask: &mut dyn FnMut(&Warning) -> Decision,
     ) -> Summary {
-        let started = Instant::now();
         let plan = plan(self.graph);
+        let order = plan.order.clone();
+        self.walk(&plan, &order, HashMap::new(), true, emit, ask)
+    }
+
+    /// Run just these steps, starting from values that are already known.
+    ///
+    /// This is what a live event does: the plan says which part of the graph
+    /// is below whatever fired, and the value that fired is seeded onto its
+    /// own port before anything runs (SPEC §8.2).
+    pub fn execute_steps(
+        &self,
+        steps: &[String],
+        seeded: HashMap<Endpoint, Value>,
+        emit: &mut dyn FnMut(RunEvent),
+        ask: &mut dyn FnMut(&Warning) -> Decision,
+    ) -> Summary {
+        let plan = plan(self.graph);
+        self.walk(&plan, steps, seeded, false, emit, ask)
+    }
+
+    fn walk(
+        &self,
+        plan: &Plan,
+        order: &[String],
+        seeded: HashMap<Endpoint, Value>,
+        announce: bool,
+        emit: &mut dyn FnMut(RunEvent),
+        ask: &mut dyn FnMut(&Warning) -> Decision,
+    ) -> Summary {
+        let started = Instant::now();
         let mut st = State {
             emit,
             ask,
-            values: HashMap::new(),
+            values: seeded,
             failed: HashSet::new(),
             trusted: HashSet::new(),
             errors: Vec::new(),
             stopped: false,
         };
 
-        (st.emit)(RunEvent::Started {
-            run: self.run.clone(),
-            graph: self.graph.id.clone(),
-            order: plan.order.clone(),
-        });
-        for problem in &plan.problems {
-            self.console(&mut st, None, Level::Warn, problem.clone());
+        if announce {
+            (st.emit)(RunEvent::Started {
+                run: self.run.clone(),
+                graph: self.graph.id.clone(),
+                order: order.to_vec(),
+            });
+            for problem in &plan.problems {
+                self.console(&mut st, None, Level::Warn, problem.clone());
+            }
         }
 
         // Everything the plan will visit shows as queued before anything
@@ -134,10 +169,14 @@ impl<'a> Runner<'a> {
                 BlockState::Disabled
             } else if plan.is_capability(&block.id) {
                 BlockState::Ready
-            } else if plan.order.contains(&block.id) {
+            } else if order.contains(&block.id) {
                 BlockState::Queued
-            } else {
+            } else if announce {
                 BlockState::Idle
+            } else {
+                // A live event says nothing about the branches it is not
+                // running, so the canvas keeps showing what they last did.
+                continue;
             };
             (st.emit)(RunEvent::BlockState {
                 run: self.run.clone(),
@@ -146,7 +185,7 @@ impl<'a> Runner<'a> {
             });
         }
 
-        for id in &plan.order {
+        for id in order {
             if st.stopped || self.cancelled(&mut st) {
                 break;
             }
@@ -156,7 +195,7 @@ impl<'a> Runner<'a> {
             if block.disabled {
                 continue;
             }
-            self.step(block, &plan, &mut st);
+            self.step(block, plan, &mut st);
         }
 
         // The run's results are what reached the Output blocks, which is what a
@@ -182,17 +221,20 @@ impl<'a> Runner<'a> {
             RunOutcome::Failed
         };
         let ms = started.elapsed().as_millis() as u32;
-        (st.emit)(RunEvent::Finished {
-            run: self.run.clone(),
-            outcome,
-            ms,
-            results: results.clone(),
-        });
+        if announce {
+            (st.emit)(RunEvent::Finished {
+                run: self.run.clone(),
+                outcome,
+                ms,
+                results: results.clone(),
+            });
+        }
         Summary {
             outcome,
             ms,
             results,
             errors: st.errors,
+            values: st.values,
         }
     }
 
@@ -289,10 +331,18 @@ impl<'a> Runner<'a> {
     }
 
     /// The values on this block's wired inputs.
+    ///
+    /// An `exec` wire is skipped. Exec is control flow, never a value
+    /// (SPEC §4.3): a Schedule's tick says *run*, and reading it as an input
+    /// handed a Terminal an empty string where its command should have been —
+    /// which ran, succeeded, and did nothing.
     fn gather(&self, block: &Block, st: &mut State<'_>) -> Outputs {
         let mut inputs = Outputs::new();
         for wire in &self.graph.wires {
             if wire.to.node != block.id {
+                continue;
+            }
+            if self.wire_type(wire) == Some(graph_format::PortType::Exec) {
                 continue;
             }
             if let Some(value) = st.values.get(&wire.from) {
@@ -321,6 +371,23 @@ impl<'a> Runner<'a> {
 
     fn block(&self, id: &str) -> Option<&Block> {
         self.graph.blocks.iter().find(|b| b.id == id)
+    }
+
+    /// What a wire carries, from the port it leaves.
+    fn wire_type(&self, wire: &graph_format::Wire) -> Option<graph_format::PortType> {
+        let block = self.block(&wire.from.node)?;
+        if let Some(port) = block
+            .ports
+            .iter()
+            .find(|p| p.name == wire.from.port && p.side == graph_format::Side::Out)
+        {
+            return Some(port.port_type);
+        }
+        block_kinds::kind(&block.kind)?
+            .ports
+            .iter()
+            .find(|p| p.name == wire.from.port && p.side == graph_format::Side::Out)
+            .map(|p| p.port_type)
     }
 
     /// Whether someone pressed stop. Recorded on the state the first time it is

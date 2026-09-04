@@ -425,6 +425,16 @@ export type Request =
 	decision: Decision,
 } } | 
 /**
+ *  Hold a live graph, or let it go (SPEC §8.1).
+ * 
+ *  Events keep queueing while it is held; nothing runs. That is what makes
+ *  it safe to rewire a graph that is armed.
+ */
+{ method: "run.pause"; params: {
+	run?: string | null,
+	paused: boolean,
+} } | 
+/**
  *  Re-read a custom block's signature (SPEC §10.3).
  * 
  *  The code comes from the shell rather than from disk for the same reason

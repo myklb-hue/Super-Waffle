@@ -76,6 +76,19 @@ impl PortType {
         matches!(self, PortType::Tools | PortType::Memory | PortType::Exec)
     }
 
+    /// A handle is something the holder *calls*: `tools` and `memory`
+    /// (SPEC §4.3). Every handle is closed, but not every closed type is a
+    /// handle — `exec` is control flow, and control flow is neither a value
+    /// nor something to call.
+    ///
+    /// The distinction decides what runs. A block whose only wired outputs are
+    /// handles is a capability, waiting to be called; a block whose outputs are
+    /// `exec` is a step that sets other steps going, and treating it as a
+    /// capability would mean a Branch never ran at all.
+    pub fn is_handle(self) -> bool {
+        matches!(self, PortType::Tools | PortType::Memory)
+    }
+
     /// Whether a wire from a `self` output may land on a `target` input.
     ///
     /// The whole rule, with no implicit cast. Where two types are compatible
