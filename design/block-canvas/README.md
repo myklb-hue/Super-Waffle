@@ -47,6 +47,19 @@ of `tools` inputs and exposes one `tools` output; a **Memory hub** does the
 same for `memory`. A runtime or actuator can also wire straight into
 `llm.tools` for a simple run.
 
+`tools` and `memory` wires are *handles*, not flows: the holder (the LLM,
+or a Toolbox) calls, the device replies on the same call. They carry a
+two-way mark at the holder's end. Anything a device reports on its own
+initiative leaves on a separate port: `stream` or `data` for telemetry,
+`exec` for a fault or interrupt. The Motors block on the assistant screen
+shows all three.
+
+**Custom blocks** are code. A parameter without a default is an input port
+typed by its annotation; a parameter with a default is a setting in the
+inspector; the return annotation is the output port; the docstring is the
+description. The source is inline or a watched file, and a reload keeps
+every wire whose port still exists.
+
 Ports are rows: inputs down the left edge, outputs down the right, one row
 per index, above the block's body. Row *i* is centred 51 + 24·*i* px from
 the block's top, which is what `build.mjs` uses to route wires.
@@ -82,6 +95,15 @@ human rose.
 - `SensePanels` — inspector panels for a Webcam, Face recognition, the
   Memory hub, and Motors. Each leads with the boundary that matters
   (privacy, enrolment, what is stored, physical limits).
+
+**Custom blocks**
+
+- `CustomBlock` — a custom block open for editing on the canvas: inline
+  code with the derived interface underneath, and an inspector whose
+  Settings section was generated from the code's default arguments.
+- `CustomRules` — the same code annotated line by line against the block it
+  produces, the reload and error rules, and the Python, TypeScript and
+  shell spellings.
 
 **Clickable**
 

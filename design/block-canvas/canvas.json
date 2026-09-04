@@ -41,7 +41,7 @@
       "x": 1920,
       "y": 1080,
       "w": 1470,
-      "h": 1120,
+      "h": 1190,
       "page": "page-1",
       "title": "Block library"
     },
@@ -49,7 +49,7 @@
       "file": "BlockAnatomy.dc.html",
       "x": 3510,
       "y": 1080,
-      "w": 1240,
+      "w": 1500,
       "h": 760,
       "page": "page-1",
       "title": "Block anatomy"
@@ -86,9 +86,27 @@
       "x": 2040,
       "y": 1160,
       "w": 1460,
-      "h": 950,
+      "h": 980,
       "page": "page-2",
       "title": "Embodied panels"
+    },
+    {
+      "file": "CustomBlock.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1560,
+      "h": 900,
+      "page": "page-3",
+      "title": "Custom block"
+    },
+    {
+      "file": "CustomRules.dc.html",
+      "x": 1680,
+      "y": 0,
+      "w": 1400,
+      "h": 820,
+      "page": "page-3",
+      "title": "Code becomes a block"
     },
     {
       "file": "Interactive.dc.html",
@@ -96,7 +114,7 @@
       "y": 0,
       "w": 1560,
       "h": 900,
-      "page": "page-3",
+      "page": "page-4",
       "title": "Clickable shell",
       "is_interactive": true
     }
@@ -124,15 +142,15 @@
       "y": 940,
       "w": 520,
       "page": "page-1",
-      "text": "Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag. Now ten types, nine categories."
+      "text": "Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag. Ten types, nine categories plus Custom."
     },
     {
       "id": "anatomy-note",
       "x": 3510,
       "y": 940,
-      "w": 480,
+      "w": 560,
       "page": "page-1",
-      "text": "One block, labelled, plus every run state - and the direct-or-bundled rule for tools."
+      "text": "One block, labelled, plus every run state - and the wiring rules. Handle wires (tools, memory) carry a two-way mark at the holder's end: the call goes out, the reply comes back."
     },
     {
       "id": "live-note",
@@ -148,14 +166,22 @@
       "y": 1010,
       "w": 760,
       "page": "page-2",
-      "text": "The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model's text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that waits for approval.\n\nThe library is collapsed to a rail here to make room."
+      "text": "The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model's text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that waits for approval.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator's context, and raises a fault on an exec port that locks the Toolbox until motor.home clears it."
+    },
+    {
+      "id": "custom-note",
+      "x": 0,
+      "y": -170,
+      "w": 700,
+      "page": "page-3",
+      "text": "Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in."
     },
     {
       "id": "proto-note",
       "x": 0,
       "y": -150,
       "w": 620,
-      "page": "page-3",
+      "page": "page-4",
       "text": "Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports."
     }
   ],
@@ -170,11 +196,15 @@
     },
     {
       "id": "page-3",
+      "name": "Custom blocks"
+    },
+    {
+      "id": "page-4",
       "name": "Clickable"
     }
   ],
   "launch": {
     "view": "canvas",
-    "page": "page-2"
+    "page": "page-3"
   }
 }

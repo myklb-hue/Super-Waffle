@@ -43,7 +43,7 @@ const T = {
 const CAT = {
   models:'#56c7d6', capabilities:'#e0a458', runtimes:'#6fc98a',
   data:'#a78bd0', control:'#8a93a3', human:'#d97f8f',
-  senses:'#dcc65b', memory:'#7e9ff0', actuators:'#e8865a',
+  senses:'#dcc65b', memory:'#7e9ff0', actuators:'#e8865a', custom:'#c3ccd8',
 };
 
 const rgba = (hex, a) => {
@@ -210,7 +210,10 @@ function wire(x1, y1, x2, y2, kind, opt = {}) {
   const d = `M${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
   const halo = `<path d="${d}" fill="none" stroke="${c}" stroke-width="${opt.live ? 7 : 5}" stroke-linecap="round" opacity="${opt.live ? 0.16 : 0.09}"/>`;
   const core = `<path d="${d}" fill="none" stroke="${c}" stroke-width="${opt.width || 1.9}" stroke-linecap="round" opacity="${opt.opacity ?? 0.95}"${opt.dash ? ` stroke-dasharray="${opt.dash}"` : ''}${opt.live ? ' style="animation:flow .85s linear infinite;"' : ''}/>`;
-  return halo + core;
+  const mark = (kind === 'tools' || kind === 'memory') && !opt.nomark
+    ? `<path d="M${x2 - 22} ${y2 - 3.5}l-3.5 3.5 3.5 3.5M${x2 - 13} ${y2 - 3.5}l3.5 3.5-3.5 3.5" fill="none" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>`
+    : '';
+  return halo + core + mark;
 }
 
 /* ---------------------------------------------------------- form controls */
@@ -402,6 +405,9 @@ const LIB = [
     { n:'Approval', i:'approve', sig:'any &rarr; any | halt', t:['exec'] },
     { n:'Form', i:'form', sig:'&rarr; data', t:['data'] },
     { n:'Notify', i:'note', sig:'text &rarr;', t:['text'] },
+  ]},
+  { id:'custom', name:'Custom', blocks:[
+    { n:'door_check', i:'shield', sig:'image &rarr; data', t:['image','data'] },
   ]},
 ];
 
@@ -668,7 +674,7 @@ const mainSvg = [
   mw('input', 0, 'llm', 0, 'text', { opacity: 0.5 }),
   mw('terminal', 0, 'toolbox', 0, 'tools'),
   mw('python', 0, 'toolbox', 1, 'tools'),
-  mw('toolbox', 0, 'llm', 2, 'tools', { live: true, dash: '7 6', width: 2.3 }),
+  mw('toolbox', 0, 'llm', 2, 'tools', { live: true, dash: '7 6', width: 2.3, nomark: true }),
   `<circle cx="${snapX}" cy="${snapY}" r="10" fill="none" stroke="${T.tools}" stroke-width="1.6" opacity=".95"/>`,
   `<circle cx="${snapX}" cy="${snapY}" r="16" fill="none" stroke="${T.tools}" stroke-width="1" opacity=".35"/>`,
 ].join('');
@@ -900,12 +906,12 @@ const TYPE_DOC = [
 const byId = (id) => LIB.find(c => c.id === id);
 
 const LIBRARY_SHEET = doc(sheet({
-  w: 1470, h: 1120, kicker: 'Left panel',
-  title: 'Nine categories, forty-four blocks, one type system',
+  w: 1470, h: 1190, kicker: 'Left panel',
+  title: 'Nine categories plus yours, one type system',
   body: `<div style="display:flex;gap:26px;align-items:flex-start;">
   <div style="width:${LIB_W}px;flex:none;height:748px;border:1px solid ${C.line};border-radius:10px;overflow:hidden;display:flex;">${libraryPanel({ open: ['models', 'capabilities', 'runtimes'] })}</div>
   <div style="flex:1;display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:18px;align-content:start;">
-    <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('models'))}${catCard(byId('senses'))}${catCard(byId('human'))}</div>
+    <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('models'))}${catCard(byId('senses'))}${catCard(byId('human'))}${catCard(byId('custom'))}</div>
     <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('capabilities'))}${catCard(byId('memory'))}${catCard(byId('control'))}</div>
     <div style="display:flex;flex-direction:column;gap:18px;">${catCard(byId('runtimes'))}${catCard(byId('actuators'))}${catCard(byId('data'))}</div>
   </div>
@@ -972,7 +978,7 @@ const ruleSvg = (c1, c2, stroke, dash) => `<svg xmlns="http://www.w3.org/2000/sv
 </svg>`;
 
 const ANATOMY = doc(sheet({
-  w: 1240, h: 760, kicker: 'Vocabulary',
+  w: 1500, h: 760, kicker: 'Vocabulary',
   title: 'A block, its ports, and the states it moves through',
   body: `<div style="display:flex;gap:28px;align-items:flex-start;">
   <div style="position:relative;width:620px;height:300px;flex:none;">
@@ -1007,6 +1013,7 @@ const ANATOMY = doc(sheet({
   ${ruleCard('Same type connects', 'Drop anywhere on the target block and it snaps to the first port that accepts the type.', ruleSvg(T.tools, T.tools, T.tools), C.ok)}
   ${ruleCard('Mismatched type is refused', 'Incompatible ports dim during the drag, so a wrong wire cannot be drawn in the first place.', ruleSvg(T.text, T.tools, rgba(C.err, 0.7), '5 5'), C.err)}
   ${ruleCard('any accepts everything', 'Input, Output and Variable take any type and pass it through unchanged.', ruleSvg(T.data, T.any, T.any), C.mid)}
+  ${ruleCard('Tools reply, senses report', 'A handle wire is two-way: the call goes out, the reply comes back. Telemetry and faults leave on ports of their own.', `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="34" viewBox="0 0 200 34" style="display:block;"><circle cx="10" cy="17" r="5.5" fill="${T.tools}"/><path d="M17 17H78" fill="none" stroke="${T.tools}" stroke-width="2" stroke-linecap="round"/><path d="M60 13.5l-3.5 3.5 3.5 3.5M69 13.5l3.5 3.5-3.5 3.5" fill="none" stroke="${T.tools}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="80" y="8" width="40" height="18" rx="4" fill="none" stroke="${C.mid}" stroke-width="1.5"/><path d="M122 12H162" fill="none" stroke="${T.stream}" stroke-width="2" stroke-linecap="round"/><path d="M122 22H150" fill="none" stroke="${T.exec}" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/><circle cx="170" cy="12" r="5.5" fill="${T.stream}"/><circle cx="158" cy="22" r="4" fill="${T.exec}"/></svg>`, T.tools)}
   ${ruleCard('Direct or bundled', 'A runtime wires straight into llm.tools for a simple run; a Toolbox bundles several and adds guards.', `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="34" viewBox="0 0 200 34" style="display:block;"><circle cx="10" cy="9" r="5" fill="${T.tools}"/><path d="M17 9 C 70 9, 110 17, 162 17" fill="none" stroke="${T.tools}" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="26" r="5" fill="${T.tools}"/><path d="M17 26 C 40 26, 50 26, 70 26" fill="none" stroke="${T.tools}" stroke-width="2" stroke-linecap="round"/><rect x="72" y="20" width="26" height="12" rx="3" fill="none" stroke="${T.tools}" stroke-width="1.5"/><path d="M99 26 C 120 26, 140 17, 162 17" fill="none" stroke="${T.tools}" stroke-width="2" stroke-linecap="round"/><circle cx="170" cy="17" r="5.5" fill="${T.tools}"/></svg>`, T.tools)}
 </div>`,
 }));
@@ -1373,7 +1380,7 @@ const ACW = AW - RAIL_W - INSP_W;   // 1544
 const ACH = AH - TOP_H - BOT_H;     // 1006
 
 function libraryRail() {
-  const cats = [['models', 'llm'], ['capabilities', 'toolbox'], ['runtimes', 'terminal'], ['senses', 'eye'], ['memory', 'db'], ['actuators', 'bolt'], ['data', 'braces'], ['control', 'branch'], ['human', 'approve']];
+  const cats = [['models', 'llm'], ['capabilities', 'toolbox'], ['runtimes', 'terminal'], ['senses', 'eye'], ['memory', 'db'], ['actuators', 'bolt'], ['data', 'braces'], ['control', 'branch'], ['human', 'approve'], ['custom', 'braces']];
   return `<div style="width:${RAIL_W}px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;background:${C.panel};border-right:1px solid ${C.line};">
   <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:${C.field};border:1px solid ${C.line};margin-bottom:6px;">${icon('search', 13, C.low)}</div>
   ${cats.map(([id, ic]) => `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:${rgba(CAT[id], 0.1)};">${icon(ic, 14, CAT[id], 1.7)}</div>`).join('')}
@@ -1400,12 +1407,11 @@ const XB = {
   objdet: { x: 260, y: 40, w: 200 },
   facerec: { x: 260, y: 182, w: 200 },
   stt: { x: 260, y: 304, w: 200 },
-  usb: { x: 260, y: 458, w: 200 },
-  motors: { x: 260, y: 585, w: 200 },
-  wm: { x: 260, y: 712, w: 200 },
-  ltm: { x: 260, y: 843, w: 200 },
-  toolbox: { x: 520, y: 430, w: 200 },
-  hub: { x: 520, y: 770, w: 210 },
+  motors: { x: 260, y: 458, w: 200 },
+  wm: { x: 260, y: 656, w: 200 },
+  ltm: { x: 260, y: 789, w: 200 },
+  toolbox: { x: 520, y: 610, w: 200 },
+  hub: { x: 520, y: 806, w: 210 },
   llm: { x: 780, y: 300, w: 260 },
   display: { x: 1100, y: 200, w: 200 },
   tts: { x: 1100, y: 360, w: 200 },
@@ -1434,13 +1440,14 @@ const asstNodes = [
   blockNode({ ...XB.stt, icon: 'note', color: CAT.models, title: 'Speech to text', state: 'running',
     body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.55;color:#c3cad4;white-space:nowrap;overflow:hidden;">&#8230;check the front door<span style="color:${C.ok};">&#9612;</span></div>`,
     ports: [{ kind: 'audio', label: 'audio', side: 'in' }, { kind: 'text', label: 'text', side: 'out' }] }),
-  blockNode({ ...XB.usb, icon: 'plug', color: CAT.actuators, title: 'USB device', state: 'ok',
-    body: field('/dev/ttyACM0 &middot; 115200', { mono: true }),
-    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
   blockNode({ ...XB.motors, icon: 'loop', color: CAT.actuators, title: 'Motors', state: 'ok',
     badge: chip('approval', C.err, { dot: true }),
-    body: field('2 servos &middot; pan / tilt', { mono: true }),
-    ports: [{ kind: 'tools', label: 'tool', side: 'out' }] }),
+    body: field('2 servos &middot; pan / tilt', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">pan &minus;40&deg; &middot; tilt 5&deg; &middot; load 12%</div>`,
+    ports: [
+      { kind: 'tools', label: 'tool', side: 'out' },
+      { kind: 'stream', label: 'state', side: 'out' },
+      { kind: 'exec', label: 'fault', side: 'out' },
+    ] }),
   blockNode({ ...XB.wm, icon: 'braces', color: CAT.memory, title: 'Working memory', state: 'ok',
     body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.7;color:${C.faint};white-space:nowrap;"><span style="color:${C.mid};">14:02</span> Mykl at desk<br><span style="color:${C.mid};">14:03</span> asked about the door</div>`,
     ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
@@ -1448,9 +1455,9 @@ const asstNodes = [
     body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">Mykl &mdash; terse answers, works late</div><div style="margin-top:4px;font-family:${MONO};font-size:9.5px;color:${C.faint};">12 people &middot; 2,140 episodes</div>`,
     ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
   blockNode({ ...XB.toolbox, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox', state: 'ok',
-    badge: chip('3 fns', T.tools),
-    body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('plug', 'usb.send &middot; usb.read', CAT.actuators)}${hubRow('loop', 'motor.move', CAT.actuators, `<span style="flex:1;"></span><span style="width:6px;height:6px;border-radius:50%;background:${C.err};"></span>`)}</div>`,
-    ports: [{ kind: 'tools', label: 'usb', side: 'in' }, { kind: 'tools', label: 'motors', side: 'in' }, { kind: 'tools', label: 'tools', side: 'out' }] }),
+    badge: chip('2 fns', T.tools),
+    body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('loop', 'motor.move', CAT.actuators, `<span style="flex:1;"></span><span style="width:6px;height:6px;border-radius:50%;background:${C.err};"></span>`)}${hubRow('loop', 'motor.home', CAT.actuators)}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">locks on fault &middot; clears on home</div></div>`,
+    ports: [{ kind: 'tools', label: 'motors', side: 'in' }, { kind: 'exec', label: 'lock', side: 'in' }, { kind: 'tools', label: 'tools', side: 'out' }] }),
   blockNode({ ...XB.hub, icon: 'merge', color: CAT.memory, title: 'Memory hub', state: 'ok',
     badge: chip('2', T.memory),
     body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('braces', 'working &middot; fast', CAT.memory)}${hubRow('db', 'long-term &middot; vectors', CAT.memory)}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">consolidate every 10 min</div></div>`,
@@ -1492,8 +1499,9 @@ const asstSvg = [
   xw('stt', 0, 'llm', 0, 'text', { live: true, dash: '6 6' }),
   xw('objdet', 0, 'llm', 1, 'data', { live: true, dash: '6 6' }),
   xw('facerec', 0, 'llm', 1, 'data'),
-  xw('usb', 0, 'toolbox', 0, 'tools'),
-  xw('motors', 0, 'toolbox', 1, 'tools'),
+  xw('motors', 0, 'toolbox', 0, 'tools'),
+  xw('motors', 1, 'llm', 1, 'stream', { live: true, dash: '6 6' }),
+  xw('motors', 2, 'toolbox', 1, 'exec', { opacity: 0.5, dash: '4 5' }),
   xw('toolbox', 0, 'llm', 2, 'tools', { width: 2.2 }),
   xw('wm', 0, 'hub', 0, 'memory'),
   xw('ltm', 0, 'hub', 1, 'memory'),
@@ -1509,7 +1517,7 @@ const ORCH_BODY = [
     + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Coordinates the specialists below. It never sees raw frames or audio &mdash; only what they report.</div>`),
   sect('Specialists', connRow('eye', 'Object detection', 'yolo-v8n &rarr; context', 'data', 'running') + connRow('approve', 'Face recognition', 'insightface &rarr; context', 'data', 'ok') + connRow('note', 'Speech to text', 'whisper-small &rarr; prompt', 'text', 'running'), { tint: CAT.models, right: chip('3', CAT.models) }),
   sect('Memory', connRow('merge', 'Memory hub', 'working + long-term', 'memory', 'ok') + switchRow('May write memories', true, { hint: 'remember() and forget() offered as tools', col: T.memory }), { tint: T.memory, right: chip('hub', T.memory) }),
-  sect('Tools', connRow('toolbox', 'Toolbox', 'usb.send, usb.read, motor.move', 'tools', 'ok') + switchRow('Confirm physical actions', true, { hint: 'motor.move waits for a human', col: C.err }), { tint: T.tools, right: chip('3', T.tools) }),
+  sect('Tools', connRow('toolbox', 'Toolbox', 'motor.move, motor.home &middot; locks on fault', 'tools', 'ok') + switchRow('Confirm physical actions', true, { hint: 'motor.move waits for a human', col: C.err }), { tint: T.tools, right: chip('3', T.tools) }),
   sect('Thoughts', switchRow('Print thoughts', true, { hint: '&rarr; Terminal, one line per step' }) + rowField('Detail', 'look / recall / act', { select: true, gap: 0 })),
 ].join('');
 
@@ -1520,17 +1528,18 @@ const ASSISTANT = doc(`<div style="width:${AW}px;height:${AH}px;display:flex;fle
     <div style="flex:1;position:relative;overflow:hidden;background-color:${C.canvas};background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.055) 1px, transparent 0);background-size:22px 22px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="${ACW}" height="${ACH}" viewBox="0 0 ${ACW} ${ACH}" style="position:absolute;left:0;top:0;pointer-events:none;">${asstSvg}</svg>
       ${asstNodes}
-      <div style="position:absolute;left:24px;top:${ACH - 118}px;display:flex;flex-direction:column;gap:5px;font-family:${MONO};font-size:9.5px;color:${C.faint};">
+      <div style="position:absolute;left:24px;top:${ACH - 136}px;display:flex;flex-direction:column;gap:5px;font-family:${MONO};font-size:9.5px;color:${C.faint};">
         <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.image};"></span>image</div>
         <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.audio};"></span>audio</div>
         <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.memory};"></span>memory</div>
-        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.tools};"></span>tools</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.tools};"></span>tools &middot; two-way</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:18px;height:2px;background:${T.exec};"></span>exec &middot; fault</div>
       </div>
-      ${minimap([[8, 9, 12, 8, CAT.senses], [8, 22, 12, 7, CAT.senses], [8, 32, 12, 6, CAT.senses], [24, 8, 13, 8, CAT.models], [24, 18, 13, 8, CAT.models], [24, 27, 13, 7, CAT.models], [24, 37, 13, 7, CAT.actuators], [24, 45, 13, 7, CAT.actuators], [24, 54, 13, 8, CAT.memory], [24, 63, 13, 8, CAT.memory], [41, 34, 13, 10, CAT.capabilities], [41, 57, 13, 10, CAT.memory], [59, 26, 17, 13, CAT.models], [80, 19, 13, 7, CAT.actuators], [80, 28, 13, 6, CAT.models], [80, 37, 13, 7, CAT.runtimes], [96, 28, 12, 6, CAT.actuators]])}
+      ${minimap([[8, 9, 12, 8, CAT.senses], [8, 22, 12, 7, CAT.senses], [8, 32, 12, 6, CAT.senses], [24, 8, 13, 8, CAT.models], [24, 18, 13, 8, CAT.models], [24, 27, 13, 7, CAT.models], [24, 37, 13, 12, CAT.actuators], [24, 51, 13, 8, CAT.memory], [24, 60, 13, 9, CAT.memory], [41, 46, 13, 11, CAT.capabilities], [41, 59, 13, 11, CAT.memory], [59, 26, 17, 13, CAT.models], [80, 19, 13, 7, CAT.actuators], [80, 28, 13, 6, CAT.models], [80, 37, 13, 7, CAT.runtimes], [96, 28, 12, 6, CAT.actuators]])}
     </div>
     ${inspector(ORCH_BODY, { title: 'Orchestrator', sub: 'models &middot; llm.chat &middot; role: orchestrator', icn: 'llm', col: CAT.models, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' })}
   </div>
-  ${statusbar('17 blocks &middot; 17 wires &middot; 3 specialists', 'live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 action awaiting approval')}
+  ${statusbar('16 blocks &middot; 18 wires &middot; 3 specialists', 'live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 action awaiting approval')}
 </div>`);
 
 /* =========================================================== 11. SensePanels */
@@ -1570,12 +1579,12 @@ const HUB_BODY = [
 const MOTOR_BODY = [
   sect('Device', rowField('Controller', 'Arduino Nano &middot; /dev/ttyACM0', { select: true, icon: 'plug' }) + rowField('Channels', '2 &middot; pan, tilt', { mono: true, gap: 0 })),
   sect('Limits', slider('Pan range', '&plusmn; 90&deg;', 100, CAT.actuators) + slider('Tilt range', '&plusmn; 30&deg;', 33, CAT.actuators) + rowField('Max speed', '60&deg; / s', { mono: true }) + switchRow('Require approval', true, { hint: 'every move pauses for a human', col: C.err }), { tint: C.err, right: chip('physical', C.err, { dot: true }) }),
-  sect('Exposes', `<div style="display:flex;gap:5px;">${fnChip('motor.move')}${fnChip('motor.home')}</div><div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Wire the tool port straight into an LLM, or through a Toolbox to share guards with other tools.</div>`),
+  sect('Exposes', `<div style="display:flex;gap:5px;">${fnChip('motor.move')}${fnChip('motor.home')}</div><div style="margin:8px 0 10px;font-size:10px;line-height:1.5;color:${C.low};">Called by the model; each call returns the final position or a fault.</div><div style="display:flex;gap:5px;">${chip('state &middot; stream', T.stream, { dot: true })}${chip('fault &middot; exec', T.exec, { dot: true })}</div><div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Reported on its own ports, 20&times; a second, whether or not anyone asked.</div>`),
   sect('Live', rowField('Position', 'pan &minus;40&deg; &middot; tilt 5&deg;', { mono: true }) + rowField('Pending', 'move(pan: &minus;40) &middot; awaiting ok', { mono: true, gap: 0 }), { tint: C.warn, right: chip('1 pending', C.warn, { dot: true }) }),
 ].join('');
 
 const SENSE_SHEET = doc(sheet({
-  w: 1460, h: 950, kicker: 'Embodied blocks',
+  w: 1460, h: 980, kicker: 'Embodied blocks',
   title: 'Senses, memory and actuators &mdash; the panel leads with the boundary that matters',
   body: `<div style="display:flex;gap:22px;">
   ${[['Webcam', 'a sense', WEBCAM_BODY, { title: 'Webcam', sub: 'senses &middot; video.capture', icn: 'eye', col: CAT.senses, tabs: ['Settings', 'Subscribers'], tab: 'Settings' }, CAT.senses],
@@ -1588,8 +1597,177 @@ const SENSE_SHEET = doc(sheet({
       <span style="font-size:12px;font-weight:600;color:${C.hi};">${cap}</span>
       <span style="font-size:10.5px;color:${C.low};">${note}</span>
     </div>
-    <div style="height:780px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
+    <div style="height:810px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
   </div>`).join('')}
+</div>`,
+}));
+
+/* ============================================================ 12. CustomBlock */
+
+const kw = (t) => `<span style="color:${T.data};">${t}</span>`;
+const st = (t) => `<span style="color:${C.ok};">${t}</span>`;
+const dc = (t) => `<span style="color:${C.accent};">${t}</span>`;
+const ty = (t) => `<span style="color:${T.image};">${t}</span>`;
+const nm = (t) => `<span style="color:${C.warn};">${t}</span>`;
+const cm = (t) => `<span style="color:${C.faint};">${t}</span>`;
+const fn = (t) => `<span style="color:${C.hi};">${t}</span>`;
+const SP = '&nbsp;&nbsp;&nbsp;&nbsp;';
+
+const CODE = [
+  `${kw('from')} canvas ${kw('import')} block, Image, Data`,
+  ``,
+  `${dc('@block')}(icon=${st('"shield"')}, category=${st('"senses"')})`,
+  `${kw('def')} ${fn('door_check')}(frame: ${ty('Image')}, threshold: ${ty('float')} = ${nm('0.8')}) -> ${ty('Data')}:`,
+  `${SP}${st('"""Is the front door open in this frame?"""')}`,
+  `${SP}boxes = detect(frame, classes=[${st('"door"')}])`,
+  `${SP}door = max(boxes, key=${kw('lambda')} b: b.score, default=${kw('None')})`,
+  `${SP}${kw('if')} door ${kw('is')} ${kw('None')} ${kw('or')} door.score < threshold:`,
+  `${SP}${SP}${kw('return')} {${st('"open"')}: ${kw('None')}, ${st('"confidence"')}: ${nm('0.0')}}`,
+  `${SP}${kw('return')} {${st('"open"')}: door.aspect > ${nm('1.4')}, ${st('"confidence"')}: door.score}`,
+];
+
+function codeBlock(lines, { h = 214, marks = {} } = {}) {
+  return `<div style="height:${h}px;padding:9px 0;background:#07080a;border:1px solid ${C.soft};border-radius:6px;overflow:hidden;font-family:${MONO};font-size:10.5px;line-height:19px;">
+  ${lines.map((l, i) => `<div style="display:flex;align-items:center;gap:12px;padding:0 10px;${marks[i] ? `background:${rgba(C.accent, 0.06)};` : ''}">
+    <span style="width:14px;flex:none;text-align:right;color:${C.faint};font-size:9.5px;">${i + 1}</span>
+    <span style="flex:1;white-space:nowrap;overflow:hidden;color:#c3cad4;">${l || '&nbsp;'}</span>
+    ${marks[i] ? `<span style="width:16px;height:16px;border-radius:50%;background:${C.accent};color:#08090b;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;">${marks[i]}</span>` : ''}
+  </div>`).join('')}
+</div>`;
+}
+
+const ifaceChip = (dir, name, kind) => `<div style="display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:5px;background:${C.field};border:1px solid ${C.line};">
+  <span style="font-family:${MONO};font-size:9px;color:${C.faint};">${dir}</span>
+  <span style="font-family:${MONO};font-size:10px;color:${C.hi};">${name}</span>
+  <span style="width:6px;height:6px;border-radius:50%;background:${T[kind] || C.mid};"></span>
+  <span style="font-family:${MONO};font-size:9.5px;color:${C.mid};">${kind}</span>
+</div>`;
+
+const KB = {
+  webcam: { x: 24, y: 140, w: 180 },
+  custom: { x: 290, y: 70, w: 480 },
+  notify: { x: 790, y: 90, w: 176 },
+};
+const kbw = W(KB);
+
+const customEditorBody = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+  <div style="display:flex;gap:2px;padding:2px;background:${C.field};border:1px solid ${C.line};border-radius:6px;">
+    <div style="display:flex;align-items:center;gap:5px;height:20px;padding:0 9px;border-radius:4px;background:${C.accent};font-size:10.5px;font-weight:600;color:#08090b;"><span style="width:5px;height:5px;border-radius:50%;background:#08090b;"></span>Inline</div>
+    <div style="display:flex;align-items:center;height:20px;padding:0 9px;font-size:10.5px;color:${C.mid};">File</div>
+  </div>
+  ${chip('python 3.12', CAT.runtimes)}
+  <span style="flex:1;"></span>
+  <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">Format</span>
+  <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">Test</span>
+</div>
+${codeBlock(CODE)}
+<div style="display:flex;align-items:center;gap:6px;margin-top:9px;">
+  <span style="font-family:${MONO};font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.low};margin-right:2px;">interface</span>
+  ${ifaceChip('in', 'frame', 'image')}${ifaceChip('out', 'result', 'data')}${ifaceChip('set', 'threshold', 'float')}
+  <span style="flex:1;"></span>
+  <span style="font-family:${MONO};font-size:9.5px;color:${C.ok};white-space:nowrap;">updated 0.2 s ago</span>
+</div>`;
+
+const customNodes = [
+  blockNode({ ...KB.webcam, icon: 'eye', color: CAT.senses, title: 'Webcam', state: 'running',
+    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
+    ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
+  blockNode({ ...KB.custom, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok', selected: true,
+    badge: `<div style="display:flex;gap:5px;">${chip('custom', CAT.custom)}${chip('reloaded', C.ok, { dot: true })}</div>`,
+    body: customEditorBody,
+    ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] }),
+  blockNode({ ...KB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
+    body: field('slack #home', { mono: true, select: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">when result.open</div>`,
+    ports: [{ kind: 'data', label: 'data', side: 'in' }] }),
+].join('\n');
+
+const customSvg = [
+  kbw('webcam', 0, 'custom', 0, 'image', { live: true, dash: '6 6' }),
+  kbw('custom', 0, 'notify', 0, 'data'),
+].join('');
+
+const ifaceRow = (dir, name, kind, from) => `<div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 9px;background:${C.field};border:1px solid ${C.line};border-radius:6px;margin-bottom:6px;">
+  <span style="font-family:${MONO};font-size:9px;color:${C.faint};width:22px;">${dir}</span>
+  <span style="font-family:${MONO};font-size:10.5px;color:${C.hi};width:64px;">${name}</span>
+  ${chip(kind, T[kind] || C.mid, { dot: true })}
+  <span style="flex:1;"></span>
+  <span style="font-family:${MONO};font-size:9px;color:${C.faint};white-space:nowrap;">${from}</span>
+</div>`;
+
+const CUSTOM_BODY = [
+  sect('Source', segmented(['Inline', 'File'], 'Inline', C.accent) + `<div style="height:11px;"></div>` + rowField('File', '~/blocks/door_check.py', { mono: true, icon: 'folder', suffix: chip('watching', C.ok, { dot: true }) }) + rowField('Runtime', 'Python 3.12 &middot; .venv', { select: true, gap: 0 })
+    + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Switch to File to edit in your own editor. The block reloads on every save and keeps its wires.</div>`),
+  sect('Interface', ifaceRow('in', 'frame', 'image', 'frame: Image') + ifaceRow('out', 'result', 'data', '-&gt; Data') + ifaceRow('set', 'threshold', 'float', '= 0.8')
+    + `<div style="margin-top:4px;font-family:${MONO};font-size:9.5px;color:${C.faint};">parsed from the signature &middot; 0.2 s ago &middot; no errors</div>`,
+    { tint: C.accent, right: chip('live', C.ok, { dot: true }) }),
+  sect('Settings', slider('threshold', '0.80', 80) + `<div style="font-size:10px;line-height:1.5;color:${C.low};">Generated from the default argument. Change it here or in the code &mdash; they stay in sync.</div>`),
+  sect('Library', rowField('Category', 'Senses', { select: true, icon: 'eye' }) + rowField('Icon', 'shield', { select: true, icon: 'shield', gap: 0 })
+    + `<div style="margin-top:12px;display:flex;gap:8px;">${btn('Save to library', { primary: true })}${btn('Export .py')}</div>`),
+].join('');
+
+const CUSTOMBLOCK = doc(shell({
+  top: topbar({ name: 'door-watch.graph', saved: 'edited &middot; just now' }),
+  library: libraryPanel({ open: ['senses', 'custom'], placed: ['Webcam', 'door_check'] }),
+  canvas: stage({ svg: customSvg, nodes: customNodes, overlay: zoomPill + minimap([[9, 15, 19, 12, CAT.senses], [37, 10, 47, 38, CAT.senses], [88, 12, 19, 8, CAT.human]]) }),
+  insp: inspector(CUSTOM_BODY, { title: 'door_check', sub: 'custom &middot; python.block', icn: 'shield', col: CAT.senses, tabs: ['Settings', 'Source', 'Tests'], tab: 'Settings' }),
+  status: statusbar('3 blocks &middot; 2 wires &middot; 1 custom', 'door_check reloaded 0.2 s ago &middot; interface unchanged'),
+}));
+
+/* ========================================================== 13. CustomRules */
+
+const RB2 = { x: 40, y: 56, w: 260 };
+const numBadge = (n, x, y) => `<span style="position:absolute;left:${x}px;top:${y}px;width:18px;height:18px;border-radius:50%;background:${C.accent};color:#08090b;font-family:${MONO};font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">${n}</span>`;
+
+const resultBlock = blockNode({ ...RB2, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
+  badge: chip('custom', CAT.custom),
+  body: label('threshold') + field('0.80', { mono: true }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Is the front door open in this frame?</div>`,
+  ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
+
+const ruleText = (title, note) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+  <div style="font-size:11.5px;font-weight:600;color:${C.hi};margin-bottom:5px;">${title}</div>
+  <div style="font-size:10.5px;line-height:1.5;color:${C.low};">${note}</div>
+</div>`;
+
+const langCard = (name, col, lines) => `<div style="flex:1;background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:12px 14px;">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;"><span style="width:6px;height:6px;border-radius:2px;background:${col};"></span><span style="font-family:${MONO};font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.mid};">${name}</span></div>
+  <div style="font-family:${MONO};font-size:10px;line-height:17px;color:#c3cad4;white-space:nowrap;overflow:hidden;">${lines.join('<br>')}</div>
+</div>`;
+
+const CUSTOMRULES = doc(sheet({
+  w: 1400, h: 820, kicker: 'Custom blocks',
+  title: 'The signature is the block &mdash; write code, get ports',
+  body: `<div style="display:flex;gap:28px;align-items:flex-start;">
+  <div style="width:700px;flex:none;">${codeBlock(CODE, { h: 214, marks: { 2: 1, 3: 2, 4: 5 } })}
+    <div style="display:flex;gap:16px;margin-top:10px;font-family:${MONO};font-size:9.5px;color:${C.low};">
+      <span>${dc('2')}&nbsp; frame: Image &rarr; input port</span><span>${dc('3')}&nbsp; threshold = 0.8 &rarr; setting</span><span>${dc('4')}&nbsp; -&gt; Data &rarr; output port</span>
+    </div>
+  </div>
+  <div style="position:relative;flex:1;height:250px;">
+    ${resultBlock}
+    ${numBadge(1, RB2.x + RB2.w - 118, RB2.y - 9)}
+    ${numBadge(2, RB2.x - 26, PY(RB2, 0) - 9)}
+    ${numBadge(4, RB2.x + RB2.w + 8, PY(RB2, 0) - 9)}
+    ${numBadge(3, RB2.x + RB2.w + 8, RB2.y + 31 + 36 + 4 + 20 + 6)}
+    ${numBadge(5, RB2.x + RB2.w + 8, RB2.y + 31 + 36 + 4 + 20 + 30 + 8 + 2)}
+    <div style="position:absolute;left:${RB2.x + RB2.w + 40}px;top:${RB2.y}px;width:230px;font-size:10.5px;line-height:1.55;color:${C.mid};">
+      <div style="margin-bottom:8px;"><b style="color:${C.hi};">1</b>&nbsp; the decorator names the block and picks its shelf and icon</div>
+      <div style="margin-bottom:8px;"><b style="color:${C.hi};">2</b>&nbsp; a parameter without a default is an input port, typed by its annotation</div>
+      <div style="margin-bottom:8px;"><b style="color:${C.hi};">3</b>&nbsp; a parameter with a default is a setting in the inspector</div>
+      <div style="margin-bottom:8px;"><b style="color:${C.hi};">4</b>&nbsp; the return annotation is the output port; a tuple makes several</div>
+      <div><b style="color:${C.hi};">5</b>&nbsp; the docstring is the description</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;gap:16px;">
+  ${ruleText('Reload keeps the wires', 'Save the file or leave the editor and the block re-parses. Ports that still exist keep their connections; a removed port drops its wire and says so in the console.')}
+  ${ruleText('Errors keep the last good interface', 'A syntax error turns the block red with the line number. The previous ports stay so the graph keeps running around it.')}
+  ${ruleText('Any type in the system', 'Annotate with Image, Audio, Text, Data, File, Tools or Memory. Untyped parameters become any. A parameter typed Tools makes the block a tool host of its own.')}
+  ${ruleText('Save to library', 'A saved block lands under Custom, or under the category the decorator names, and can be dropped into any graph like a built-in.')}
+</div>
+<div style="display:flex;gap:16px;">
+  ${langCard('Python', CAT.runtimes, [`${dc('@block')}(icon=${st('"shield"')})`, `${kw('def')} door_check(frame: ${ty('Image')}) -> ${ty('Data')}:`])}
+  ${langCard('TypeScript', CAT.runtimes, [`${kw('export default')} block({ icon: ${st('"shield"')} },`, `${SP}(frame: ${ty('Image')}): ${ty('Data')} => { ... })`])}
+  ${langCard('Shell', CAT.runtimes, [`${cm('# @block icon=shield')}`, `${cm('# @in frame:image  @out result:data')}`, `door_check() { ... }`])}
 </div>`,
 }));
 
@@ -1606,6 +1784,8 @@ const files = {
   'RunModes.dc.html': RUNMODES_SHEET,
   'Assistant.dc.html': ASSISTANT,
   'SensePanels.dc.html': SENSE_SHEET,
+  'CustomBlock.dc.html': CUSTOMBLOCK,
+  'CustomRules.dc.html': CUSTOMRULES,
   'Interactive.dc.html': INTERACTIVE,
 };
 
@@ -1615,13 +1795,15 @@ const canvas = {
     { file: 'Main.dc.html', x: 1680, y: 0, w: 1560, h: 900, page: 'page-1', title: 'Wiring a block in' },
     { file: 'Running.dc.html', x: 3360, y: 0, w: 1560, h: 900, page: 'page-1', title: 'Graph running' },
     { file: 'Inspector.dc.html', x: 0, y: 1080, w: 1800, h: 980, page: 'page-1', title: 'Inspector states' },
-    { file: 'Library.dc.html', x: 1920, y: 1080, w: 1470, h: 1120, page: 'page-1', title: 'Block library' },
-    { file: 'BlockAnatomy.dc.html', x: 3510, y: 1080, w: 1240, h: 760, page: 'page-1', title: 'Block anatomy' },
+    { file: 'Library.dc.html', x: 1920, y: 1080, w: 1470, h: 1190, page: 'page-1', title: 'Block library' },
+    { file: 'BlockAnatomy.dc.html', x: 3510, y: 1080, w: 1500, h: 760, page: 'page-1', title: 'Block anatomy' },
     { file: 'Continuous.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-2', title: 'Live graph' },
     { file: 'RunModes.dc.html', x: 1680, y: 0, w: 1120, h: 980, page: 'page-2', title: 'Run modes' },
     { file: 'Assistant.dc.html', x: 0, y: 1160, w: 1920, h: 1080, page: 'page-2', title: 'Home assistant' },
-    { file: 'SensePanels.dc.html', x: 2040, y: 1160, w: 1460, h: 950, page: 'page-2', title: 'Embodied panels' },
-    { file: 'Interactive.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-3', title: 'Clickable shell', is_interactive: true },
+    { file: 'SensePanels.dc.html', x: 2040, y: 1160, w: 1460, h: 980, page: 'page-2', title: 'Embodied panels' },
+    { file: 'CustomBlock.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-3', title: 'Custom block' },
+    { file: 'CustomRules.dc.html', x: 1680, y: 0, w: 1400, h: 820, page: 'page-3', title: 'Code becomes a block' },
+    { file: 'Interactive.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-4', title: 'Clickable shell', is_interactive: true },
   ],
   annotations: [
     { id: 'brief', x: 0, y: -186, w: 700, page: 'page-1',
@@ -1629,22 +1811,25 @@ const canvas = {
     { id: 'panel-note', x: 0, y: 940, w: 560, page: 'page-1',
       text: 'The right panel is the whole idea: five different selections, five different panels, one 328px column.' },
     { id: 'types-note', x: 1920, y: 940, w: 520, page: 'page-1',
-      text: 'Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag. Now ten types, nine categories.' },
-    { id: 'anatomy-note', x: 3510, y: 940, w: 480, page: 'page-1',
-      text: 'One block, labelled, plus every run state - and the direct-or-bundled rule for tools.' },
+      text: 'Every block declares typed ports. A wire is coloured by its data type, and the type is what makes a connection legal or refuses it mid-drag. Ten types, nine categories plus Custom.' },
+    { id: 'anatomy-note', x: 3510, y: 940, w: 560, page: 'page-1',
+      text: 'One block, labelled, plus every run state - and the wiring rules. Handle wires (tools, memory) carry a two-way mark at the holder\'s end: the call goes out, the reply comes back.' },
     { id: 'live-note', x: 0, y: -200, w: 720, page: 'page-2',
       text: 'Continuous running.\n\nA graph with a source block (Senses: watch folder, webhook, schedule, webcam...) never finishes - it stays armed and every event runs downstream. The transport chip switches from Run to live, and the inspector with nothing selected becomes the run-mode panel.\n\nA Loop is a dashed frame on the canvas: blocks inside repeat once per item.' },
     { id: 'asst-note', x: 0, y: 1010, w: 760, page: 'page-2',
-      text: 'The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model\'s text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that waits for approval.\n\nThe library is collapsed to a rail here to make room.' },
-    { id: 'proto-note', x: 0, y: -150, w: 620, page: 'page-3',
+      text: 'The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model\'s text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that waits for approval.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator\'s context, and raises a fault on an exec port that locks the Toolbox until motor.home clears it.' },
+    { id: 'custom-note', x: 0, y: -170, w: 700, page: 'page-3',
+      text: 'Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in.' },
+    { id: 'proto-note', x: 0, y: -150, w: 620, page: 'page-4',
       text: 'Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports.' },
   ],
   pages: [
     { id: 'page-1', name: 'Screens' },
     { id: 'page-2', name: 'Live and embodied' },
-    { id: 'page-3', name: 'Clickable' },
+    { id: 'page-3', name: 'Custom blocks' },
+    { id: 'page-4', name: 'Clickable' },
   ],
-  launch: { view: 'canvas', page: 'page-2' },
+  launch: { view: 'canvas', page: 'page-3' },
 };
 
 for (const [name, html] of Object.entries(files)) writeFileSync(name, html);
