@@ -8,12 +8,13 @@
 //! visible in the diff. `npm run typecheck` fails if it is stale, because the
 //! catalogue is checked against it.
 use block_kinds::{BlockKind, Category, KINDS, PortDef, SettingDef, SettingKind};
+use block_source::{Control, Generated, Interface, SourceError};
 use graph_format::{
     Between, Block, Defaults, Endpoint, Execution, Frame, FrameKind, Graph, Language, Overlap,
     OverlapPolicy, Port, PortType, Position, RunMode, Setting, Side, Size, Source, SourceMode, Ui,
     View, Viewport, Wire,
 };
-use loomd::rpc::{Acknowledged, RunStarted, Saved};
+use loomd::rpc::{Acknowledged, Reparsed, RunStarted, Saved};
 use loomd::run::event::{BlockState, Level, PortValue, RunEvent, RunOutcome};
 use loomd::run::runner::Decision;
 use loomd::run::value::{Media, Value as RunValue};
@@ -60,6 +61,12 @@ fn main() {
     types.register_mut::<Saved>();
     types.register_mut::<RunStarted>();
     types.register_mut::<Acknowledged>();
+    // A custom block's interface, derived from its code (SPEC §10.1).
+    types.register_mut::<Reparsed>();
+    types.register_mut::<Interface>();
+    types.register_mut::<Generated>();
+    types.register_mut::<Control>();
+    types.register_mut::<SourceError>();
     // What a run says while it is in flight.
     types.register_mut::<RunEvent>();
     types.register_mut::<BlockState>();

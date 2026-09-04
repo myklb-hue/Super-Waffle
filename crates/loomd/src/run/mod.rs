@@ -1,6 +1,7 @@
 //! Running a graph.
 
 pub mod blocks;
+pub mod custom;
 pub mod event;
 pub mod model;
 pub mod ollama;

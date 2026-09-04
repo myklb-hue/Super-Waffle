@@ -19,6 +19,7 @@
 //! reads is the part they all spell similarly.
 
 pub mod python;
+pub mod reload;
 pub mod shell;
 pub mod typescript;
 
@@ -217,14 +218,17 @@ pub fn control_for(annotation: Option<&str>, default: &str) -> (Control, Option<
     (Control::Text, None, None)
 }
 
-pub(crate) fn is_quoted(text: &str) -> bool {
+/// Whether a source literal is a quoted string. Public because the engine
+/// reads the same defaults this crate parsed, and must read them the same way.
+pub fn is_quoted(text: &str) -> bool {
     let bytes = text.as_bytes();
     bytes.len() >= 2
         && (bytes[0] == b'"' || bytes[0] == b'\'')
         && bytes[bytes.len() - 1] == bytes[0]
 }
 
-pub(crate) fn unquote(text: &str) -> String {
+/// A quoted source literal without its quotes.
+pub fn unquote(text: &str) -> String {
     if is_quoted(text) {
         text[1..text.len() - 1].to_owned()
     } else {

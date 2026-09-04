@@ -231,6 +231,7 @@ impl<'a> Runner<'a> {
             "llm" => self.run_model(block, plan, &inputs, st),
             "terminal" => self.run_terminal(block, &inputs, st),
             "python" => self.run_python(block, &inputs, st),
+            "custom" => self.run_custom(block, &inputs, st),
             _ => blocks::pure_step(block, &inputs).map(|o| (o, None)),
         };
 
@@ -451,6 +452,61 @@ impl<'a> Runner<'a> {
         let mut out = Outputs::new();
         out.insert("value".into(), Value::Text(output.stdout.clone()));
         Ok((out, Some(output.figure())))
+    }
+
+    /// Run a custom block: parse its signature, call the function it names.
+    ///
+    /// The interface is derived here rather than taken from the block's stored
+    /// `ports`, because the code is the truth and the stored ports are a copy
+    /// of what it said last time (SPEC §10.1). A file edited outside the shell
+    /// runs as it is now, not as the graph remembers it.
+    fn run_custom(
+        &self,
+        block: &Block,
+        inputs: &Outputs,
+        st: &mut State<'_>,
+    ) -> Result<(Outputs, Option<String>), String> {
+        let source = block.source.as_ref().ok_or("this block has no code")?;
+        let code = match source.mode {
+            graph_format::SourceMode::Inline => source
+                .code
+                .clone()
+                .ok_or("the block is in inline mode but holds no code")?,
+            graph_format::SourceMode::File => {
+                let path = source
+                    .path
+                    .as_deref()
+                    .ok_or("the block is in file mode but names no file")?;
+                let full = if Path::new(path).is_absolute() {
+                    Path::new(path).to_path_buf()
+                } else {
+                    self.root.join(path)
+                };
+                std::fs::read_to_string(&full)
+                    .map_err(|e| format!("could not read {}: {e}", full.display()))?
+            }
+        };
+
+        let interfaces = block_source::parse(source.language, &code).map_err(|e| e.to_string())?;
+        // A file with several functions makes several blocks; this block is the
+        // one whose name it carries.
+        let wanted = block.title.as_deref();
+        let interface = wanted
+            .and_then(|name| interfaces.iter().find(|i| i.name == name))
+            .or_else(|| interfaces.first())
+            .ok_or("the file declares no function")?;
+
+        let (outputs, ran) = super::custom::run(block, interface, inputs, self.root)?;
+        // What the function printed is the user's, and belongs in the console
+        // beside every other line the graph produced.
+        for line in ran.stdout.lines().filter(|l| !l.trim().is_empty()) {
+            self.console(st, Some(&block.id), Level::Info, line.to_owned());
+        }
+        for line in ran.stderr.lines().filter(|l| !l.trim().is_empty()) {
+            self.console(st, Some(&block.id), Level::Warn, line.to_owned());
+        }
+        let figure = Some(format!("{} ms", ran.ms));
+        Ok((outputs, figure))
     }
 
     // ------------------------------------------------------------ the model

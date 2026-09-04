@@ -8,6 +8,7 @@ repository.workspace = true
 
 [dependencies]
 block-kinds = { path = "../block-kinds" }
+block-source = { path = "../block-source" }
 graph-format = { path = "../graph-format" }
 serde.workspace = true
 serde_json.workspace = true

@@ -1873,6 +1873,7 @@ name = "loomd"
 version = "0.1.0"
 dependencies = [
  "block-kinds",
+ "block-source",
  "graph-format",
  "serde",
  "serde_json",

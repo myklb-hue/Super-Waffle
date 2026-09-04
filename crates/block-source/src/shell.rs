@@ -6,9 +6,7 @@
 //! parameter list — and the comments are how it holds in spirit: the interface
 //! is still in the file, still next to the code, and still the only copy.
 
-use crate::{
-    Generated, Interface, SourceError, control_for, label_for, port, port_type, unquote,
-};
+use crate::{Generated, Interface, SourceError, control_for, label_for, port, port_type, unquote};
 use graph_format::Side;
 
 pub fn parse(source: &str) -> Result<Vec<Interface>, SourceError> {

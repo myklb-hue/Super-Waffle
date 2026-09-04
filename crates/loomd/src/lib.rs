@@ -132,6 +132,36 @@ impl Engine {
                 }
             }
 
+            Request::BlockReparse {
+                language,
+                code,
+                function,
+            } => {
+                // A parse failure is a reply rather than an error, because the
+                // block goes red and keeps working with what it had — a graph
+                // does not stop because someone is mid-keystroke (SPEC §10.4).
+                let reparsed = match block_source::parse(language, &code) {
+                    Err(error) => rpc::Reparsed {
+                        blocks: Vec::new(),
+                        chosen: None,
+                        error: Some(error),
+                    },
+                    Ok(blocks) => {
+                        let chosen = function
+                            .as_deref()
+                            .and_then(|name| blocks.iter().find(|b| b.name == name))
+                            .or_else(|| blocks.first())
+                            .cloned();
+                        rpc::Reparsed {
+                            blocks,
+                            chosen,
+                            error: None,
+                        }
+                    }
+                };
+                Reply::Interface(reparsed)
+            }
+
             Request::RunStop { run } => Reply::Acknowledged(rpc::Acknowledged {
                 ok: true,
                 count: session.stop(run.as_deref()) as u32,

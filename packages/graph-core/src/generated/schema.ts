@@ -92,6 +92,8 @@ export type BlockState =
  */
 export type Category = "models" | "capabilities" | "runtimes" | "senses" | "memory" | "actuators" | "data" | "control" | "human" | "custom";
 
+export type Control = "text" | "multiline" | "number" | "range" | "bool" | "select" | "path";
+
 /**
  *  The only two answers. There is no "refuse": the application may warn before
  *  a dangerous action and may not prevent one, so the choice is between going
@@ -157,6 +159,24 @@ export type Frame = {
 
 export type FrameKind = "loop";
 
+/**  A setting the code asked for, with the control it should draw. */
+export type Generated = {
+	name: string,
+	/**  Title-cased from the name: `max_items` becomes `Max items`. */
+	label: string,
+	kind: Control,
+	/**
+	 *  The default, exactly as it was written in the code. Editing the setting
+	 *  rewrites this text in place (§10.3), so it is kept verbatim rather than
+	 *  parsed and re-printed: `0.60` should not silently become `0.6`.
+	 */
+	default: string,
+	min: number,
+	max: number,
+	/**  A `Literal[...]` or a union of strings becomes a choice. */
+	options: string[],
+};
+
 /**  One `.loom` file. */
 export type Graph = {
 	version: number,
@@ -195,6 +215,28 @@ export type GraphSummary = {
 	blocks: number,
 	wires: number,
 	runMode: RunMode,
+};
+
+/**  A block derived from one function. */
+export type Interface = {
+	/**  The function's own name, which becomes the block's title. */
+	name: string,
+	/**  The docstring, or the comment above the function. */
+	description: string | null,
+	/**
+	 *  From `@block(icon=…)`. None leaves the block with the Custom shelf's
+	 *  default rather than guessing one from the name.
+	 */
+	icon: string | null,
+	/**  From `@block(category=…)`, which decides the shelf it lands on. */
+	category: string | null,
+	ports: Port[],
+	settings: Generated[],
+	/**
+	 *  Where the function starts, 1-based. Used to point at the right line
+	 *  when something is wrong with it.
+	 */
+	line: number,
 };
 
 /**  The languages a custom block may be written in (SPEC §15.8). */
@@ -306,6 +348,14 @@ export type Position = {
 	y: number,
 };
 
+export type Reparsed = {
+	/**  Every function the file declares, in the order it declares them. */
+	blocks: Interface[],
+	/**  The one the request asked for, or the first. */
+	chosen: Interface | null,
+	error: SourceError | null,
+};
+
 /**
  *  Anything the engine sends back.
  * 
@@ -314,6 +364,12 @@ export type Position = {
  *  inside it is a table of `&'static str` that could not be parsed anyway.
  */
 export type Reply = { result: "engineStatus"; data: EngineStatus } | { result: "catalogue"; data: BlockKind[] } | { result: "workspace"; data: GraphSummary[] } | { result: "graph"; data: OpenGraph } | { result: "saved"; data: Saved } | { result: "running"; data: RunStarted } | 
+/**
+ *  What the code says the block's interface is, or why it could not be
+ *  read. A failure is a reply, not an error: the block shows the line
+ *  number and keeps its previous interface (SPEC §10.4).
+ */
+{ result: "interface"; data: Reparsed } | 
 /**  How many runs stopped, or whether a warning was answered. */
 { result: "acknowledged"; data: Acknowledged } | 
 /**  Not an exception: the shell shows it and carries on (SPEC §12.1). */
@@ -367,6 +423,22 @@ export type Request =
 { method: "run.continue"; params: {
 	warning: string,
 	decision: Decision,
+} } | 
+/**
+ *  Re-read a custom block's signature (SPEC §10.3).
+ * 
+ *  The code comes from the shell rather than from disk for the same reason
+ *  `run.start` does: a block is re-parsed on every save and every editor
+ *  blur, and what the person is looking at is what should be parsed.
+ */
+{ method: "block.reparse"; params: {
+	language: Language,
+	code: string,
+	/**
+	 *  Which function, when the file declares several (SPEC §10.5). None
+	 *  takes the first.
+	 */
+	function?: string | null,
 } };
 
 export type RpcError = {
@@ -599,6 +671,19 @@ export type Source = {
 	code?: string | null,
 	/**  Relative to the workspace folder, so a graph moves with its files. */
 	path?: string | null,
+};
+
+/**
+ *  What went wrong, and where.
+ * 
+ *  A parse failure is shown on the block with its line number while the
+ *  previous interface stays, so the graph keeps running around it (§10.4).
+ *  That is only possible because this reports rather than throws.
+ */
+export type SourceError = {
+	/**  1-based, so it matches what an editor's gutter says. */
+	line: number,
+	message: string,
 };
 
 /**  Where a custom block's code lives. */

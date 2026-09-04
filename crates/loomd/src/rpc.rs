@@ -68,6 +68,21 @@ pub enum Request {
         warning: String,
         decision: crate::run::runner::Decision,
     },
+
+    /// Re-read a custom block's signature (SPEC §10.3).
+    ///
+    /// The code comes from the shell rather than from disk for the same reason
+    /// `run.start` does: a block is re-parsed on every save and every editor
+    /// blur, and what the person is looking at is what should be parsed.
+    #[serde(rename = "block.reparse")]
+    BlockReparse {
+        language: graph_format::Language,
+        code: String,
+        /// Which function, when the file declares several (SPEC §10.5). None
+        /// takes the first.
+        #[serde(default)]
+        function: Option<String>,
+    },
 }
 
 /// The envelope a request arrives in.
@@ -92,6 +107,10 @@ pub enum Reply {
     Graph(Box<OpenGraph>),
     Saved(Saved),
     Running(RunStarted),
+    /// What the code says the block's interface is, or why it could not be
+    /// read. A failure is a reply, not an error: the block shows the line
+    /// number and keeps its previous interface (SPEC §10.4).
+    Interface(Reparsed),
     /// How many runs stopped, or whether a warning was answered.
     Acknowledged(Acknowledged),
     /// Not an exception: the shell shows it and carries on (SPEC §12.1).
@@ -104,6 +123,16 @@ pub struct RunStarted {
     pub run: String,
     /// What the plan could not do. The run starts anyway (SPEC §12.1).
     pub problems: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Reparsed {
+    /// Every function the file declares, in the order it declares them.
+    pub blocks: Vec<block_source::Interface>,
+    /// The one the request asked for, or the first.
+    pub chosen: Option<block_source::Interface>,
+    pub error: Option<block_source::SourceError>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
