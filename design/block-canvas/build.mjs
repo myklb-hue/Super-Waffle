@@ -86,6 +86,8 @@ const ICONS = {
   step:'<path d="M6 5l9 7-9 7z"/><path d="M18 5v14"/>',
   dots:'<circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/>',
   fit:'<path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9"/><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9"/><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/>',
+  minus:'<path d="M6 12h12"/>',
+  code:'<path d="M9 8L5.5 12 9 16"/><path d="M15 8l3.5 4-3.5 4"/>',
   mark:'<circle cx="5.5" cy="6" r="2.2"/><circle cx="5.5" cy="18" r="2.2"/><circle cx="18.5" cy="12" r="2.6"/><path d="M7.7 6.9L16 11"/><path d="M7.7 17.1L16 13"/>',
 };
 
@@ -560,13 +562,13 @@ const TERMINAL_BODY = [
   sect('Command', textBox('cargo build --target \\\n  aarch64-unknown-linux-gnu', 46) + `<div style="height:11px;"></div>` + rowField('Shell', '/bin/bash', { select: true, mono: true, gap: 0 })),
   sect('Working directory', field('~/projects/tandem', { mono: true, icon: 'folder' })),
   sect('Safety', switchRow('Sandbox filesystem', true, { hint: 'read-only outside the working directory', col: C.err })
-    + switchRow('Require approval', true, { hint: 'pauses the graph before every run', col: C.err })
+    + switchRow('Warn before run', true, { hint: 'shows the command first &mdash; never blocks', col: C.warn })
     + `<div style="height:9px;"></div>${label('Allowed commands')}<div style="display:flex;flex-wrap:wrap;gap:5px;">${chip('cargo', C.err)}${chip('rg', C.err)}${chip('git', C.err)}${plusChip}</div>`,
     { tint: C.err, right: chip('elevated', C.err, { dot: true }) }),
   sect('Limits', rowField('Timeout', '90 s') + rowField('Max output', '64 KB') + switchRow('Capture stderr', true)),
   `<div style="padding:12px 16px;display:flex;gap:9px;align-items:flex-start;">
     ${icon('shield', 14, C.err, 1.7)}
-    <div style="font-size:10.5px;line-height:1.55;color:${C.low};">This block runs commands on the host machine. Every setting above is a real boundary &mdash; the panel shows them first for a reason.</div>
+    <div style="font-size:10.5px;line-height:1.55;color:${C.low};">This block runs commands on the host machine. Every setting above is yours to loosen &mdash; the panel shows them first, it never enforces them.</div>
   </div>`,
 ].join('');
 
@@ -1399,6 +1401,7 @@ const camPreview = `<div style="position:relative;height:46px;border-radius:5px;
 </div>`;
 
 const fnChip = (t) => chip(t, T.tools);
+const viewToggle = (active) => `<div style="display:flex;gap:1px;padding:1px;background:${C.field};border:1px solid ${C.line};border-radius:4px;">${[['minus', 'compact'], ['form', 'summary'], ['code', 'code']].map(([ic, v]) => `<div style="display:flex;align-items:center;justify-content:center;width:16px;height:14px;border-radius:3px;background:${v === active ? rgba(C.accent, 0.22) : 'transparent'};">${icon(ic, 10, v === active ? C.accent : C.low, 2)}</div>`).join('')}</div>`;
 
 const XB = {
   webcam: { x: 24, y: 50, w: 180 },
@@ -1441,7 +1444,7 @@ const asstNodes = [
     body: `<div style="font-family:${MONO};font-size:9.5px;line-height:1.55;color:#c3cad4;white-space:nowrap;overflow:hidden;">&#8230;check the front door<span style="color:${C.ok};">&#9612;</span></div>`,
     ports: [{ kind: 'audio', label: 'audio', side: 'in' }, { kind: 'text', label: 'text', side: 'out' }] }),
   blockNode({ ...XB.motors, icon: 'loop', color: CAT.actuators, title: 'Motors', state: 'ok',
-    badge: chip('approval', C.err, { dot: true }),
+    badge: chip('warns', C.warn, { dot: true }),
     body: field('2 servos &middot; pan / tilt', { mono: true }) + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">pan &minus;40&deg; &middot; tilt 5&deg; &middot; load 12%</div>`,
     ports: [
       { kind: 'tools', label: 'tool', side: 'out' },
@@ -1456,8 +1459,8 @@ const asstNodes = [
     ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
   blockNode({ ...XB.toolbox, icon: 'toolbox', color: CAT.capabilities, title: 'Toolbox', state: 'ok',
     badge: chip('2 fns', T.tools),
-    body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('loop', 'motor.move', CAT.actuators, `<span style="flex:1;"></span><span style="width:6px;height:6px;border-radius:50%;background:${C.err};"></span>`)}${hubRow('loop', 'motor.home', CAT.actuators)}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">locks on fault &middot; clears on home</div></div>`,
-    ports: [{ kind: 'tools', label: 'motors', side: 'in' }, { kind: 'exec', label: 'lock', side: 'in' }, { kind: 'tools', label: 'tools', side: 'out' }] }),
+    body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('loop', 'motor.move', CAT.actuators, `<span style="flex:1;"></span><span style="width:6px;height:6px;border-radius:50%;background:${C.warn};"></span>`)}${hubRow('loop', 'motor.home', CAT.actuators)}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">pauses on fault &middot; resume anytime</div></div>`,
+    ports: [{ kind: 'tools', label: 'motors', side: 'in' }, { kind: 'exec', label: 'pause', side: 'in' }, { kind: 'tools', label: 'tools', side: 'out' }] }),
   blockNode({ ...XB.hub, icon: 'merge', color: CAT.memory, title: 'Memory hub', state: 'ok',
     badge: chip('2', T.memory),
     body: `<div style="display:flex;flex-direction:column;gap:5px;">${hubRow('braces', 'working &middot; fast', CAT.memory)}${hubRow('db', 'long-term &middot; vectors', CAT.memory)}<div style="font-family:${MONO};font-size:9px;color:${C.faint};padding-left:2px;">consolidate every 10 min</div></div>`,
@@ -1466,7 +1469,7 @@ const asstNodes = [
     badge: chip('thinking', C.ok, { dot: true }),
     body: label('model') + field('qwen2.5:14b &middot; local', { mono: true, select: true })
       + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.55;color:${C.faint};">Mykl asked about the front door. Camera shows it closed, no one near it for 2 min. Pan the camera to confirm&#8230;</div>`
-      + `<div style="margin-top:8px;display:flex;align-items:center;gap:7px;height:23px;padding:0 8px;border-radius:5px;background:${rgba(T.tools, 0.1)};border:1px solid ${rgba(T.tools, 0.32)};">${icon('loop', 11, T.tools, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${T.tools};white-space:nowrap;">motor.move(pan: &minus;40)</span><span style="flex:1;"></span>${chip('confirm?', C.err)}</div>`,
+      + `<div style="margin-top:8px;display:flex;align-items:center;gap:7px;height:23px;padding:0 8px;border-radius:5px;background:${rgba(T.tools, 0.1)};border:1px solid ${rgba(T.tools, 0.32)};">${icon('loop', 11, T.tools, 1.7)}<span style="font-family:${MONO};font-size:9.5px;color:${T.tools};white-space:nowrap;">motor.move(pan: &minus;40)</span><span style="flex:1;"></span>${chip('warned', C.warn)}</div>`,
     ports: [
       { kind: 'text', label: 'prompt', side: 'in' },
       { kind: 'data', label: 'context', side: 'in' },
@@ -1517,7 +1520,7 @@ const ORCH_BODY = [
     + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Coordinates the specialists below. It never sees raw frames or audio &mdash; only what they report.</div>`),
   sect('Specialists', connRow('eye', 'Object detection', 'yolo-v8n &rarr; context', 'data', 'running') + connRow('approve', 'Face recognition', 'insightface &rarr; context', 'data', 'ok') + connRow('note', 'Speech to text', 'whisper-small &rarr; prompt', 'text', 'running'), { tint: CAT.models, right: chip('3', CAT.models) }),
   sect('Memory', connRow('merge', 'Memory hub', 'working + long-term', 'memory', 'ok') + switchRow('May write memories', true, { hint: 'remember() and forget() offered as tools', col: T.memory }), { tint: T.memory, right: chip('hub', T.memory) }),
-  sect('Tools', connRow('toolbox', 'Toolbox', 'motor.move, motor.home &middot; locks on fault', 'tools', 'ok') + switchRow('Confirm physical actions', true, { hint: 'motor.move waits for a human', col: C.err }), { tint: T.tools, right: chip('3', T.tools) }),
+  sect('Tools', connRow('toolbox', 'Toolbox', 'motor.move, motor.home &middot; pauses on fault', 'tools', 'ok') + switchRow('Warn on physical actions', true, { hint: 'a warning, never a block &mdash; you own your tools', col: C.warn }), { tint: T.tools, right: chip('3', T.tools) }),
   sect('Thoughts', switchRow('Print thoughts', true, { hint: '&rarr; Terminal, one line per step' }) + rowField('Detail', 'look / recall / act', { select: true, gap: 0 })),
 ].join('');
 
@@ -1539,7 +1542,7 @@ const ASSISTANT = doc(`<div style="width:${AW}px;height:${AH}px;display:flex;fle
     </div>
     ${inspector(ORCH_BODY, { title: 'Orchestrator', sub: 'models &middot; llm.chat &middot; role: orchestrator', icn: 'llm', col: CAT.models, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' })}
   </div>
-  ${statusbar('16 blocks &middot; 18 wires &middot; 3 specialists', 'live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 action awaiting approval')}
+  ${statusbar('16 blocks &middot; 18 wires &middot; 3 specialists', 'live &middot; 4 h 12 m &middot; cam 15 fps &middot; mic vad &middot; 1 warning')}
 </div>`);
 
 /* =========================================================== 11. SensePanels */
@@ -1578,9 +1581,9 @@ const HUB_BODY = [
 
 const MOTOR_BODY = [
   sect('Device', rowField('Controller', 'Arduino Nano &middot; /dev/ttyACM0', { select: true, icon: 'plug' }) + rowField('Channels', '2 &middot; pan, tilt', { mono: true, gap: 0 })),
-  sect('Limits', slider('Pan range', '&plusmn; 90&deg;', 100, CAT.actuators) + slider('Tilt range', '&plusmn; 30&deg;', 33, CAT.actuators) + rowField('Max speed', '60&deg; / s', { mono: true }) + switchRow('Require approval', true, { hint: 'every move pauses for a human', col: C.err }), { tint: C.err, right: chip('physical', C.err, { dot: true }) }),
+  sect('Limits', slider('Pan range', '&plusmn; 90&deg;', 100, CAT.actuators) + slider('Tilt range', '&plusmn; 30&deg;', 33, CAT.actuators) + rowField('Max speed', '60&deg; / s', { mono: true }) + switchRow('Warn before move', true, { hint: 'a prompt you can always continue through', col: C.warn }), { tint: C.err, right: chip('physical', C.err, { dot: true }) }),
   sect('Exposes', `<div style="display:flex;gap:5px;">${fnChip('motor.move')}${fnChip('motor.home')}</div><div style="margin:8px 0 10px;font-size:10px;line-height:1.5;color:${C.low};">Called by the model; each call returns the final position or a fault.</div><div style="display:flex;gap:5px;">${chip('state &middot; stream', T.stream, { dot: true })}${chip('fault &middot; exec', T.exec, { dot: true })}</div><div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Reported on its own ports, 20&times; a second, whether or not anyone asked.</div>`),
-  sect('Live', rowField('Position', 'pan &minus;40&deg; &middot; tilt 5&deg;', { mono: true }) + rowField('Pending', 'move(pan: &minus;40) &middot; awaiting ok', { mono: true, gap: 0 }), { tint: C.warn, right: chip('1 pending', C.warn, { dot: true }) }),
+  sect('Live', rowField('Position', 'pan &minus;40&deg; &middot; tilt 5&deg;', { mono: true }) + rowField('Last', 'move(pan: &minus;40) &middot; warned, ran', { mono: true, gap: 0 }), { tint: C.warn, right: chip('1 warning', C.warn, { dot: true }) }),
 ].join('');
 
 const SENSE_SHEET = doc(sheet({
@@ -1626,8 +1629,8 @@ const CODE = [
   `${SP}${kw('return')} {${st('"open"')}: door.aspect > ${nm('1.4')}, ${st('"confidence"')}: door.score}`,
 ];
 
-function codeBlock(lines, { h = 214, marks = {} } = {}) {
-  return `<div style="height:${h}px;padding:9px 0;background:#07080a;border:1px solid ${C.soft};border-radius:6px;overflow:hidden;font-family:${MONO};font-size:10.5px;line-height:19px;">
+function codeBlock(lines, { h = 214, marks = {}, fs = 10.5 } = {}) {
+  return `<div style="height:${h}px;padding:9px 0;background:#07080a;border:1px solid ${C.soft};border-radius:6px;overflow:hidden;font-family:${MONO};font-size:${fs}px;line-height:19px;">
   ${lines.map((l, i) => `<div style="display:flex;align-items:center;gap:12px;padding:0 10px;${marks[i] ? `background:${rgba(C.accent, 0.06)};` : ''}">
     <span style="width:14px;flex:none;text-align:right;color:${C.faint};font-size:9.5px;">${i + 1}</span>
     <span style="flex:1;white-space:nowrap;overflow:hidden;color:#c3cad4;">${l || '&nbsp;'}</span>
@@ -1645,8 +1648,8 @@ const ifaceChip = (dir, name, kind) => `<div style="display:flex;align-items:cen
 
 const KB = {
   webcam: { x: 24, y: 140, w: 180 },
-  custom: { x: 290, y: 70, w: 480 },
-  notify: { x: 790, y: 90, w: 176 },
+  custom: { x: 260, y: 70, w: 470 },
+  notify: { x: 780, y: 90, w: 176 },
 };
 const kbw = W(KB);
 
@@ -1660,7 +1663,7 @@ const customEditorBody = `<div style="display:flex;align-items:center;gap:8px;ma
   <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">Format</span>
   <span style="font-family:${MONO};font-size:9.5px;color:${C.low};">Test</span>
 </div>
-${codeBlock(CODE)}
+${codeBlock(CODE, { fs: 10 })}
 <div style="display:flex;align-items:center;gap:6px;margin-top:9px;">
   <span style="font-family:${MONO};font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${C.low};margin-right:2px;">interface</span>
   ${ifaceChip('in', 'frame', 'image')}${ifaceChip('out', 'result', 'data')}${ifaceChip('set', 'threshold', 'float')}
@@ -1673,7 +1676,7 @@ const customNodes = [
     body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
     ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
   blockNode({ ...KB.custom, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok', selected: true,
-    badge: `<div style="display:flex;gap:5px;">${chip('custom', CAT.custom)}${chip('reloaded', C.ok, { dot: true })}</div>`,
+    badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('reloaded', C.ok, { dot: true })}${viewToggle('code')}</div>`,
     body: customEditorBody,
     ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] }),
   blockNode({ ...KB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
@@ -1771,6 +1774,148 @@ const CUSTOMRULES = doc(sheet({
 </div>`,
 }));
 
+/* ============================================================ 14. BlockViews */
+
+const VB = { x: 0, y: 0, w: 250 };
+const viewCompact = blockNode({ ...VB, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
+  badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('py', CAT.runtimes)}${viewToggle('compact')}</div>`,
+  ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
+const viewSummary = blockNode({ ...VB, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
+  badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('py', CAT.runtimes)}${viewToggle('summary')}</div>`,
+  body: label('threshold') + field('0.80', { mono: true }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Is the front door open in this frame?</div><div style="margin-top:7px;font-family:${MONO};font-size:9px;color:${C.faint};">12 lines &middot; reloaded 2 m ago</div>`,
+  ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
+const viewCode = blockNode({ ...VB, w: 330, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
+  badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('py', CAT.runtimes)}${viewToggle('code')}</div>`,
+  body: codeBlock(CODE.slice(0, 6), { h: 128 }) + `<div style="display:flex;align-items:center;margin-top:6px;font-family:${MONO};font-size:9px;color:${C.faint};"><span>&#8230; 4 more lines</span><span style="flex:1;"></span><span style="color:${C.low};">drag to resize &#8599;</span></div>`,
+  ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
+
+const viewCol = (cap, note, block, w) => `<div style="flex:none;width:${w}px;display:flex;flex-direction:column;gap:12px;">
+  <div><div style="font-size:12px;font-weight:600;color:${C.hi};margin-bottom:3px;">${cap}</div><div style="font-size:10.5px;line-height:1.5;color:${C.low};">${note}</div></div>
+  <div style="position:relative;height:240px;">${block}</div>
+</div>`;
+
+const shortcut = (k) => `<span style="font-family:${MONO};font-size:9.5px;color:${C.mid};border:1px solid ${C.line};border-radius:3px;padding:1px 5px;white-space:nowrap;">${k}</span>`;
+
+const BLOCKVIEWS = doc(sheet({
+  w: 1400, h: 700, kicker: 'Custom block views',
+  title: 'The code is one view of the block, not the block',
+  body: `<div style="display:flex;gap:40px;">
+  ${viewCol('Compact', 'Name and ports only &mdash; what every block looks like from a distance, and the default once a block is saved to the library.', viewCompact, 250)}
+  ${viewCol('Summary', 'Settings and description, no code. The default while the block is being used on a graph. Change a setting here or in the code; they stay in sync.', viewSummary, 250)}
+  ${viewCol('Code', 'The editor, inline. Sized by you: drag the corner, it scrolls inside. Fine up to a screenful; past that the drawer below is the better place.', viewCode, 330)}
+  <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+      <div style="font-size:11.5px;font-weight:600;color:${C.hi};margin-bottom:8px;">Switching</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:10.5px;line-height:1.5;color:${C.low};">
+        <div style="display:flex;align-items:center;gap:8px;">${viewToggle('summary')}<span>the toggle in every custom block's header</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">${shortcut('dbl-click')}<span>on the header cycles compact &rarr; summary &rarr; code</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">${shortcut('&#8984;E')}<span>opens the code of the selected block</span></div>
+        <div>The view is remembered per block, per graph.</div>
+      </div>
+    </div>
+    <div style="background:${C.panel};border:1px solid ${C.line};border-radius:10px;padding:13px 15px;">
+      <div style="font-size:11.5px;font-weight:600;color:${C.hi};margin-bottom:8px;">Big programs</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:10.5px;line-height:1.5;color:${C.low};">
+        <div><b style="color:${C.mid};">Code drawer</b> &mdash; full width under the canvas, beside Console and Trace; the block stays compact above it.</div>
+        <div><b style="color:${C.mid};">File mode</b> &mdash; point the block at a file and edit in your own editor; the block reloads on save.</div>
+        <div><b style="color:${C.mid};">Split into blocks</b> &mdash; a file with several <span style="font-family:${MONO};">@block</span> functions makes several blocks, one per function.</div>
+      </div>
+    </div>
+  </div>
+</div>`,
+}));
+
+/* ========================================================= 15. CustomDrawer */
+
+const DRAWER_H = 300;
+const DB = {
+  webcam: { x: 24, y: 120, w: 180 },
+  custom: { x: 300, y: 96, w: 250 },
+  hub: { x: 300, y: 330, w: 200 },
+  notify: { x: 640, y: 110, w: 176 },
+};
+const dbw = W(DB);
+
+const CODE_LONG = [
+  `${kw('from')} canvas ${kw('import')} block, Image, Data, Memory`,
+  `${kw('from')} .vision ${kw('import')} detect, track`,
+  `${kw('from')} .config ${kw('import')} DOOR_CLASSES, MIN_ASPECT`,
+  ``,
+  `_history: list[dict] = []`,
+  ``,
+  `${kw('def')} ${fn('_aspect')}(box) -> ${ty('float')}:`,
+  `${SP}${kw('return')} box.w / max(box.h, ${nm('1')})`,
+  ``,
+  `${kw('def')} ${fn('_stable')}(open_: ${ty('bool')}, n: ${ty('int')} = ${nm('3')}) -> ${ty('bool')}:`,
+  `${SP}_history.append({${st('"open"')}: open_})`,
+  `${SP}recent = [h[${st('"open"')}] ${kw('for')} h ${kw('in')} _history[-n:]]`,
+  `${SP}${kw('return')} len(recent) == n ${kw('and')} all(r == open_ ${kw('for')} r ${kw('in')} recent)`,
+  ``,
+  `${dc('@block')}(icon=${st('"shield"')}, category=${st('"senses"')})`,
+  `${kw('def')} ${fn('door_check')}(frame: ${ty('Image')}, memory: ${ty('Memory')}, threshold: ${ty('float')} = ${nm('0.8')}) -> ${ty('Data')}:`,
+];
+
+const codeDrawer = `<div style="height:${DRAWER_H}px;flex:none;display:flex;flex-direction:column;background:#0a0c10;border-top:1px solid ${C.line};">
+  <div style="display:flex;align-items:center;gap:18px;height:33px;flex:none;padding:0 14px;border-bottom:1px solid ${C.soft};">
+    <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:${C.hi};border-bottom:1.5px solid ${C.accent};height:33px;">${icon('code', 12, C.accent, 2)}door_check.py<span style="width:5px;height:5px;border-radius:50%;background:${C.warn};"></span></span>
+    ${['Console', 'Trace', 'Variables'].map(t => `<span style="font-size:11.5px;color:${C.low};height:33px;display:flex;align-items:center;">${t}</span>`).join('')}
+    <span style="flex:1;"></span>
+    <span style="font-family:${MONO};font-size:10px;color:${C.low};">184 lines &middot; python 3.12 &middot; saved 4 s ago</span>
+    ${chip('2 blocks in file', CAT.custom)}
+    <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:5px;border:1px solid ${C.line};font-size:10.5px;color:${C.hi};">${icon('output', 11, C.mid, 1.8)}Open in editor</div>
+    <span style="transform:rotate(90deg);display:flex;">${icon('chev', 12, C.low, 2)}</span>
+  </div>
+  <div style="flex:1;display:flex;min-height:0;">
+    <div style="flex:1;padding:8px 0;font-family:${MONO};font-size:10.5px;line-height:19px;overflow:hidden;">
+      ${CODE_LONG.map((l, i) => `<div style="display:flex;align-items:center;gap:12px;padding:0 14px;${i === 15 ? `background:${rgba(C.accent, 0.06)};` : ''}"><span style="width:20px;flex:none;text-align:right;color:${C.faint};font-size:9.5px;">${i + 1}</span><span style="flex:1;white-space:nowrap;overflow:hidden;color:#c3cad4;">${l || '&nbsp;'}</span>${i === 15 ? `<span style="font-size:9px;color:${C.accent};white-space:nowrap;">&larr; door_check &middot; 3 ports &middot; 1 setting</span>` : ''}</div>`).join('')}
+    </div>
+    <div style="width:10px;flex:none;position:relative;background:${C.field};border-left:1px solid ${C.soft};"><div style="position:absolute;left:2px;right:2px;top:4px;height:22px;border-radius:3px;background:${C.faint};"></div></div>
+  </div>
+</div>`;
+
+const customDrawerNodes = [
+  blockNode({ ...DB.webcam, icon: 'eye', color: CAT.senses, title: 'Webcam', state: 'running',
+    body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
+    ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
+  blockNode({ ...DB.custom, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok', selected: true,
+    badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('py', CAT.runtimes)}${viewToggle('summary')}</div>`,
+    body: label('threshold') + field('0.80', { mono: true }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Is the front door open, and has it been for three frames?</div><div style="margin-top:7px;font-family:${MONO};font-size:9px;color:${C.faint};">184 lines &middot; editing below</div>`,
+    ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'memory', label: 'memory', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] }),
+  blockNode({ ...DB.hub, icon: 'merge', color: CAT.memory, title: 'Memory hub', state: 'ok',
+    body: `<div style="font-family:${MONO};font-size:9.5px;color:${C.faint};">working &middot; long-term</div>`,
+    ports: [{ kind: 'memory', label: 'memory', side: 'out' }] }),
+  blockNode({ ...DB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
+    body: field('slack #home', { mono: true, select: true }),
+    ports: [{ kind: 'data', label: 'data', side: 'in' }] }),
+].join('\n');
+
+const customDrawerSvg = [
+  dbw('webcam', 0, 'custom', 0, 'image', { live: true, dash: '6 6' }),
+  dbw('hub', 0, 'custom', 1, 'memory'),
+  dbw('custom', 0, 'notify', 0, 'data'),
+].join('');
+
+const CUSTOM_BODY_FILE = [
+  sect('Source', segmented(['Inline', 'File'], 'File', C.accent) + `<div style="height:11px;"></div>` + rowField('File', '~/blocks/door_check.py', { mono: true, icon: 'folder', suffix: chip('watching', C.ok, { dot: true }) }) + rowField('Runtime', 'Python 3.12 &middot; .venv', { select: true, gap: 0 })
+    + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Edited in the drawer or in your own editor &mdash; the block reloads on every save and keeps its wires.</div>`),
+  sect('Interface', ifaceRow('in', 'frame', 'image', 'frame: Image') + ifaceRow('in', 'memory', 'memory', 'memory: Memory') + ifaceRow('out', 'result', 'data', '-&gt; Data') + ifaceRow('set', 'threshold', 'float', '= 0.8')
+    + `<div style="margin-top:4px;font-family:${MONO};font-size:9.5px;color:${C.faint};">parsed from the signature &middot; 4 s ago &middot; +1 port since last save</div>`,
+    { tint: C.accent, right: chip('live', C.ok, { dot: true }) }),
+  sect('View', segmented(['Compact', 'Summary', 'Code'], 'Summary', C.accent) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Remembered for this block on this graph.</div>`),
+  sect('Settings', slider('threshold', '0.80', 80)),
+].join('');
+
+const CUSTOMDRAWER = doc(shell({
+  top: topbar({ name: 'door-watch.graph', saved: 'edited &middot; 4 s ago' }),
+  library: libraryPanel({ open: ['senses', 'custom'], placed: ['Webcam', 'door_check'] }),
+  canvas: `<div style="width:${CW}px;flex:none;display:flex;flex-direction:column;min-height:0;">
+    ${stage({ svg: customDrawerSvg, nodes: customDrawerNodes, overlay: zoomPill, h: CH - DRAWER_H })}
+    ${codeDrawer}
+  </div>`,
+  insp: inspector(CUSTOM_BODY_FILE, { title: 'door_check', sub: 'custom &middot; python.block &middot; file', icn: 'shield', col: CAT.senses, tabs: ['Settings', 'Source', 'Tests'], tab: 'Settings' }),
+  status: statusbar('4 blocks &middot; 3 wires &middot; 1 custom', 'door_check.py &middot; 184 lines &middot; reloaded 4 s ago &middot; +1 port'),
+}));
+
 /* =================================================================== write */
 
 const files = {
@@ -1786,6 +1931,8 @@ const files = {
   'SensePanels.dc.html': SENSE_SHEET,
   'CustomBlock.dc.html': CUSTOMBLOCK,
   'CustomRules.dc.html': CUSTOMRULES,
+  'BlockViews.dc.html': BLOCKVIEWS,
+  'CustomDrawer.dc.html': CUSTOMDRAWER,
   'Interactive.dc.html': INTERACTIVE,
 };
 
@@ -1803,6 +1950,8 @@ const canvas = {
     { file: 'SensePanels.dc.html', x: 2040, y: 1160, w: 1460, h: 980, page: 'page-2', title: 'Embodied panels' },
     { file: 'CustomBlock.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-3', title: 'Custom block' },
     { file: 'CustomRules.dc.html', x: 1680, y: 0, w: 1400, h: 820, page: 'page-3', title: 'Code becomes a block' },
+    { file: 'CustomDrawer.dc.html', x: 0, y: 1080, w: 1560, h: 900, page: 'page-3', title: 'Big program, small block' },
+    { file: 'BlockViews.dc.html', x: 1680, y: 1080, w: 1400, h: 700, page: 'page-3', title: 'Block views' },
     { file: 'Interactive.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-4', title: 'Clickable shell', is_interactive: true },
   ],
   annotations: [
@@ -1817,9 +1966,9 @@ const canvas = {
     { id: 'live-note', x: 0, y: -200, w: 720, page: 'page-2',
       text: 'Continuous running.\n\nA graph with a source block (Senses: watch folder, webhook, schedule, webcam...) never finishes - it stays armed and every event runs downstream. The transport chip switches from Run to live, and the inspector with nothing selected becomes the run-mode panel.\n\nA Loop is a dashed frame on the canvas: blocks inside repeat once per item.' },
     { id: 'asst-note', x: 0, y: 1010, w: 760, page: 'page-2',
-      text: 'The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model\'s text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that waits for approval.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator\'s context, and raises a fault on an exec port that locks the Toolbox until motor.home clears it.' },
+      text: 'The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model\'s text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that warns first and then runs.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator\'s context, and raises a fault on an exec port that pauses the Toolbox until you resume it.\n\nWarn, never block: the user owns their tools. A truly dangerous action gets a prompt; the prompt always has a Continue.' },
     { id: 'custom-note', x: 0, y: -170, w: 700, page: 'page-3',
-      text: 'Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in.' },
+      text: 'Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in.\n\nThe code is one view of the block, not the block: compact, summary or code, per block. A big program lives in the drawer under the canvas, or in your own editor, while the block on the canvas stays small.' },
     { id: 'proto-note', x: 0, y: -150, w: 620, page: 'page-4',
       text: 'Click any block to watch the inspector swap. Press Run to put the graph in flight - wires animate, status dots turn green, the console reports.' },
   ],

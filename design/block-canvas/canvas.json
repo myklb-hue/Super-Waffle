@@ -109,6 +109,24 @@
       "title": "Code becomes a block"
     },
     {
+      "file": "CustomDrawer.dc.html",
+      "x": 0,
+      "y": 1080,
+      "w": 1560,
+      "h": 900,
+      "page": "page-3",
+      "title": "Big program, small block"
+    },
+    {
+      "file": "BlockViews.dc.html",
+      "x": 1680,
+      "y": 1080,
+      "w": 1400,
+      "h": 700,
+      "page": "page-3",
+      "title": "Block views"
+    },
+    {
       "file": "Interactive.dc.html",
       "x": 0,
       "y": 0,
@@ -166,7 +184,7 @@
       "y": 1010,
       "w": 760,
       "page": "page-2",
-      "text": "The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model's text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that waits for approval.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator's context, and raises a fault on an exec port that locks the Toolbox until motor.home clears it."
+      "text": "The home assistant, as one graph. Left to right: senses feed specialist models, which feed an orchestrator LLM; memory stores bundle through a Memory hub the same way tools bundle through a Toolbox; the model's text goes to a display and a speaker, its thoughts to a terminal, and its actions to motors - via a tool call that warns first and then runs.\n\nFeedback: the Motors block replies on its tool handle, streams its state into the orchestrator's context, and raises a fault on an exec port that pauses the Toolbox until you resume it.\n\nWarn, never block: the user owns their tools. A truly dangerous action gets a prompt; the prompt always has a Continue."
     },
     {
       "id": "custom-note",
@@ -174,7 +192,7 @@
       "y": -170,
       "w": 700,
       "page": "page-3",
-      "text": "Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in."
+      "text": "Custom blocks.\n\nWrite code inline or point the block at a file it watches. The signature is the interface: parameters without defaults are input ports, parameters with defaults are settings, the return annotation is the output. Save it and it sits in the library like a built-in.\n\nThe code is one view of the block, not the block: compact, summary or code, per block. A big program lives in the drawer under the canvas, or in your own editor, while the block on the canvas stays small."
     },
     {
       "id": "proto-note",

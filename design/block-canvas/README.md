@@ -54,11 +54,24 @@ initiative leaves on a separate port: `stream` or `data` for telemetry,
 `exec` for a fault or interrupt. The Motors block on the assistant screen
 shows all three.
 
+**Warn, never block.** The user owns their tools. A truly dangerous action
+(a shell command, a motor move) gets a warning prompt, and the prompt always
+has a Continue. There is no approval gate, no admin lock, nothing the graph
+cannot do. The "Warn before" toggles in the inspectors are the user's own
+preference, not a permission.
+
 **Custom blocks** are code. A parameter without a default is an input port
 typed by its annotation; a parameter with a default is a setting in the
 inspector; the return annotation is the output port; the docstring is the
 description. The source is inline or a watched file, and a reload keeps
 every wire whose port still exists.
+
+The code is one *view* of a custom block, not the block. Each block shows
+as Compact (name and ports), Summary (settings and description) or Code
+(inline editor), switched from a toggle in its header and remembered per
+block per graph. A big program lives in the code drawer under the canvas,
+beside Console and Trace, or in the user's own editor via File mode, while
+the block on the canvas stays small.
 
 Ports are rows: inputs down the left edge, outputs down the right, one row
 per index, above the block's body. Row *i* is centred 51 + 24·*i* px from
@@ -104,6 +117,10 @@ human rose.
 - `CustomRules` — the same code annotated line by line against the block it
   produces, the reload and error rules, and the Python, TypeScript and
   shell spellings.
+- `CustomDrawer` — a 184-line block shown in Summary view on the canvas
+  while its code is edited in the full-width drawer below.
+- `BlockViews` — the same block in Compact, Summary and Code views, how to
+  switch, and the three answers for big programs.
 
 **Clickable**
 
