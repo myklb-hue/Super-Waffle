@@ -66,6 +66,10 @@ pub struct Summary {
     /// What the Output blocks were given, in file order.
     pub results: Vec<PortValue>,
     pub errors: Vec<String>,
+    /// What every port held when the run ended. A Once run has no use for it;
+    /// a live one carries it into the next event when the graph keeps state
+    /// (SPEC §8.4).
+    pub values: HashMap<Endpoint, Value>,
 }
 
 pub struct Runner<'a> {
@@ -93,6 +97,10 @@ struct State<'a> {
     /// Blocks that errored or were skipped, so downstream knows why it has no
     /// input to work from.
     failed: HashSet<String>,
+    /// Blocks that have taken their turn. Distinguishes "produced nothing on
+    /// this port" from "has not run yet", which is the whole of how a Branch
+    /// decides what happens next.
+    ran: HashSet<String>,
     /// Blocks the user said not to ask about again.
     trusted: HashSet<String>,
     errors: Vec<String>,
@@ -106,25 +114,57 @@ impl<'a> Runner<'a> {
         emit: &mut dyn FnMut(RunEvent),
         ask: &mut dyn FnMut(&Warning) -> Decision,
     ) -> Summary {
-        let started = Instant::now();
         let plan = plan(self.graph);
+        let order = plan.order.clone();
+        self.walk(&plan, &order, HashMap::new(), true, emit, ask)
+    }
+
+    /// Run just these steps, starting from values that are already known.
+    ///
+    /// This is what a live event does: the plan says which part of the graph
+    /// is below whatever fired, and the value that fired is seeded onto its
+    /// own port before anything runs (SPEC §8.2).
+    pub fn execute_steps(
+        &self,
+        steps: &[String],
+        seeded: HashMap<Endpoint, Value>,
+        emit: &mut dyn FnMut(RunEvent),
+        ask: &mut dyn FnMut(&Warning) -> Decision,
+    ) -> Summary {
+        let plan = plan(self.graph);
+        self.walk(&plan, steps, seeded, false, emit, ask)
+    }
+
+    fn walk(
+        &self,
+        plan: &Plan,
+        order: &[String],
+        seeded: HashMap<Endpoint, Value>,
+        announce: bool,
+        emit: &mut dyn FnMut(RunEvent),
+        ask: &mut dyn FnMut(&Warning) -> Decision,
+    ) -> Summary {
+        let started = Instant::now();
         let mut st = State {
             emit,
             ask,
-            values: HashMap::new(),
+            values: seeded,
             failed: HashSet::new(),
+            ran: HashSet::new(),
             trusted: HashSet::new(),
             errors: Vec::new(),
             stopped: false,
         };
 
-        (st.emit)(RunEvent::Started {
-            run: self.run.clone(),
-            graph: self.graph.id.clone(),
-            order: plan.order.clone(),
-        });
-        for problem in &plan.problems {
-            self.console(&mut st, None, Level::Warn, problem.clone());
+        if announce {
+            (st.emit)(RunEvent::Started {
+                run: self.run.clone(),
+                graph: self.graph.id.clone(),
+                order: order.to_vec(),
+            });
+            for problem in &plan.problems {
+                self.console(&mut st, None, Level::Warn, problem.clone());
+            }
         }
 
         // Everything the plan will visit shows as queued before anything
@@ -134,10 +174,14 @@ impl<'a> Runner<'a> {
                 BlockState::Disabled
             } else if plan.is_capability(&block.id) {
                 BlockState::Ready
-            } else if plan.order.contains(&block.id) {
+            } else if order.contains(&block.id) {
                 BlockState::Queued
-            } else {
+            } else if announce {
                 BlockState::Idle
+            } else {
+                // A live event says nothing about the branches it is not
+                // running, so the canvas keeps showing what they last did.
+                continue;
             };
             (st.emit)(RunEvent::BlockState {
                 run: self.run.clone(),
@@ -146,9 +190,13 @@ impl<'a> Runner<'a> {
             });
         }
 
-        for id in &plan.order {
+        for id in order {
             if st.stopped || self.cancelled(&mut st) {
                 break;
+            }
+            if let Some(frame) = self.graph.frames.iter().find(|f| &f.id == id) {
+                self.run_frame(frame, plan, &mut st);
+                continue;
             }
             let Some(block) = self.block(id) else {
                 continue;
@@ -156,7 +204,7 @@ impl<'a> Runner<'a> {
             if block.disabled {
                 continue;
             }
-            self.step(block, &plan, &mut st);
+            self.step(block, plan, &mut st);
         }
 
         // The run's results are what reached the Output blocks, which is what a
@@ -182,23 +230,35 @@ impl<'a> Runner<'a> {
             RunOutcome::Failed
         };
         let ms = started.elapsed().as_millis() as u32;
-        (st.emit)(RunEvent::Finished {
-            run: self.run.clone(),
-            outcome,
-            ms,
-            results: results.clone(),
-        });
+        if announce {
+            (st.emit)(RunEvent::Finished {
+                run: self.run.clone(),
+                outcome,
+                ms,
+                results: results.clone(),
+            });
+        }
         Summary {
             outcome,
             ms,
             results,
             errors: st.errors,
+            values: st.values,
         }
     }
 
     // ------------------------------------------------------------ one block
 
     fn step(&self, block: &Block, plan: &Plan, st: &mut State<'_>) {
+        if self.off_the_path(block, st) {
+            (st.emit)(RunEvent::BlockState {
+                run: self.run.clone(),
+                block: block.id.clone(),
+                state: BlockState::Idle,
+            });
+            return;
+        }
+
         let inputs = self.gather(block, st);
 
         // A block whose upstream failed has nothing to work from. It is skipped
@@ -253,6 +313,7 @@ impl<'a> Runner<'a> {
                 self.console(st, Some(&block.id), Level::Error, message);
             }
             Ok((outputs, figure)) => {
+                st.ran.insert(block.id.clone());
                 let mut sent = Vec::new();
                 for (port, value) in &outputs {
                     let end = Endpoint::new(&block.id, port);
@@ -288,11 +349,307 @@ impl<'a> Runner<'a> {
         }
     }
 
+    /// Run a loop frame: the blocks inside it, once per item (SPEC §3.5).
+    ///
+    /// # Asking once for two hundred items
+    ///
+    /// A block inside a frame that warns would warn per item, and a prompt
+    /// that appears two hundred times is not a prompt. So the frame asks
+    /// *before* it iterates, once per block that warns, describing what is
+    /// about to happen that many times. That keeps SPEC §12.1 — the user is
+    /// told and decides — without turning a Continue into a job.
+    fn run_frame(&self, frame: &graph_format::Frame, plan: &Plan, st: &mut State<'_>) {
+        let started = Instant::now();
+        let inside = plan.frames.get(&frame.id).cloned().unwrap_or_default();
+        let items = self.items_for(frame, st);
+
+        (st.emit)(RunEvent::FrameState {
+            run: self.run.clone(),
+            frame: frame.id.clone(),
+            at: 0,
+            of: items.len() as u32,
+            item: None,
+        });
+
+        if items.is_empty() {
+            self.console(
+                st,
+                Some(&frame.id),
+                Level::Warn,
+                "nothing to iterate: the frame's `items` port has no list".into(),
+            );
+            return;
+        }
+
+        // Ask now, once, for anything inside that would ask per item.
+        for id in &inside {
+            let Some(block) = self.block(id) else {
+                continue;
+            };
+            if !blocks::flag(block, "warnBefore") && !blocks::flag(block, "warnBeforeMove") {
+                continue;
+            }
+            let permitted = self.permitted(
+                st,
+                Warning {
+                    block: id.clone(),
+                    action: format!("Run `{id}` once for each of {} items", items.len()),
+                    reason: "A block inside a loop runs once per item. This asks once for all                              of them rather than once each."
+                        .into(),
+                    remember: true,
+                },
+            );
+            if !permitted {
+                return;
+            }
+            st.trusted.insert(id.clone());
+        }
+
+        let parallel = frame.parallel.max(1) as usize;
+        let mut results: Vec<Value> = Vec::new();
+        let mut errors: Vec<serde_json::Value> = Vec::new();
+        let mut done = 0u32;
+
+        for batch in items.chunks(parallel) {
+            if st.stopped || self.cancelled(st) {
+                break;
+            }
+            // Items in a batch run at the same time; their events are handed on
+            // afterwards in item order. Interleaving two items' output would
+            // produce a console nobody can read, and the point of the
+            // parallelism is the work, not the log.
+            let outcomes = self.run_batch(frame, &inside, batch, st);
+            for (item, outcome) in batch.iter().zip(outcomes) {
+                done += 1;
+                (st.emit)(RunEvent::FrameState {
+                    run: self.run.clone(),
+                    frame: frame.id.clone(),
+                    at: done,
+                    of: items.len() as u32,
+                    item: Some(item.summary(40)),
+                });
+                match outcome {
+                    Ok(value) => results.push(value),
+                    Err(why) => {
+                        errors.push(serde_json::json!({ "item": item.as_data(), "error": why }));
+                        if !frame.continue_on_error {
+                            st.errors.push(format!("{}: {why}", frame.id));
+                            self.console(st, Some(&frame.id), Level::Error, why);
+                            self.finish_frame(frame, results, errors, done, started, st);
+                            return;
+                        }
+                        self.console(st, Some(&frame.id), Level::Warn, why);
+                    }
+                }
+            }
+        }
+
+        self.finish_frame(frame, results, errors, done, started, st);
+    }
+
+    /// One batch of items, run at the same time.
+    fn run_batch(
+        &self,
+        frame: &graph_format::Frame,
+        inside: &[String],
+        batch: &[Value],
+        st: &mut State<'_>,
+    ) -> Vec<Result<Value, String>> {
+        let mut collected: Vec<(Vec<RunEvent>, Result<Value, String>)> = Vec::new();
+
+        std::thread::scope(|scope| {
+            let mut handles = Vec::new();
+            for item in batch {
+                let seeded = {
+                    let mut values = st.values.clone();
+                    values.insert(Endpoint::new(&frame.id, &frame.as_name), item.clone());
+                    values
+                };
+                let trusted = st.trusted.clone();
+                handles.push(scope.spawn(move || {
+                    let mut events = Vec::new();
+                    let summary = {
+                        let mut inner = State {
+                            emit: &mut |e| events.push(e),
+                            // A warning inside a batch was already asked before
+                            // the loop started; anything that still asks here
+                            // is answered by continuing, because there is
+                            // nobody on this thread to ask.
+                            ask: &mut |_| Decision::Continue,
+                            values: seeded,
+                            failed: HashSet::new(),
+                            ran: HashSet::new(),
+                            trusted,
+                            errors: Vec::new(),
+                            stopped: false,
+                        };
+                        for id in inside {
+                            let Some(block) = self.block(id) else {
+                                continue;
+                            };
+                            if block.disabled {
+                                continue;
+                            }
+                            self.step(block, &plan(self.graph), &mut inner);
+                        }
+                        (inner.errors, inner.values)
+                    };
+                    let (errors, values) = summary;
+                    let produced = self.frame_result(frame, inside, &values);
+                    let outcome = if errors.is_empty() {
+                        Ok(produced)
+                    } else {
+                        Err(errors.join("; "))
+                    };
+                    (events, outcome)
+                }));
+            }
+            for handle in handles {
+                match handle.join() {
+                    Ok(pair) => collected.push(pair),
+                    // A panic inside one item is that item's failure, not the
+                    // graph's: the rest of the batch still reports.
+                    Err(_) => collected.push((Vec::new(), Err("the item panicked".into()))),
+                }
+            }
+        });
+
+        let mut outcomes = Vec::new();
+        for (events, outcome) in collected {
+            for event in events {
+                (st.emit)(event);
+            }
+            outcomes.push(outcome);
+        }
+        outcomes
+    }
+
+    /// What one pass through the frame produced: the value on the last block's
+    /// first output, which is what a loop over a region means by "the result".
+    fn frame_result(
+        &self,
+        _frame: &graph_format::Frame,
+        inside: &[String],
+        values: &HashMap<Endpoint, Value>,
+    ) -> Value {
+        for id in inside.iter().rev() {
+            if let Some((_, value)) = values.iter().find(|(end, _)| &end.node == id) {
+                return value.clone();
+            }
+        }
+        Value::Null
+    }
+
+    fn finish_frame(
+        &self,
+        frame: &graph_format::Frame,
+        results: Vec<Value>,
+        errors: Vec<serde_json::Value>,
+        done: u32,
+        started: Instant,
+        st: &mut State<'_>,
+    ) {
+        let mut out = Outputs::new();
+        out.insert(
+            "results".into(),
+            Value::Data(serde_json::Value::Array(
+                results.iter().map(Value::as_data).collect(),
+            )),
+        );
+        if !errors.is_empty() {
+            out.insert(
+                "errors".into(),
+                Value::Data(serde_json::Value::Array(errors)),
+            );
+        }
+        // `done` is exec: it says the loop finished, and carries nothing.
+        out.insert("done".into(), Value::Null);
+
+        for (port, value) in &out {
+            st.values
+                .insert(Endpoint::new(&frame.id, port), value.clone());
+        }
+        (st.emit)(RunEvent::BlockDone {
+            run: self.run.clone(),
+            block: frame.id.clone(),
+            outputs: out
+                .iter()
+                .map(|(port, value)| PortValue {
+                    port: port.clone(),
+                    value: value.clone(),
+                })
+                .collect(),
+            ms: started.elapsed().as_millis() as u32,
+            figure: Some(format!("{done} item{}", if done == 1 { "" } else { "s" })),
+        });
+        for wire in &self.graph.wires {
+            if wire.from.node == frame.id && out.contains_key(&wire.from.port) {
+                (st.emit)(RunEvent::WireActive {
+                    run: self.run.clone(),
+                    wire: wire.id.clone(),
+                });
+            }
+        }
+    }
+
+    /// The items a frame will iterate.
+    ///
+    /// A list is its elements. Anything else is one item: a folder source
+    /// hands the frame one file at a time, and a frame that refused to iterate
+    /// a single value would make the commonest live graph impossible to write.
+    fn items_for(&self, frame: &graph_format::Frame, st: &State<'_>) -> Vec<Value> {
+        // `over` names the port the frame iterates; a wire into `items` is the
+        // same thing said the other way round.
+        let mut found: Option<Value> = st.values.get(&frame.over).cloned();
+        if found.is_none() {
+            for wire in &self.graph.wires {
+                if wire.to.node == frame.id
+                    && wire.to.port == "items"
+                    && let Some(value) = st.values.get(&wire.from)
+                {
+                    found = Some(value.clone());
+                    break;
+                }
+            }
+        }
+        let Some(value) = found else {
+            return Vec::new();
+        };
+
+        // Read through `as_data`, so a list written as text and a list that
+        // arrived as data are the same list. A model asked for JSON returns a
+        // string, and a frame that would not iterate it would need a Convert
+        // in front of every loop.
+        let items = match value.as_data() {
+            serde_json::Value::Array(items) => items
+                .into_iter()
+                .map(|v| match v {
+                    serde_json::Value::String(s) => Value::Text(s),
+                    other => Value::Data(other),
+                })
+                .collect(),
+            // Anything else is one item: a folder source hands the frame one
+            // file at a time, and a frame that refused a single value would
+            // make the commonest live graph impossible to write.
+            _ => vec![value],
+        };
+        let max = frame.max.max(1) as usize;
+        items.into_iter().take(max).collect()
+    }
+
     /// The values on this block's wired inputs.
+    ///
+    /// An `exec` wire is skipped. Exec is control flow, never a value
+    /// (SPEC §4.3): a Schedule's tick says *run*, and reading it as an input
+    /// handed a Terminal an empty string where its command should have been —
+    /// which ran, succeeded, and did nothing.
     fn gather(&self, block: &Block, st: &mut State<'_>) -> Outputs {
         let mut inputs = Outputs::new();
         for wire in &self.graph.wires {
             if wire.to.node != block.id {
+                continue;
+            }
+            if self.wire_type(wire) == Some(graph_format::PortType::Exec) {
                 continue;
             }
             if let Some(value) = st.values.get(&wire.from) {
@@ -319,8 +676,52 @@ impl<'a> Runner<'a> {
         None
     }
 
+    /// Whether this block is on a path a Branch did not take.
+    ///
+    /// A Branch produces a value on exactly one of its two exec ports, so a
+    /// block below the other one has an incoming exec wire from a block that
+    /// has run and said nothing. That silence is the branch: skipping here is
+    /// what makes a Branch choose rather than fork.
+    ///
+    /// Only when *every* incoming exec wire is like that. A block reachable
+    /// two ways runs if either way was taken, which is what a Merge downstream
+    /// of a Branch has to mean.
+    fn off_the_path(&self, block: &Block, st: &State<'_>) -> bool {
+        let mut execs = 0usize;
+        let mut silent = 0usize;
+        for wire in &self.graph.wires {
+            if wire.to.node != block.id
+                || self.wire_type(wire) != Some(graph_format::PortType::Exec)
+            {
+                continue;
+            }
+            execs += 1;
+            if st.ran.contains(&wire.from.node) && !st.values.contains_key(&wire.from) {
+                silent += 1;
+            }
+        }
+        execs > 0 && execs == silent
+    }
+
     fn block(&self, id: &str) -> Option<&Block> {
         self.graph.blocks.iter().find(|b| b.id == id)
+    }
+
+    /// What a wire carries, from the port it leaves.
+    fn wire_type(&self, wire: &graph_format::Wire) -> Option<graph_format::PortType> {
+        let block = self.block(&wire.from.node)?;
+        if let Some(port) = block
+            .ports
+            .iter()
+            .find(|p| p.name == wire.from.port && p.side == graph_format::Side::Out)
+        {
+            return Some(port.port_type);
+        }
+        block_kinds::kind(&block.kind)?
+            .ports
+            .iter()
+            .find(|p| p.name == wire.from.port && p.side == graph_format::Side::Out)
+            .map(|p| p.port_type)
     }
 
     /// Whether someone pressed stop. Recorded on the state the first time it is
@@ -382,18 +783,28 @@ impl<'a> Runner<'a> {
             .or_else(|| blocks::setting(block, "command").map(str::to_owned))
             .ok_or("no command: the block's Command setting is empty and nothing is wired to it")?;
         let output = self.shell_with_warning(block, &command, st)?;
+
+        // A command that exits non-zero has failed, and a Terminal *step* that
+        // failed is a block that threw (SPEC §3.2). This is deliberately not
+        // how a Terminal behaves as a *tool*: there, exit 101 is a result the
+        // model reads and reasons about, which is the whole of §13.1. The two
+        // paths differ because the two things differ — a step is part of the
+        // program and a tool call is a question somebody asked.
+        if !output.ok() {
+            let why = output
+                .stderr
+                .lines()
+                .rev()
+                .map(str::trim)
+                .find(|l| !l.is_empty())
+                .map(|l| format!("`{command}` exited {}: {l}", output.code))
+                .unwrap_or_else(|| format!("`{command}` exited {}", output.code));
+            return Err(why);
+        }
+
         let mut out = Outputs::new();
         out.insert("stdout".into(), Value::Text(output.stdout.clone()));
-        let figure = output.figure();
-        if !output.ok() {
-            self.console(
-                st,
-                Some(&block.id),
-                Level::Warn,
-                format!("`{command}` exited {}", output.code),
-            );
-        }
-        Ok((out, Some(figure)))
+        Ok((out, Some(output.figure())))
     }
 
     /// Run a command, asking first if the block is set to warn.

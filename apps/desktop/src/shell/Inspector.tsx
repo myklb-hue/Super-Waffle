@@ -23,7 +23,7 @@ import {
   type IconName,
 } from '@cyberloom/ui';
 import { portTypeOf, useDocument, type Selection } from '../stores/document';
-import { useRun } from '../stores/run';
+import { elapsed, useRun } from '../stores/run';
 import { ago, useSource } from '../stores/source';
 import { RunPanel } from './RunPanel';
 import s from './Inspector.module.css';
@@ -40,10 +40,15 @@ export function Inspector() {
   const selection = useDocument((d) => d.selection);
   const problems = useDocument((d) => d.problems);
   const phase = useRun((r) => r.phase);
-  // While a run is in flight the panel is the run's. The inspector has no
-  // identity of its own and shows what matters now (SPEC §7.1); what matters
-  // while a graph is running is the run, not what happens to be selected.
-  const running = phase === 'running';
+  // While a *Once* run is in flight the panel is the run's: it has a beginning,
+  // an end and a progress list, and that is what matters more than whatever
+  // happens to be selected (SPEC §7.1, §8.5).
+  //
+  // A live graph is different and SPEC §7.4 says so: its panel leads with Run
+  // mode, then the sources armed, the overlap policy and the recent events. A
+  // graph that never finishes has no progress bar, and showing one would be
+  // answering a question nobody asked.
+  const running = phase === 'running' && graph.runMode === 'once';
 
   return (
     <aside className={`${s.inspector} cl-scroll`}>
@@ -153,6 +158,8 @@ function GraphPanel({ graph }: { graph: Graph }) {
           onChange={(v) => setField('description', v || null)}
         />
       </Section>
+      <SourcesArmed graph={graph} />
+
       <Section title="Execution">
         <Label>Run mode</Label>
         <Segmented
@@ -281,6 +288,58 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
  * the order of the questions: where is it, what did it produce, what can I
  * change.
  */
+/**
+ * What is armed, and what has happened lately (SPEC §8.2, Figure 8).
+ *
+ * Only while a live graph is up: a graph at rest has nothing armed and nothing
+ * recent, and two empty sections are worse than none.
+ */
+function SourcesArmed({ graph }: { graph: Graph }) {
+  const armed = useRun((r) => r.armed);
+  const recent = useRun((r) => r.recent);
+  const phase = useRun((r) => r.phase);
+  const paused = useRun((r) => r.paused);
+  const ids = Object.keys(armed);
+  if (phase !== 'running' || ids.length === 0) return null;
+
+  return (
+    <>
+      <Section
+        title="Sources armed"
+        right={<Chip label={paused ? 'held' : 'live'} color={paused ? 'text-mid' : 'ok'} dot />}
+      >
+        {ids.map((id) => {
+          const block = graph.blocks.find((b) => b.id === id);
+          const kind = block && lookupKind(block.kind);
+          return (
+            <div key={id} className={s.derived}>
+              <Icon
+                name={(kind?.icon ?? 'clock') as IconName}
+                size={12}
+                color={`cat-${kind?.category ?? 'senses'}`}
+                strokeWidth={1.7}
+              />
+              <span className={s.derivedName}>{block?.title ?? kind?.title ?? id}</span>
+              <span className={s.derivedType}>{armed[id]}</span>
+            </div>
+          );
+        })}
+      </Section>
+
+      {recent.length > 0 && (
+        <Section title="Recent events">
+          {recent.slice(0, 8).map((event, i) => (
+            <div key={i} className={s.recent}>
+              <span className={s.recentAt}>{elapsed(event.at)}</span>
+              <span className={s.recentWhat}>{event.detail}</span>
+            </div>
+          ))}
+        </Section>
+      )}
+    </>
+  );
+}
+
 function CustomSections({ block }: { block: Block }) {
   const setSourceMode = useDocument((d) => d.setSourceMode);
   const setSetting = useDocument((d) => d.setSetting);
@@ -457,8 +516,17 @@ function GeneratedControl({
   );
 }
 
-/** One control per setting, chosen by the kind's declaration rather than by a
- *  hand-written panel per block. */
+/**
+ * One control per setting, chosen by the kind's declaration rather than by a
+ * hand-written panel per block.
+ *
+ * A setting the user has not touched shows the kind's declared default, and a
+ * setting with no declared default shows nothing at all. Until the catalogue
+ * carried defaults this panel filled the gap itself — a slider sat at its
+ * minimum and a choice showed its first option — which read as a value someone
+ * had chosen when nobody had. A control that is empty because nothing has been
+ * decided should look empty.
+ */
 function SettingControl({
   def,
   value,
@@ -469,21 +537,30 @@ function SettingControl({
   onChange: (value: unknown) => void;
 }) {
   if (def.kind === 'bool') {
+    // A switch has no unset position, so the catalogue always declares one
+    // (`every_switch_says_which_way_it_starts`).
+    const on = value === undefined || value === null ? def.default === 'true' : value === true;
     return (
       <SwitchRow
         label={def.label}
         hint={def.hint ?? undefined}
-        on={value === true}
+        on={on}
         color={def.hint ? 'err' : 'accent'}
         onChange={onChange}
       />
     );
   }
+
   if (def.kind === 'range') {
+    const fallback = def.default === null ? null : Number(def.default);
+    const chosen = typeof value === 'number' ? value : fallback;
     return (
       <Slider
         label={def.label}
-        value={typeof value === 'number' ? value : (def.min ?? 0)}
+        // A slider with nothing behind it sits at its floor and says so, rather
+        // than reading as a deliberate zero.
+        value={chosen ?? (def.min ?? 0)}
+        display={chosen === null ? 'unset' : undefined}
         min={def.min ?? 0}
         max={def.max ?? 1}
         step={(def.max ?? 1) - (def.min ?? 0) > 4 ? 1 : 0.01}
@@ -491,36 +568,43 @@ function SettingControl({
       />
     );
   }
+
   if (def.kind === 'select') {
     return (
       <>
         <Label>{def.label}</Label>
         <Segmented
           options={[...def.options]}
-          value={typeof value === 'string' ? value : (def.options[0] ?? '')}
+          value={typeof value === 'string' ? value : (def.default ?? def.options[0] ?? '')}
           label={def.label}
           onChange={onChange}
         />
       </>
     );
   }
+
   if (def.kind === 'multiline') {
     return (
       <>
         <Label>{def.label}</Label>
         <TextBox
           value={typeof value === 'string' ? value : ''}
+          placeholder={def.default ?? undefined}
           mono
           onChange={onChange}
         />
       </>
     );
   }
+
   return (
     <>
       <Label>{def.label}</Label>
       <Field
         value={value === undefined || value === null ? '' : String(value)}
+        // The declared default as a placeholder: what the block will use, shown
+        // in the shape of something nobody typed.
+        placeholder={def.default ?? undefined}
         mono={def.kind === 'path' || def.kind === 'number'}
         onChange={(v) => onChange(def.kind === 'number' ? Number(v) || 0 : v)}
       />

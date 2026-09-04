@@ -167,6 +167,11 @@ impl Engine {
                 count: session.stop(run.as_deref()) as u32,
             }),
 
+            Request::RunPause { run, paused } => Reply::Acknowledged(rpc::Acknowledged {
+                ok: true,
+                count: session.hold(run.as_deref(), paused) as u32,
+            }),
+
             Request::RunContinue { warning, decision } => {
                 let ok = session.answer(&warning, decision);
                 Reply::Acknowledged(rpc::Acknowledged {

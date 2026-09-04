@@ -803,8 +803,55 @@ code:
   would fail on its first line. Providing them is what makes them the type
   system's names rather than a convention the parser happens to recognise.
 
-Still open from slice 3, and now overdue: **`SettingDef` has no default.** The
-generated settings a custom block produces *do* carry one, read from the code,
-and the difference is visible side by side in the same inspector — a custom
-block's threshold shows 0.6 because its code says so, while a built-in LLM's
-top-p shows 0 because nothing does.
+**`SettingDef` now carries a default**, closing the gap slice 3 opened. The
+rule, encoded in the catalogue's own tests: a default is declared when the
+control *cannot* be unset — a switch has no third position, a segmented choice
+always has something selected — or when the specification states one.
+Everything else stays genuinely unset, and the inspector shows `unset` rather
+than a number nobody chose. A temperature has none on purpose: the engine
+leaves it out of the request and the provider's own default applies, which is
+a better answer than one invented in a table here.
+
+Half of it was not cosmetic. `flag` read `false` for any switch the file did
+not mention, which made every safety switch off unless someone had turned it
+on — the opposite of what SPEC §12.2 says about shell commands and physical
+actions. A Terminal dropped on a canvas now warns before it runs, and a test
+in the protocol suite caught the change by parking twenty of them on a
+question nobody was answering.
+
+Found while building slice 6:
+
+- **Every Branch was classified as a tool nobody held.** The capability rule
+  read "all wired outputs are closed types", and `exec` is closed — so a
+  Branch, whose outputs are exec, was never scheduled at all. §4.3
+  distinguishes handles from control flow: a capability is a block whose
+  outputs are `tools` or `memory`, the things a holder *calls*. Control flow
+  makes other blocks run, which is the opposite of waiting to be asked.
+- **A file arriving the instant a folder armed was missed, silently and
+  forever.** The listing of what was already there was taken inside the
+  source's own thread, leaving a window after the block reported itself armed.
+  It is taken before the thread starts now, so "armed" means it.
+- **An `exec` wire seeded a null into the value map**, so a Terminal wired to a
+  Schedule's tick ran an empty command — successfully, and to no effect.
+- **A Terminal step that exits non-zero has failed.** It used to warn and carry
+  on, which left continue-on-error with nothing to act on. Deliberately not how
+  a Terminal behaves as a *tool*: there, exit 101 is a result the model reads,
+  which is the whole of §13.1.
+
+Two decisions worth recording:
+
+- **One event at a time, and the overlap policy handles the rest.** A graph is
+  a program with shared state — a Memory hub, a Terminal's working directory,
+  a model's context — and running two events through it at once would make
+  every one of those a race the user never wrote. Parallelism belongs inside a
+  Loop frame, where §8.3 puts it and where the items are independent.
+- **A warning inside a loop is asked once, before the loop starts**, naming how
+  many items it covers. A prompt that appears two hundred times is not a
+  prompt, and answering it two hundred times is not consent.
+
+What slice 6 does **not** deliver: `notify` and `file-system` are not runnable
+kinds, so inbox-triage runs live, keeps running, and reports those two blocks
+per event rather than completing its archive and its Slack message. The live
+machinery is complete and proven — sources arm, events fire only what is below
+them, the loop repeats, the branch chooses, a hold holds and a stop releases
+the port. The two leaf blocks belong to §6.2 and §6.9 and to their own slices.

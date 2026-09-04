@@ -21,6 +21,7 @@
 
 use crate::rpc::{Reply, ReplyEnvelope, RpcError};
 use crate::run::event::RunEvent;
+use crate::run::live::Live;
 use crate::run::model::ModelProvider;
 use crate::run::ollama::Ollama;
 use crate::run::runner::{Decision, Runner, Warning};
@@ -38,8 +39,11 @@ pub enum Outgoing {
 }
 
 /// What the session knows about a run in flight.
-struct Live {
+struct InFlight {
     cancel: Arc<AtomicBool>,
+    /// Set while a live graph is holding: events keep queueing and nothing
+    /// runs until it clears (SPEC §8.1).
+    paused: Arc<AtomicBool>,
     /// Warnings this run is parked on, by the id the shell answers with.
     pending: HashMap<String, Sender<Decision>>,
 }
@@ -47,7 +51,7 @@ struct Live {
 /// Everything one connection owns.
 pub struct Session {
     out: Sender<Outgoing>,
-    runs: Mutex<HashMap<String, Live>>,
+    runs: Mutex<HashMap<String, InFlight>>,
     next: AtomicU64,
 }
 
@@ -102,10 +106,12 @@ impl Session {
         let provider = provider_for(&graph)?;
         let run = self.fresh_run_id();
         let cancel = Arc::new(AtomicBool::new(false));
+        let paused = Arc::new(AtomicBool::new(false));
         self.runs.lock().unwrap().insert(
             run.clone(),
-            Live {
+            InFlight {
                 cancel: cancel.clone(),
+                paused: paused.clone(),
                 pending: HashMap::new(),
             },
         );
@@ -115,16 +121,34 @@ impl Session {
         std::thread::Builder::new()
             .name(format!("loomd-{run}"))
             .spawn(move || {
-                let runner = Runner {
-                    graph: &graph,
-                    root: &root,
-                    provider: provider.as_ref(),
-                    run: id.clone(),
-                    cancel,
-                };
-                runner.execute(&mut |event| session.send_event(&event), &mut |warning| {
-                    session.ask(&id, warning)
-                });
+                let emit = &mut |event: crate::run::event::RunEvent| session.send_event(&event);
+                let ask = &mut |warning: &Warning| session.ask(&id, warning);
+                // The graph says which it is. Once runs top to bottom and
+                // stops; Live and Schedule arm the sources and never finish on
+                // their own (SPEC §8.1).
+                match graph.run_mode {
+                    graph_format::RunMode::Once => {
+                        Runner {
+                            graph: &graph,
+                            root: &root,
+                            provider: provider.as_ref(),
+                            run: id.clone(),
+                            cancel,
+                        }
+                        .execute(emit, ask);
+                    }
+                    _ => {
+                        Live {
+                            graph: &graph,
+                            root: &root,
+                            provider: provider.as_ref(),
+                            run: id.clone(),
+                            cancel,
+                            paused,
+                        }
+                        .execute(emit, ask);
+                    }
+                }
                 // A finished run is forgotten, so a `run.stop` for it is a
                 // no-op rather than an error about a run that already ended.
                 session.runs.lock().unwrap().remove(&id);
@@ -192,6 +216,21 @@ impl Session {
             stopped += 1;
         }
         stopped
+    }
+
+    /// Hold, or let go. Events keep queueing while a graph is held
+    /// (SPEC §8.1), which is what makes it safe to rewire a live graph.
+    pub fn hold(&self, run: Option<&str>, paused: bool) -> usize {
+        let mut runs = self.runs.lock().unwrap();
+        let mut changed = 0;
+        for (id, live) in runs.iter_mut() {
+            if run.is_some_and(|wanted| wanted != id) {
+                continue;
+            }
+            live.paused.store(paused, Ordering::Relaxed);
+            changed += 1;
+        }
+        changed
     }
 
     pub fn running(&self) -> Vec<String> {
@@ -310,8 +349,9 @@ mod tests {
         let (session, rx) = session();
         session.runs.lock().unwrap().insert(
             "r1".into(),
-            Live {
+            InFlight {
                 cancel: Arc::new(AtomicBool::new(false)),
+                paused: Arc::new(AtomicBool::new(false)),
                 pending: HashMap::new(),
             },
         );
@@ -348,8 +388,9 @@ mod tests {
         let (session, rx) = session();
         session.runs.lock().unwrap().insert(
             "r1".into(),
-            Live {
+            InFlight {
                 cancel: Arc::new(AtomicBool::new(false)),
+                paused: Arc::new(AtomicBool::new(false)),
                 pending: HashMap::new(),
             },
         );

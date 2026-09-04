@@ -158,6 +158,23 @@ pub struct SettingDef {
     /// under a switch row; this is where a safety or privacy boundary is stated
     /// in plain words (SPEC §12).
     pub hint: Option<&'static str>,
+    /// What the setting is when the user has not chosen (SPEC §7).
+    ///
+    /// Held as the text it would be written as, which is the same shape a
+    /// custom block's generated settings use (`block_source::Generated`), so
+    /// the inspector reads a built-in default and a derived one the same way.
+    ///
+    /// `None` means genuinely unset, and the inspector shows nothing rather
+    /// than a number nobody chose. The rule for when there is one:
+    ///
+    /// - a control that *cannot* be unset always has one — a switch has no
+    ///   third position, and a segmented choice always has something selected;
+    /// - anything else has one only where the specification states it.
+    ///
+    /// A temperature has none, and that is not an oversight: the engine leaves
+    /// it out of the request, the provider's own default applies, and a number
+    /// invented here would be a worse answer than the one the model ships with.
+    pub default: Option<&'static str>,
 }
 
 pub(crate) const fn setting(
@@ -173,6 +190,7 @@ pub(crate) const fn setting(
         min: None,
         max: None,
         hint: None,
+        default: None,
     }
 }
 
@@ -189,6 +207,9 @@ pub(crate) const fn select(
         min: None,
         max: None,
         hint: None,
+        // A segmented control always has something selected, so the first
+        // option is the default unless a kind says otherwise.
+        default: Some(options[0]),
     }
 }
 
@@ -206,11 +227,25 @@ pub(crate) const fn range(
         min: Some(min),
         max: Some(max),
         hint: None,
+        default: None,
     }
 }
 
 pub(crate) const fn hinted(mut def: SettingDef, hint: &'static str) -> SettingDef {
     def.hint = Some(hint);
+    def
+}
+
+/// What this setting is when nobody has chosen. See `SettingDef::default`.
+pub(crate) const fn falls_back_to(mut def: SettingDef, value: &'static str) -> SettingDef {
+    def.default = Some(value);
+    def
+}
+
+/// A switch, which has no unset position and so always declares one.
+pub(crate) const fn switch(name: &'static str, label: &'static str, on: bool) -> SettingDef {
+    let mut def = setting(name, label, SettingKind::Bool);
+    def.default = Some(if on { "true" } else { "false" });
     def
 }
 

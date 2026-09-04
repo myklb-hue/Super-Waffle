@@ -70,7 +70,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "model",
@@ -79,7 +80,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "endpoint",
@@ -88,7 +90,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "role",
@@ -101,7 +104,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "assistant"
       },
       {
         "name": "temperature",
@@ -110,7 +114,8 @@
         "options": [],
         "min": 0.0,
         "max": 2.0,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "topP",
@@ -119,7 +124,8 @@
         "options": [],
         "min": 0.0,
         "max": 1.0,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "maxTokens",
@@ -128,7 +134,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "systemPrompt",
@@ -137,7 +144,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -173,7 +181,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "confidence",
@@ -182,7 +191,8 @@
         "options": [],
         "min": 0.0,
         "max": 1.0,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -218,7 +228,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "enrolment",
@@ -227,7 +238,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "Off by default. Adding a person stores 512 floats, never a picture."
+        "hint": "Off by default. Adding a person stores 512 floats, never a picture.",
+        "default": "false"
       },
       {
         "name": "storeImages",
@@ -236,7 +248,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "Off. Turning this on writes frames to disk until you turn it off again."
+        "hint": "Off. Turning this on writes frames to disk until you turn it off again.",
+        "default": "false"
       }
     ],
     "source": false,
@@ -272,7 +285,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "language",
@@ -281,7 +295,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -317,7 +332,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "rate",
@@ -326,7 +342,8 @@
         "options": [],
         "min": 0.5,
         "max": 2.0,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -362,7 +379,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -398,7 +416,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "labels",
@@ -407,7 +426,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -443,7 +463,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -490,7 +511,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "auto"
       },
       {
         "name": "warnBefore",
@@ -499,7 +521,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "A prompt with a Continue. It never blocks the graph."
+        "hint": "A prompt with a Continue. It never blocks the graph.",
+        "default": "true"
       }
     ],
     "source": false,
@@ -535,7 +558,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "results",
@@ -544,7 +568,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -592,7 +617,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "read"
       },
       {
         "name": "root",
@@ -601,7 +627,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "to",
@@ -610,7 +637,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -639,7 +667,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "args",
@@ -648,7 +677,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -691,7 +721,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "cwd",
@@ -700,7 +731,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "warnBefore",
@@ -709,7 +741,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "A shell command is a dangerous action. The prompt always has a Continue."
+        "hint": "A shell command is a dangerous action. The prompt always has a Continue.",
+        "default": "true"
       }
     ],
     "source": false,
@@ -745,7 +778,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "venv",
@@ -754,7 +788,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -790,7 +825,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -826,7 +862,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "query",
@@ -835,7 +872,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -877,7 +915,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "GET"
       },
       {
         "name": "url",
@@ -886,7 +925,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "headers",
@@ -895,7 +935,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -924,7 +965,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "resolution",
@@ -933,7 +975,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "fps",
@@ -942,7 +985,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "store",
@@ -951,7 +995,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "Off. Frames never leave the machine and are not written to disk."
+        "hint": "Off. Frames never leave the machine and are not written to disk.",
+        "default": "false"
       }
     ],
     "source": true,
@@ -980,7 +1025,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "vad",
@@ -989,7 +1035,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "true"
       },
       {
         "name": "store",
@@ -998,7 +1045,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "Off. Audio never leaves the machine and is not written to disk."
+        "hint": "Off. Audio never leaves the machine and is not written to disk.",
+        "default": "false"
       }
     ],
     "source": true,
@@ -1027,7 +1075,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": true,
@@ -1056,7 +1105,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "cron",
@@ -1065,7 +1115,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "jitter",
@@ -1074,7 +1125,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "catchUp",
@@ -1087,7 +1139,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "skip"
       }
     ],
     "source": true,
@@ -1116,7 +1169,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "pattern",
@@ -1125,7 +1179,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "events",
@@ -1134,7 +1189,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "debounce",
@@ -1143,7 +1199,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": true,
@@ -1175,7 +1232,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "POST"
       },
       {
         "name": "path",
@@ -1184,7 +1242,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "port",
@@ -1193,7 +1252,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": true,
@@ -1233,7 +1293,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "recent-first"
       },
       {
         "name": "consolidateEvery",
@@ -1242,7 +1303,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "retention",
@@ -1251,7 +1313,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1280,7 +1343,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "window",
@@ -1289,7 +1353,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1318,7 +1383,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "vectors",
@@ -1327,7 +1393,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "true"
       },
       {
         "name": "retention",
@@ -1336,7 +1403,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "What is kept, and for how long. Deleting a person deletes every sighting."
+        "hint": "What is kept, and for how long. Deleting a person deletes every sighting.",
+        "default": null
       }
     ],
     "source": false,
@@ -1372,7 +1440,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1404,7 +1473,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "window"
       }
     ],
     "source": false,
@@ -1433,7 +1503,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "volume",
@@ -1442,7 +1513,8 @@
         "options": [],
         "min": 0.0,
         "max": 1.0,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1478,7 +1550,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "baud",
@@ -1487,7 +1560,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1530,7 +1604,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "panLimit",
@@ -1539,7 +1614,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "tiltLimit",
@@ -1548,7 +1624,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "warnBeforeMove",
@@ -1557,7 +1634,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "A move is a dangerous action. The prompt always has a Continue."
+        "hint": "A move is a dangerous action. The prompt always has a Continue.",
+        "default": "true"
       }
     ],
     "source": false,
@@ -1593,7 +1671,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1655,7 +1734,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "line"
       },
       {
         "name": "autoAffectFromSpeech",
@@ -1664,7 +1744,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "Off: an Affect block feeds express instead."
+        "hint": "Off: an Affect block feeds express instead.",
+        "default": "true"
       },
       {
         "name": "blink",
@@ -1673,7 +1754,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "breathePerMin",
@@ -1682,7 +1764,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "settleSec",
@@ -1691,7 +1774,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "sleepAfterMin",
@@ -1700,7 +1784,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "keepAspect",
@@ -1709,7 +1794,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "true"
       }
     ],
     "source": false,
@@ -1745,7 +1831,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1781,7 +1868,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1810,7 +1898,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1839,7 +1928,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1875,7 +1965,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1911,7 +2002,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "overlap",
@@ -1920,7 +2012,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -1949,7 +2042,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "The name of a secret in the OS keyring. The value is never written to the file."
+        "hint": "The name of a secret in the OS keyring. The value is never written to the file.",
+        "default": null
       }
     ],
     "source": false,
@@ -1991,7 +2085,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "text"
       }
     ],
     "source": false,
@@ -2048,7 +2143,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "parallel",
@@ -2057,7 +2153,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "2"
       },
       {
         "name": "max",
@@ -2066,7 +2163,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "continueOnError",
@@ -2075,7 +2173,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "true"
       }
     ],
     "source": false,
@@ -2118,7 +2217,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -2158,7 +2258,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "first"
       }
     ],
     "source": false,
@@ -2227,7 +2328,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -2270,7 +2372,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": "This block is a choice, not a gate the application imposes (SPEC 12)."
+        "hint": "This block is a choice, not a gate the application imposes (SPEC 12).",
+        "default": null
       }
     ],
     "source": false,
@@ -2299,7 +2402,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,
@@ -2339,7 +2443,8 @@
         ],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": "desktop"
       },
       {
         "name": "channel",
@@ -2348,7 +2453,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       },
       {
         "name": "to",
@@ -2357,7 +2463,8 @@
         "options": [],
         "min": null,
         "max": null,
-        "hint": null
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,

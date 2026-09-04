@@ -1,7 +1,8 @@
 import { Handle, Position as FlowPosition, type NodeProps } from '@xyflow/react';
 import { PORT_ROW, kind as lookupKind, portY } from '@cyberloom/graph-core';
 import type { Frame, PortDef } from '@cyberloom/graph-core';
-import { Icon } from '@cyberloom/ui';
+import { Chip, Icon } from '@cyberloom/ui';
+import { useRun } from '../stores/run';
 import s from './LoopFrame.module.css';
 
 export interface LoopFrameData extends Record<string, unknown> {
@@ -19,6 +20,7 @@ export interface LoopFrameData extends Record<string, unknown> {
  */
 export function LoopFrame({ data, selected }: NodeProps & { data: LoopFrameData }) {
   const { frame } = data;
+  const live = useRun((r) => r.frames[frame.id]);
   const ports = lookupKind('loop')?.ports ?? [];
   const ins = ports.filter((p) => p.side === 'in');
   const outs = ports.filter((p) => p.side === 'out' && !p.optional);
@@ -35,7 +37,21 @@ export function LoopFrame({ data, selected }: NodeProps & { data: LoopFrameData 
         <span className={s.meta}>
           over {frame.over.node}.{frame.over.port} · as {frame.as} · {frame.parallel} at a time
         </span>
+        {/* Iteration as a chip, which is what §3.5 puts in the header. */}
+        {live && <Chip label={`${live.at} / ${live.of}`} color="cat-control" />}
       </header>
+      {/* The status line at the bottom of the frame: where it has got to and
+          what it is on (SPEC §3.5). Only while it is going. */}
+      {live && live.of > 0 && (
+        <div className={s.status}>
+          <span className={s.progress} style={{ ['--at' as string]: `${(live.at / Math.max(1, live.of)) * 100}%` }} />
+          <span className={s.statusText}>
+            {live.at === live.of
+              ? `${live.of} item${live.of === 1 ? '' : 's'} done`
+              : `item ${live.at + 1} of ${live.of}${live.item ? ` · ${live.item}` : ''}`}
+          </span>
+        </div>
+      )}
       {ins.map((port, i) => (
         <FramePort key={port.name} port={port} index={i} side="in" />
       ))}

@@ -3,10 +3,12 @@
 pub mod blocks;
 pub mod custom;
 pub mod event;
+pub mod live;
 pub mod model;
 pub mod ollama;
 pub mod plan;
 pub mod runner;
+pub mod source;
 pub mod value;
 
 pub use event::{BlockState, Level, PortValue, RunEvent, RunOutcome};

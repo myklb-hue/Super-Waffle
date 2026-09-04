@@ -276,6 +276,15 @@
   color: var(--c);
 }
 
+/* A slider nobody has touched. Same place in the row, quieter, so the eye can
+ * tell "not chosen" from "chosen to be the minimum". */
+.sliderUnset {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-faint);
+  font-style: italic;
+}
+
 .sliderInput {
   appearance: none;
   width: 100%;

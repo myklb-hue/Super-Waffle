@@ -14,7 +14,12 @@
 //! would run `cargo build` before the model had decided it wanted to.
 //!
 //! A block is a capability when it has wired outputs and every one of them is
-//! a closed type (SPEC §4.3: `tools` and `memory` are handles, not values).
+//! a *handle* — `tools` or `memory`, the types whose holder makes the calls
+//! (SPEC §4.3). Not merely a closed type: `exec` is closed too, and it is
+//! control flow rather than something to call, so a Branch whose only outputs
+//! are `exec` is a step that sets other steps going. Reading `exec` as a handle
+//! made every Branch a tool nobody held, and it never ran.
+//!
 //! A block with no wired outputs at all is a *step*, not a capability: it was
 //! placed to do something, and having nowhere to send the result does not make
 //! it a handle.
@@ -41,6 +46,16 @@ pub struct Plan {
     /// Which wire connects a producing port to a consuming one, so the runner
     /// can say which wire lit up.
     pub wires: HashMap<Endpoint, Vec<(String, Endpoint)>>,
+    /// The blocks that emit on their own initiative, in file order. A graph
+    /// with one of these never finishes by itself (SPEC §8.2).
+    pub sources: Vec<String>,
+    /// For each loop frame, the blocks inside it in the order they run.
+    ///
+    /// These are deliberately *not* in `order`: a framed block does not take a
+    /// turn of its own, it takes one per item, and the frame is what schedules
+    /// it (SPEC §3.5). The frame stands in the main order where they would
+    /// have been.
+    pub frames: BTreeMap<String, Vec<String>>,
     /// What the plan could not do. Reported, never fatal: a graph with a
     /// problem still runs, minus the part that could not be ordered
     /// (SPEC §12.1).
@@ -51,6 +66,46 @@ impl Plan {
     /// Whether this block answers calls rather than taking a turn.
     pub fn is_capability(&self, id: &str) -> bool {
         self.capabilities.contains(id)
+    }
+
+    /// The steps an event on this port sets going, in the order they run.
+    ///
+    /// A live graph does not run top to bottom; it runs the part of itself
+    /// downstream of whatever just happened (SPEC §8.2). Two sources in one
+    /// graph are two programs sharing a canvas, and this is what keeps a file
+    /// arriving in a folder from also firing the fifteen-minute digest.
+    ///
+    /// Reachability follows every wire, `exec` included. Exec is control flow
+    /// rather than a value (SPEC §4.3), and control flow is precisely what
+    /// decides which blocks run — a Schedule's `tick` carries nothing and
+    /// still sets the whole branch below it going.
+    pub fn downstream_of(&self, node: &str, port: &str) -> Vec<String> {
+        let mut reached: HashSet<String> = HashSet::new();
+        let mut frontier: Vec<Endpoint> = vec![Endpoint::new(node, port)];
+        while let Some(from) = frontier.pop() {
+            let Some(targets) = self.wires.get(&from) else {
+                continue;
+            };
+            for (_, to) in targets {
+                if !reached.insert(to.node.clone()) {
+                    continue;
+                }
+                // Everything that block produces carries on downstream.
+                for end in self.wires.keys().filter(|e| e.node == to.node) {
+                    frontier.push(end.clone());
+                }
+            }
+        }
+        self.order
+            .iter()
+            .filter(|id| reached.contains(*id))
+            .cloned()
+            .collect()
+    }
+
+    /// Every source in the graph, in file order.
+    pub fn sources(&self) -> &[String] {
+        &self.sources
     }
 }
 
@@ -88,7 +143,7 @@ pub fn plan(graph: &Graph) -> Plan {
             match outs {
                 // Nowhere to send a result is not the same as having no result.
                 None => false,
-                Some(types) => types.iter().all(|t| t.is_closed()),
+                Some(types) => types.iter().all(|t| t.is_handle()),
             }
         })
         .map(|b| b.id.clone())
@@ -113,21 +168,40 @@ pub fn plan(graph: &Graph) -> Plan {
     // Kahn's algorithm over the steps only, with ties broken by the block's
     // position in the file. Without that tiebreak the order would depend on
     // hash iteration and two runs of the same graph could log differently.
-    let steps: Vec<&str> = graph
+    // A block inside a loop frame runs once per item rather than once, so the
+    // frame takes its place in the order and the block runs under it.
+    let framed: HashMap<&str, &str> = graph
+        .blocks
+        .iter()
+        .filter_map(|b| Some((b.id.as_str(), b.frame.as_deref()?)))
+        .collect();
+
+    let mut steps: Vec<&str> = graph
         .blocks
         .iter()
         .map(|b| b.id.as_str())
         .filter(|id| !capabilities.contains(*id))
+        .filter(|id| !framed.contains_key(id))
         .collect();
+    steps.extend(graph.frames.iter().map(|f| f.id.as_str()));
     let step_set: HashSet<&str> = steps.iter().copied().collect();
 
     let mut waiting_on: HashMap<&str, HashSet<&str>> =
         steps.iter().map(|id| (*id, HashSet::new())).collect();
     for wire in &graph.wires {
-        let (from, to) = (block_of(&wire.from), block_of(&wire.to));
+        // A wire touching a block inside a frame is, for ordering, a wire on
+        // the frame: the frame is what runs and what everything else waits for.
+        let from = framed
+            .get(block_of(&wire.from))
+            .copied()
+            .unwrap_or(block_of(&wire.from));
+        let to = framed
+            .get(block_of(&wire.to))
+            .copied()
+            .unwrap_or(block_of(&wire.to));
         // A handle wire is a binding, not a dependency: the holder does not
         // wait for the tool, it is handed the ability to call it.
-        let handle = port_type(&by_id, &wire.from, Side::Out).is_some_and(PortType::is_closed);
+        let handle = port_type(&by_id, &wire.from, Side::Out).is_some_and(PortType::is_handle);
         if handle || !step_set.contains(from) || !step_set.contains(to) || from == to {
             continue;
         }
@@ -171,13 +245,25 @@ pub fn plan(graph: &Graph) -> Plan {
         ));
     }
 
-    if !graph.frames.is_empty() {
-        problems.push(format!(
-            "{} loop frame{} will run once rather than repeating: frames arrive with live graphs",
-            graph.frames.len(),
-            if graph.frames.len() == 1 { "" } else { "s" }
-        ));
+    // Inside each frame, the same ordering over just its own blocks.
+    let mut frames: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for frame in &graph.frames {
+        let inside: Vec<&str> = graph
+            .blocks
+            .iter()
+            .filter(|b| b.frame.as_deref() == Some(frame.id.as_str()))
+            .map(|b| b.id.as_str())
+            .filter(|id| !capabilities.contains(*id))
+            .collect();
+        frames.insert(frame.id.clone(), order_within(graph, &by_id, &inside));
     }
+
+    let sources = graph
+        .blocks
+        .iter()
+        .filter(|b| block_kinds::kind(&b.kind).is_some_and(|k| k.source))
+        .map(|b| b.id.clone())
+        .collect();
 
     let _ = wired_in;
     Plan {
@@ -185,8 +271,48 @@ pub fn plan(graph: &Graph) -> Plan {
         capabilities,
         bindings,
         wires,
+        sources,
+        frames,
         problems,
     }
+}
+
+/// Kahn's algorithm over a subset, with ties broken by file order.
+///
+/// The same walk the main order uses, on the blocks inside one frame. A wire
+/// coming in from outside the frame is not a dependency here — it was already
+/// satisfied before the frame started.
+fn order_within(graph: &Graph, by_id: &HashMap<&str, &Block>, ids: &[&str]) -> Vec<String> {
+    let inside: HashSet<&str> = ids.iter().copied().collect();
+    let mut waiting_on: HashMap<&str, HashSet<&str>> =
+        ids.iter().map(|id| (*id, HashSet::new())).collect();
+    for wire in &graph.wires {
+        let (from, to) = (block_of(&wire.from), block_of(&wire.to));
+        let handle = port_type(by_id, &wire.from, Side::Out).is_some_and(PortType::is_handle);
+        if handle || !inside.contains(from) || !inside.contains(to) || from == to {
+            continue;
+        }
+        waiting_on.entry(to).or_default().insert(from);
+    }
+
+    let mut order = Vec::new();
+    let mut placed: HashSet<&str> = HashSet::new();
+    loop {
+        let ready: Vec<&str> = ids
+            .iter()
+            .copied()
+            .filter(|id| !placed.contains(id))
+            .filter(|id| waiting_on[id].iter().all(|dep| placed.contains(dep)))
+            .collect();
+        if ready.is_empty() {
+            break;
+        }
+        for id in ready {
+            placed.insert(id);
+            order.push(id.to_owned());
+        }
+    }
+    order
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -248,7 +374,7 @@ fn resolve_handles(
         if wire.to.node != holder {
             continue;
         }
-        if !port_type(by_id, &wire.from, Side::Out).is_some_and(PortType::is_closed) {
+        if !port_type(by_id, &wire.from, Side::Out).is_some_and(PortType::is_handle) {
             continue;
         }
         let source = &wire.from.node;
@@ -413,15 +539,65 @@ mod tests {
         }
     }
 
-    /// A loop frame is named as something this slice does not do, rather than
-    /// quietly running its blocks once as though that were the same thing.
+    /// A live graph runs the part of itself downstream of what just happened,
+    /// not the whole thing. Two sources on one canvas are two programs.
     #[test]
-    fn a_loop_frame_says_it_will_not_repeat_yet() {
+    fn an_event_sets_going_only_what_is_below_it() {
         let plan = plan(&fixture("inbox-triage"));
+
+        // A file arriving runs the loop frame — which is the step here, because
+        // the classifier and the branch are inside it and take a turn per item
+        // rather than a turn each (SPEC §3.5).
+        let from_folder = plan.downstream_of("watch", "file");
+        assert_eq!(from_folder, ["loop-items"]);
+        assert_eq!(
+            plan.frames["loop-items"],
+            ["classify", "branch", "notify-slack", "archive"]
+        );
         assert!(
-            plan.problems.iter().any(|p| p.contains("loop frame")),
-            "{:?}",
-            plan.problems
+            !from_folder.contains(&"digest".to_owned()),
+            "a file must not fire the quarter-hourly digest: {from_folder:?}"
+        );
+
+        // The schedule runs the digest and nothing else. Its `tick` is an exec
+        // port carrying no value, and it still sets the branch below it going.
+        let from_clock = plan.downstream_of("schedule", "tick");
+        assert!(from_clock.contains(&"digest".to_owned()), "{from_clock:?}");
+        assert!(from_clock.contains(&"notify-email".to_owned()));
+        assert!(!from_clock.contains(&"classify".to_owned()));
+    }
+
+    /// Every source the graph holds, so the panel can list what is armed.
+    #[test]
+    fn the_plan_knows_which_blocks_are_sources() {
+        assert_eq!(
+            plan(&fixture("inbox-triage")).sources(),
+            ["webhook", "watch", "schedule"]
+        );
+        // The triage example has none, which is why it finishes.
+        assert!(plan(&fixture("customer-triage")).sources().is_empty());
+    }
+
+    /// A block inside a frame is the frame's to run, not the order's: it takes
+    /// a turn per item rather than a turn (SPEC §3.5).
+    #[test]
+    fn a_framed_block_runs_under_its_frame_and_not_beside_it() {
+        let plan = plan(&fixture("inbox-triage"));
+        for inside in ["classify", "branch", "notify-slack", "archive"] {
+            assert!(
+                !plan.order.contains(&inside.to_owned()),
+                "{inside} should run under the frame: {:?}",
+                plan.order
+            );
+        }
+        // The frame stands where they would have been: after the source that
+        // feeds it, and in the order like any other step.
+        let at = |id: &str| plan.order.iter().position(|b| b == id);
+        assert!(at("loop-items").is_some(), "{:?}", plan.order);
+        assert!(at("watch") < at("loop-items"));
+        assert_eq!(
+            plan.frames["loop-items"],
+            ["classify", "branch", "notify-slack", "archive"]
         );
     }
 }

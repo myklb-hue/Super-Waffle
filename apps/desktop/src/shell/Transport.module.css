@@ -186,3 +186,62 @@
 .primary:hover {
   background: color-mix(in srgb, var(--accent) 26%, transparent);
 }
+
+/* The four transport states (SPEC §8.1). The colour is what the eye reads
+ * first: green for working, amber for waiting, grey for held. */
+.going {
+  border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  color: var(--ok);
+}
+
+.waiting {
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+  color: var(--warn);
+}
+
+.held {
+  border-color: var(--line);
+  background: var(--field);
+  color: var(--text-mid);
+}
+
+.going .pulse,
+.going .square {
+  background: var(--ok);
+}
+
+.waiting .pulse,
+.waiting .square {
+  background: var(--warn);
+}
+
+.held .stillDot,
+.held .square {
+  background: var(--text-low);
+}
+
+/* A held graph does not breathe. */
+.stillDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+}
+
+.pill {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pill:hover {
+  background: color-mix(in srgb, currentcolor 16%, transparent);
+}

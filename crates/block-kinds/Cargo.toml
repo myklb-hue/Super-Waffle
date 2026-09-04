@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+block-source = { path = "../block-source" }
 graph-format = { path = "../graph-format" }
 serde.workspace = true
 specta.workspace = true

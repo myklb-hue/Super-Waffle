@@ -45,6 +45,7 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
   // A custom block whose code will not parse goes red (SPEC §10.4). Its ports
   // and its wires stay exactly as they were, so the graph runs around it.
   const broken = useSource((s) => !!s.blocks[block.id]?.error);
+  const armed = useRun((r) => r.armed[block.id]);
   const setView = useDocument((d) => d.setBlockView);
   const resize = useDocument((d) => d.resizeBlock);
   const kind = lookupKind(block.kind);
@@ -114,6 +115,9 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
         {live?.state === 'running' && block.kind === 'llm' && (
           <Chip label="streaming" color="ok" dot />
         )}
+        {/* An armed source says what it is watching, which is the difference
+            between a graph that is up and one that merely started (SPEC §8.2). */}
+        {armed && <Chip label={armed} color="ok" dot />}
         <StatusDot state={block.disabled ? 'off' : dotFor(live?.state)} />
       </header>
 

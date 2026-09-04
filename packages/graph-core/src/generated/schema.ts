@@ -425,6 +425,16 @@ export type Request =
 	decision: Decision,
 } } | 
 /**
+ *  Hold a live graph, or let it go (SPEC §8.1).
+ * 
+ *  Events keep queueing while it is held; nothing runs. That is what makes
+ *  it safe to rewire a graph that is armed.
+ */
+{ method: "run.pause"; params: {
+	run?: string | null,
+	paused: boolean,
+} } | 
+/**
  *  Re-read a custom block's signature (SPEC §10.3).
  * 
  *  The code comes from the shell rather than from disk for the same reason
@@ -491,6 +501,32 @@ export type RunEvent = { event: "run.started"; data: {
 	message: string,
 	/**  The full trace, for the console. The message is the one line. */
 	detail: string | null,
+} } | 
+/**
+ *  A source is armed and what it is watching: `watching ~/inbox`,
+ *  `listening on :8420/inbox`, `every 15m` (SPEC §8.2).
+ * 
+ *  Its own event rather than a console line the shell would have to parse.
+ *  A chip on a block is structured information; reading it back out of a
+ *  sentence written for a person is how the two drift apart.
+ */
+{ event: "source.armed"; data: {
+	run: string,
+	block: string,
+	state: string,
+} } | 
+/**
+ *  Where a loop frame has got to: `3 / 7`, and the item it is on. The
+ *  frame's own status line (SPEC §3.5).
+ */
+{ event: "frame.state"; data: {
+	run: string,
+	frame: string,
+	/**  How many items are finished. */
+	at: number,
+	of: number,
+	/**  One line describing the current item, or none before it starts. */
+	item: string | null,
 } } | 
 /**  A wire carried a value. The canvas animates it (SPEC §5.3). */
 { event: "wire.active"; data: {
@@ -641,6 +677,25 @@ export type SettingDef = {
 	 *  in plain words (SPEC §12).
 	 */
 	hint: string | null,
+	/**
+	 *  What the setting is when the user has not chosen (SPEC §7).
+	 * 
+	 *  Held as the text it would be written as, which is the same shape a
+	 *  custom block's generated settings use (`block_source::Generated`), so
+	 *  the inspector reads a built-in default and a derived one the same way.
+	 * 
+	 *  `None` means genuinely unset, and the inspector shows nothing rather
+	 *  than a number nobody chose. The rule for when there is one:
+	 * 
+	 *  - a control that *cannot* be unset always has one — a switch has no
+	 *    third position, and a segmented choice always has something selected;
+	 *  - anything else has one only where the specification states it.
+	 * 
+	 *  A temperature has none, and that is not an oversight: the engine leaves
+	 *  it out of the request, the provider's own default applies, and a number
+	 *  invented here would be a worse answer than the one the model ships with.
+	 */
+	default: string | null,
 };
 
 /**  What kind of control the inspector draws for a setting. */
