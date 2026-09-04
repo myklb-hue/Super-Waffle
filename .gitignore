@@ -5,3 +5,6 @@ design/cyberloom/spec.html
 node_modules/
 packages/*/build/
 .ladle/build/
+
+# rust
+/target/
