@@ -5,8 +5,18 @@ onto a canvas, wire their typed ports together, run the graph.
 
 Not part of the `tandem` crate. Nothing here is compiled or shipped.
 
+## Master spec
+
+`SPEC.md` is the master specification (draft 0.1, for approval). It
+consolidates every decision from the design sessions and wins over any
+mockup where the two disagree. `node build-spec.mjs` renders it to
+`spec.html` with the figures under `fig/` embedded; that output is
+generated and gitignored.
+
 ## Layout
 
+- `SPEC.md` — the specification. `build-spec.mjs` renders it; `fig/` holds
+  the rendered artboards it embeds.
 - `build.mjs` — generates every artboard from one set of shared tokens and
   primitives, so the shell chrome stays identical across screens.
 - `*.dc.html` — one artboard each (Design Component format).

@@ -659,7 +659,6 @@ const mainNodes = [
       { kind: 'tools', label: 'tools', side: 'out', glow: true },
     ] }),
   blockNode({ ...MB.llm, icon: 'llm', color: CAT.models, title: 'LLM', state: 'idle', selected: true,
-    badge: chip('selected', C.accent),
     body: label('model') + field('llama3.2:3b', { mono: true, select: true })
       + `<div style="margin-top:9px;font-family:${MONO};font-size:9.5px;line-height:1.6;color:${C.faint};">You triage build failures. Read<br>the error, run the smallest&#8230;</div>`,
     ports: [
@@ -845,8 +844,8 @@ const META = {
   term: { title: 'Terminal', sub: 'runtimes &middot; shell.exec', icn: 'terminal', col: CAT.runtimes, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' },
   wire: { title: 'Connection', sub: 'toolbox.tools &rarr; llm.tools', icn: 'merge', col: T.tools, tabs: ['Settings', 'Debug'], tab: 'Settings' },
   multi: { title: '3 blocks', sub: 'terminal, python, toolbox', icn: 'dots', col: C.accent, tabs: ['Common', 'Arrange'], tab: 'Common' },
-  tool: { title: 'Toolbox', sub: 'capabilities &middot; tools.bundle', icn: 'toolbox', col: CAT.capabilities, tabs: ['Settings', 'Ports'], tab: 'Settings' },
-  input: { title: 'Input', sub: 'data &middot; graph.input', icn: 'input', col: CAT.data, tabs: ['Settings', 'Ports'], tab: 'Settings' },
+  tool: { title: 'Toolbox', sub: 'capabilities &middot; tools.bundle', icn: 'toolbox', col: CAT.capabilities, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' },
+  input: { title: 'Input', sub: 'data &middot; graph.input', icn: 'input', col: CAT.data, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' },
 };
 
 /* ============================================================= 4. Inspector */
@@ -1360,9 +1359,9 @@ const RUNMODES_SHEET = doc(sheet({
   ${transportCard(tChip(rgba(C.mid, 0.13), rgba(C.mid, 0.35), C.mid, C.hi, 'paused', 'queue 12', false), 'Paused', 'Events keep queueing; nothing runs until you resume. Useful while you rewire a live graph.')}
 </div>
 <div style="display:flex;gap:22px;">
-  ${[['Watch folder', 'a source block', WATCH_BODY, { title: 'Watch folder', sub: 'senses &middot; fs.watch', icn: 'folder', col: CAT.senses, tabs: ['Settings', 'Events'], tab: 'Settings' }, CAT.senses],
-     ['Schedule', 'periodic trigger', SCHEDULE_BODY, { title: 'Schedule', sub: 'senses &middot; clock.tick', icn: 'clock', col: CAT.senses, tabs: ['Settings', 'Events'], tab: 'Settings' }, CAT.senses],
-     ['Loop frame', 'repeat a region of the canvas', LOOP_BODY, { title: 'For each', sub: 'control &middot; loop.frame', icn: 'loop', col: CAT.control, tabs: ['Settings', 'Ports'], tab: 'Settings' }, CAT.control],
+  ${[['Watch folder', 'a source block', WATCH_BODY, { title: 'Watch folder', sub: 'senses &middot; fs.watch', icn: 'folder', col: CAT.senses, tabs: ['Settings', 'Ports', 'Events'], tab: 'Settings' }, CAT.senses],
+     ['Schedule', 'periodic trigger', SCHEDULE_BODY, { title: 'Schedule', sub: 'senses &middot; clock.tick', icn: 'clock', col: CAT.senses, tabs: ['Settings', 'Ports', 'Events'], tab: 'Settings' }, CAT.senses],
+     ['Loop frame', 'repeat a region of the canvas', LOOP_BODY, { title: 'For each', sub: 'control &middot; loop.frame', icn: 'loop', col: CAT.control, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' }, CAT.control],
     ].map(([cap, note, body, meta, col]) => `<div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
     <div style="display:flex;align-items:baseline;gap:8px;">
       <span style="width:6px;height:6px;border-radius:50%;background:${col};flex:none;transform:translateY(-1px);"></span>
@@ -1587,20 +1586,20 @@ const MOTOR_BODY = [
 ].join('');
 
 const SENSE_SHEET = doc(sheet({
-  w: 1460, h: 980, kicker: 'Embodied blocks',
+  w: 1460, h: 1020, kicker: 'Embodied blocks',
   title: 'Senses, memory and actuators &mdash; the panel leads with the boundary that matters',
   body: `<div style="display:flex;gap:22px;">
-  ${[['Webcam', 'a sense', WEBCAM_BODY, { title: 'Webcam', sub: 'senses &middot; video.capture', icn: 'eye', col: CAT.senses, tabs: ['Settings', 'Subscribers'], tab: 'Settings' }, CAT.senses],
-     ['Face recognition', 'a specialist model', FACE_BODY, { title: 'Face recognition', sub: 'models &middot; face.identify', icn: 'approve', col: CAT.models, tabs: ['Settings', 'People', 'Runs'], tab: 'Settings' }, CAT.models],
-     ['Memory hub', 'short and long term, one handle', HUB_BODY, { title: 'Memory hub', sub: 'memory &middot; recall', icn: 'merge', col: CAT.memory, tabs: ['Settings', 'Browse'], tab: 'Settings' }, CAT.memory],
-     ['Motors', 'an actuator, offered as a tool', MOTOR_BODY, { title: 'Motors', sub: 'actuators &middot; motor.servo', icn: 'loop', col: CAT.actuators, tabs: ['Settings', 'Log'], tab: 'Settings' }, CAT.actuators],
+  ${[['Webcam', 'a sense', WEBCAM_BODY, { title: 'Webcam', sub: 'senses &middot; video.capture', icn: 'eye', col: CAT.senses, tabs: ['Settings', 'Ports', 'Events'], tab: 'Settings' }, CAT.senses],
+     ['Face recognition', 'a specialist model', FACE_BODY, { title: 'Face recognition', sub: 'models &middot; face.identify', icn: 'approve', col: CAT.models, tabs: ['Settings', 'Ports', 'Runs', 'People'], tab: 'Settings' }, CAT.models],
+     ['Memory hub', 'short and long term, one handle', HUB_BODY, { title: 'Memory hub', sub: 'memory &middot; recall', icn: 'merge', col: CAT.memory, tabs: ['Settings', 'Ports', 'Browse'], tab: 'Settings' }, CAT.memory],
+     ['Motors', 'an actuator, offered as a tool', MOTOR_BODY, { title: 'Motors', sub: 'actuators &middot; motor.servo', icn: 'loop', col: CAT.actuators, tabs: ['Settings', 'Ports', 'Runs'], tab: 'Settings' }, CAT.actuators],
     ].map(([cap, note, body, meta, col]) => `<div style="width:328px;flex:none;display:flex;flex-direction:column;gap:10px;">
     <div style="display:flex;align-items:baseline;gap:8px;">
       <span style="width:6px;height:6px;border-radius:50%;background:${col};flex:none;transform:translateY(-1px);"></span>
       <span style="font-size:12px;font-weight:600;color:${C.hi};">${cap}</span>
       <span style="font-size:10.5px;color:${C.low};">${note}</span>
     </div>
-    <div style="height:810px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
+    <div style="height:850px;background:${C.panel};border:1px solid ${C.line};border-radius:10px;overflow:hidden;">${panelInner(body, meta)}</div>
   </div>`).join('')}
 </div>`,
 }));
@@ -1676,7 +1675,7 @@ const customNodes = [
     body: camPreview + `<div style="margin-top:7px;font-family:${MONO};font-size:9.5px;color:${C.faint};">1280&times;720 &middot; 15 fps</div>`,
     ports: [{ kind: 'image', label: 'frames', side: 'out' }] }),
   blockNode({ ...KB.custom, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok', selected: true,
-    badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('reloaded', C.ok, { dot: true })}${viewToggle('code')}</div>`,
+    badge: `<div style="display:flex;gap:6px;align-items:center;">${chip('reloaded', C.ok, { dot: true })}${chip('py', CAT.runtimes)}${viewToggle('code')}</div>`,
     body: customEditorBody,
     ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] }),
   blockNode({ ...KB.notify, icon: 'note', color: CAT.human, title: 'Notify', state: 'idle',
@@ -1712,7 +1711,7 @@ const CUSTOMBLOCK = doc(shell({
   top: topbar({ name: 'door-watch.graph', saved: 'edited &middot; just now' }),
   library: libraryPanel({ open: ['senses', 'custom'], placed: ['Webcam', 'door_check'] }),
   canvas: stage({ svg: customSvg, nodes: customNodes, overlay: zoomPill + minimap([[9, 15, 19, 12, CAT.senses], [37, 10, 47, 38, CAT.senses], [88, 12, 19, 8, CAT.human]]) }),
-  insp: inspector(CUSTOM_BODY, { title: 'door_check', sub: 'custom &middot; python.block', icn: 'shield', col: CAT.senses, tabs: ['Settings', 'Source', 'Tests'], tab: 'Settings' }),
+  insp: inspector(CUSTOM_BODY, { title: 'door_check', sub: 'custom &middot; python.block', icn: 'shield', col: CAT.senses, tabs: ['Settings', 'Ports', 'Source', 'Tests'], tab: 'Settings' }),
   status: statusbar('3 blocks &middot; 2 wires &middot; 1 custom', 'door_check reloaded 0.2 s ago &middot; interface unchanged'),
 }));
 
@@ -1722,7 +1721,7 @@ const RB2 = { x: 40, y: 56, w: 260 };
 const numBadge = (n, x, y) => `<span style="position:absolute;left:${x}px;top:${y}px;width:18px;height:18px;border-radius:50%;background:${C.accent};color:#08090b;font-family:${MONO};font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">${n}</span>`;
 
 const resultBlock = blockNode({ ...RB2, icon: 'shield', color: CAT.senses, title: 'door_check', state: 'ok',
-  badge: chip('custom', CAT.custom),
+  badge: chip('py', CAT.runtimes),
   body: label('threshold') + field('0.80', { mono: true }) + `<div style="margin-top:8px;font-size:10px;line-height:1.5;color:${C.low};">Is the front door open in this frame?</div>`,
   ports: [{ kind: 'image', label: 'frame', side: 'in' }, { kind: 'data', label: 'result', side: 'out' }] });
 
@@ -1912,7 +1911,7 @@ const CUSTOMDRAWER = doc(shell({
     ${stage({ svg: customDrawerSvg, nodes: customDrawerNodes, overlay: zoomPill, h: CH - DRAWER_H })}
     ${codeDrawer}
   </div>`,
-  insp: inspector(CUSTOM_BODY_FILE, { title: 'door_check', sub: 'custom &middot; python.block &middot; file', icn: 'shield', col: CAT.senses, tabs: ['Settings', 'Source', 'Tests'], tab: 'Settings' }),
+  insp: inspector(CUSTOM_BODY_FILE, { title: 'door_check', sub: 'custom &middot; python.block &middot; file', icn: 'shield', col: CAT.senses, tabs: ['Settings', 'Ports', 'Source', 'Tests'], tab: 'Settings' }),
   status: statusbar('4 blocks &middot; 3 wires &middot; 1 custom', 'door_check.py &middot; 184 lines &middot; reloaded 4 s ago &middot; +1 port'),
 }));
 
@@ -1947,7 +1946,7 @@ const canvas = {
     { file: 'Continuous.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-2', title: 'Live graph' },
     { file: 'RunModes.dc.html', x: 1680, y: 0, w: 1120, h: 980, page: 'page-2', title: 'Run modes' },
     { file: 'Assistant.dc.html', x: 0, y: 1160, w: 1920, h: 1080, page: 'page-2', title: 'Home assistant' },
-    { file: 'SensePanels.dc.html', x: 2040, y: 1160, w: 1460, h: 980, page: 'page-2', title: 'Embodied panels' },
+    { file: 'SensePanels.dc.html', x: 2040, y: 1160, w: 1460, h: 1020, page: 'page-2', title: 'Embodied panels' },
     { file: 'CustomBlock.dc.html', x: 0, y: 0, w: 1560, h: 900, page: 'page-3', title: 'Custom block' },
     { file: 'CustomRules.dc.html', x: 1680, y: 0, w: 1400, h: 820, page: 'page-3', title: 'Code becomes a block' },
     { file: 'CustomDrawer.dc.html', x: 0, y: 1080, w: 1560, h: 900, page: 'page-3', title: 'Big program, small block' },
