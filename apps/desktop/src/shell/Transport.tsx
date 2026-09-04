@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { RunMode } from '@cyberloom/graph-core';
 import { Chip, Icon } from '@cyberloom/ui';
 import { useDocument } from '../stores/document';
 import { elapsed, useRun } from '../stores/run';
@@ -16,16 +17,28 @@ export function Transport() {
   const phase = useRun((r) => r.phase);
   const startedAt = useRun((r) => r.startedAt);
   const finalMs = useRun((r) => r.ms);
+  const paused = useRun((r) => r.paused);
+  const mode = useDocument((d) => d.graph.runMode);
   const running = phase === 'running';
 
   return (
     <div className={s.transport}>
-      {running ? <Stop startedAt={startedAt} /> : <Run phase={phase} ms={finalMs} />}
+      {running ? (
+        <Live mode={mode} paused={paused} startedAt={startedAt} />
+      ) : (
+        <Run phase={phase} ms={finalMs} mode={mode} />
+      )}
     </div>
   );
 }
 
-function Run({ phase, ms }: { phase: string; ms: number | null }) {
+/**
+ * The transport at rest, and what the last run came to.
+ *
+ * The label follows the mode, because pressing it does different things: a
+ * Once graph runs and stops, a live one arms its sources and stays up.
+ */
+function Run({ phase, ms, mode }: { phase: string; ms: number | null; mode: RunMode }) {
   const path = useDocument((d) => d.path);
   const graph = useDocument((d) => d.graph);
   const begin = useRun((r) => r.begin);
@@ -36,10 +49,10 @@ function Run({ phase, ms }: { phase: string; ms: number | null }) {
         type="button"
         className={s.run}
         onClick={() => void begin(path, graph)}
-        title="Run this graph once"
+        title={mode === 'once' ? 'Run this graph once' : 'Arm this graph and leave it running'}
       >
         <Icon name="play" size={11} strokeWidth={0} />
-        Run
+        {mode === 'once' ? 'Run' : mode === 'live' ? 'Go live' : 'Arm'}
       </button>
       {ms !== null && (
         <span className={phase === 'failed' ? s.lastFailed : s.last}>
@@ -51,30 +64,77 @@ function Run({ phase, ms }: { phase: string; ms: number | null }) {
 }
 
 /**
- * The running transport: a clock and a stop square.
+ * The transport while a graph is going (SPEC §8.1, Figure 14).
  *
- * The clock ticks here rather than in the store. Elapsed time is not something
- * the engine reports and not something worth an event ten times a second; it
- * is a function of one timestamp and the wall clock, so this is the only thing
- * that has to re-render for it.
+ * Four states, one control. Once counts up and stops; Live counts up and does
+ * not; Schedule sleeps between ticks and says so; Paused keeps queueing and
+ * runs nothing. The colour is the difference the eye reads first — green for
+ * working, amber for waiting, grey for held.
  */
-function Stop({ startedAt }: { startedAt: number | null }) {
+function Live({
+  mode,
+  paused,
+  startedAt,
+}: {
+  mode: RunMode;
+  paused: boolean;
+  startedAt: number | null;
+}) {
   const halt = useRun((r) => r.halt);
+  const hold = useRun((r) => r.hold);
+  const queued = useRun((r) => r.recent.length);
   const [now, setNow] = useState(Date.now());
 
+  // The clock ticks here rather than in the store. Elapsed time is not
+  // something the engine reports and not worth an event ten times a second;
+  // it is one timestamp and the wall clock, so this is the only thing that
+  // re-renders for it.
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 100);
     return () => clearInterval(timer);
   }, []);
 
+  const since = startedAt === null ? 0 : now - startedAt;
+  const tone = paused ? s.held : mode === 'schedule' ? s.waiting : s.going;
+  const label = paused
+    ? `paused · queue ${queued}`
+    : mode === 'once'
+      ? `running ${elapsed(since)}`
+      : mode === 'schedule'
+        ? `scheduled ${longer(since)}`
+        : `live ${longer(since)}`;
+
   return (
-    <button type="button" className={s.running} onClick={() => void halt()} title="Stop the run">
-      <span className={s.pulse} />
-      running
-      <span className={s.clock}>{elapsed(startedAt === null ? 0 : now - startedAt)}</span>
-      <span className={s.square} />
-    </button>
+    <span className={`${s.running} ${tone}`}>
+      <span className={paused ? s.stillDot : s.pulse} />
+      <span className={s.clock}>{label}</span>
+      {/* Only a graph that keeps going can be held: pausing a Once run would
+          be pausing something that is already nearly over. */}
+      {mode !== 'once' && (
+        <button
+          type="button"
+          className={s.pill}
+          onClick={() => void hold(!paused)}
+          title={paused ? 'Resume' : 'Hold: events keep queueing'}
+        >
+          <Icon name={paused ? 'play' : 'stop'} size={10} strokeWidth={0} />
+        </button>
+      )}
+      <button type="button" className={s.pill} onClick={() => void halt()} title="Stop the run">
+        <span className={s.square} />
+      </button>
+    </span>
   );
+}
+
+/** `4h 12m`, `12m`, `4.2s` — a live graph is up for hours, so the clock reads
+ *  at the scale it has reached rather than counting seconds all day. */
+function longer(ms: number): string {
+  const total = Math.max(0, ms) / 1000;
+  if (total < 60) return `${total.toFixed(1)}s`;
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total - hours * 3600) / 60);
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 }
 
 /** The run's figures along the bottom right, while there are any. */

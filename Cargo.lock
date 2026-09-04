@@ -155,6 +155,7 @@ dependencies = [
 name = "block-kinds"
 version = "0.1.0"
 dependencies = [
+ "block-source",
  "graph-format",
  "serde",
  "serde_json",

@@ -23,7 +23,7 @@ import {
   type IconName,
 } from '@cyberloom/ui';
 import { portTypeOf, useDocument, type Selection } from '../stores/document';
-import { useRun } from '../stores/run';
+import { elapsed, useRun } from '../stores/run';
 import { ago, useSource } from '../stores/source';
 import { RunPanel } from './RunPanel';
 import s from './Inspector.module.css';
@@ -40,10 +40,15 @@ export function Inspector() {
   const selection = useDocument((d) => d.selection);
   const problems = useDocument((d) => d.problems);
   const phase = useRun((r) => r.phase);
-  // While a run is in flight the panel is the run's. The inspector has no
-  // identity of its own and shows what matters now (SPEC §7.1); what matters
-  // while a graph is running is the run, not what happens to be selected.
-  const running = phase === 'running';
+  // While a *Once* run is in flight the panel is the run's: it has a beginning,
+  // an end and a progress list, and that is what matters more than whatever
+  // happens to be selected (SPEC §7.1, §8.5).
+  //
+  // A live graph is different and SPEC §7.4 says so: its panel leads with Run
+  // mode, then the sources armed, the overlap policy and the recent events. A
+  // graph that never finishes has no progress bar, and showing one would be
+  // answering a question nobody asked.
+  const running = phase === 'running' && graph.runMode === 'once';
 
   return (
     <aside className={`${s.inspector} cl-scroll`}>
@@ -153,6 +158,8 @@ function GraphPanel({ graph }: { graph: Graph }) {
           onChange={(v) => setField('description', v || null)}
         />
       </Section>
+      <SourcesArmed graph={graph} />
+
       <Section title="Execution">
         <Label>Run mode</Label>
         <Segmented
@@ -281,6 +288,58 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
  * the order of the questions: where is it, what did it produce, what can I
  * change.
  */
+/**
+ * What is armed, and what has happened lately (SPEC §8.2, Figure 8).
+ *
+ * Only while a live graph is up: a graph at rest has nothing armed and nothing
+ * recent, and two empty sections are worse than none.
+ */
+function SourcesArmed({ graph }: { graph: Graph }) {
+  const armed = useRun((r) => r.armed);
+  const recent = useRun((r) => r.recent);
+  const phase = useRun((r) => r.phase);
+  const paused = useRun((r) => r.paused);
+  const ids = Object.keys(armed);
+  if (phase !== 'running' || ids.length === 0) return null;
+
+  return (
+    <>
+      <Section
+        title="Sources armed"
+        right={<Chip label={paused ? 'held' : 'live'} color={paused ? 'text-mid' : 'ok'} dot />}
+      >
+        {ids.map((id) => {
+          const block = graph.blocks.find((b) => b.id === id);
+          const kind = block && lookupKind(block.kind);
+          return (
+            <div key={id} className={s.derived}>
+              <Icon
+                name={(kind?.icon ?? 'clock') as IconName}
+                size={12}
+                color={`cat-${kind?.category ?? 'senses'}`}
+                strokeWidth={1.7}
+              />
+              <span className={s.derivedName}>{block?.title ?? kind?.title ?? id}</span>
+              <span className={s.derivedType}>{armed[id]}</span>
+            </div>
+          );
+        })}
+      </Section>
+
+      {recent.length > 0 && (
+        <Section title="Recent events">
+          {recent.slice(0, 8).map((event, i) => (
+            <div key={i} className={s.recent}>
+              <span className={s.recentAt}>{elapsed(event.at)}</span>
+              <span className={s.recentWhat}>{event.detail}</span>
+            </div>
+          ))}
+        </Section>
+      )}
+    </>
+  );
+}
+
 function CustomSections({ block }: { block: Block }) {
   const setSourceMode = useDocument((d) => d.setSourceMode);
   const setSetting = useDocument((d) => d.setSetting);

@@ -134,3 +134,27 @@
   color: var(--text-low);
   font-size: var(--fs-xs);
 }
+
+/* One line of the recent-events list: when, and what it set going. */
+.recent {
+  display: flex;
+  gap: var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-mono);
+  color: var(--text-mid);
+}
+
+.recentAt {
+  flex: none;
+  width: 48px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.recentWhat {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

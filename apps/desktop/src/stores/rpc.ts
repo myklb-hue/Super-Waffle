@@ -178,3 +178,9 @@ export async function reparse(
   if (reply.result !== 'interface') throw new Error(`unexpected reply: ${reply.result}`);
   return reply.data;
 }
+
+/** Hold a live graph, or let it go (SPEC §8.1). */
+export async function pauseRun(paused: boolean, run?: string): Promise<boolean> {
+  const reply = await call({ method: 'run.pause', params: { run: run ?? null, paused } });
+  return reply.result === 'acknowledged' && reply.data.ok;
+}

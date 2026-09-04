@@ -85,3 +85,35 @@
 .portOut .dot.dot {
   right: calc(var(--sp-4) * -1 - var(--port-dot) / 2);
 }
+
+/* Where the loop has got to, along the bottom of the frame (SPEC §3.5). */
+.status {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px dashed var(--line);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A hairline of progress under the text rather than beside it: the frame is
+ * already wide, and a bar would take a row the canvas cannot spare. */
+.progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: var(--at);
+  background: var(--cat-control);
+  transition: width 0.2s ease;
+}
+
+.statusText {
+  position: relative;
+}

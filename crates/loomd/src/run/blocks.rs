@@ -258,9 +258,101 @@ pub fn pure_step(block: &Block, inputs: &Outputs) -> Result<Outputs, String> {
                 },
             );
         }
+        "branch" => {
+            // A Branch chooses which of two control-flow paths continues
+            // (SPEC §6.8). The value it was given is what the condition reads.
+            let value = inputs.get("value").cloned().unwrap_or(Value::Null);
+            let taken = if condition_holds(setting(block, "condition"), &value) {
+                "a"
+            } else {
+                "b"
+            };
+            // Only the taken port produces anything. The other says nothing,
+            // and the runner reads that silence as "not on this path" —
+            // which is what makes a branch a branch rather than a fork.
+            out.insert(taken.into(), Value::Null);
+        }
+        "merge" => {
+            // Whatever arrived. Fan-in on one port already resolves to the
+            // last writer (see `Runner::gather`), so a Merge is that made
+            // explicit on the canvas.
+            out.insert(
+                "value".into(),
+                inputs.values().next().cloned().unwrap_or(Value::Null),
+            );
+        }
+        "variable" => {
+            let value = inputs.get("value").cloned().unwrap_or(Value::Null);
+            out.insert("value".into(), value);
+        }
         other => return Err(format!("`{other}` is not a kind this engine can run yet")),
     }
     Ok(out)
+}
+
+/// Whether a Branch's condition holds.
+///
+/// Deliberately small: `field == "value"`, `field != "value"`, a comparison
+/// against a number, or a bare field name read for truth. A Branch decides
+/// between two paths on the canvas, and a graph whose logic has outgrown that
+/// wants a custom block — where it would be written in a language with a
+/// debugger rather than in a text field.
+///
+/// An empty condition is *true*: a Branch nobody has configured takes its
+/// first path rather than silently taking neither.
+pub fn condition_holds(condition: Option<&str>, value: &Value) -> bool {
+    let Some(text) = condition.map(str::trim).filter(|c| !c.is_empty()) else {
+        return true;
+    };
+
+    for (op, test) in [
+        ("==", 0u8),
+        ("!=", 1),
+        (">=", 2),
+        ("<=", 3),
+        (">", 4),
+        ("<", 5),
+    ] {
+        let Some((left, right)) = text.split_once(op) else {
+            continue;
+        };
+        let got = field(value, left.trim());
+        let want = block_source::unquote(right.trim());
+        return match test {
+            0 => got == want,
+            1 => got != want,
+            _ => {
+                let (Ok(a), Ok(b)) = (got.parse::<f64>(), want.parse::<f64>()) else {
+                    return false;
+                };
+                match test {
+                    2 => a >= b,
+                    3 => a <= b,
+                    4 => a > b,
+                    _ => a < b,
+                }
+            }
+        };
+    }
+
+    // No operator: the named field read for truth.
+    let got = field(value, text);
+    !matches!(got.as_str(), "" | "false" | "0" | "null" | "none")
+}
+
+/// A named field of the value, or the value itself when the name does not
+/// match one — so `label == "urgent"` works on a record *and* on the bare text
+/// a classifier returns.
+fn field(value: &Value, name: &str) -> String {
+    if let Value::Data(serde_json::Value::Object(map)) = value
+        && let Some(found) = map.get(name)
+    {
+        return match found {
+            serde_json::Value::String(s) => s.clone(),
+            other => other.to_string(),
+        };
+    }
+    value.as_text().trim().to_owned()
 }
 
 #[cfg(test)]
@@ -391,6 +483,77 @@ mod tests {
         )
         .unwrap_err();
         assert!(err.contains("decoder"), "{err}");
+    }
+
+    /// SPEC §13.2's own condition, on the bare label a classifier returns and
+    /// on a record with a `label` field. Both are the same question.
+    #[test]
+    fn a_branch_reads_its_condition_against_text_or_a_record() {
+        let urgent = Some("label == \"urgent\"");
+        assert!(condition_holds(urgent, &Value::Text("urgent".into())));
+        assert!(!condition_holds(urgent, &Value::Text("routine".into())));
+        assert!(condition_holds(
+            urgent,
+            &Value::Data(serde_json::json!({ "label": "urgent", "score": 0.9 }))
+        ));
+        assert!(!condition_holds(
+            urgent,
+            &Value::Data(serde_json::json!({ "label": "noise" }))
+        ));
+    }
+
+    #[test]
+    fn a_branch_compares_numbers_and_reads_truth() {
+        let record = Value::Data(serde_json::json!({ "score": 0.9, "open": true }));
+        assert!(condition_holds(Some("score > 0.5"), &record));
+        assert!(!condition_holds(Some("score > 0.95"), &record));
+        assert!(condition_holds(Some("open"), &record));
+        assert!(!condition_holds(
+            Some("open"),
+            &Value::Data(serde_json::json!({ "open": false }))
+        ));
+    }
+
+    /// A Branch nobody configured takes its first path rather than neither.
+    #[test]
+    fn an_empty_condition_holds() {
+        assert!(condition_holds(None, &Value::Null));
+        assert!(condition_holds(
+            Some("   "),
+            &Value::Text("anything".into())
+        ));
+    }
+
+    #[test]
+    fn a_branch_produces_only_the_port_it_took() {
+        let mut inputs = Outputs::new();
+        inputs.insert("value".into(), Value::Text("urgent".into()));
+        let taken = pure_step(
+            &block(
+                "branch",
+                &[(
+                    "condition",
+                    graph_format::Setting::String("label == \"urgent\"".into()),
+                )],
+            ),
+            &inputs,
+        )
+        .unwrap();
+        assert_eq!(taken.keys().collect::<Vec<_>>(), ["a"]);
+
+        inputs.insert("value".into(), Value::Text("noise".into()));
+        let other = pure_step(
+            &block(
+                "branch",
+                &[(
+                    "condition",
+                    graph_format::Setting::String("label == \"urgent\"".into()),
+                )],
+            ),
+            &inputs,
+        )
+        .unwrap();
+        assert_eq!(other.keys().collect::<Vec<_>>(), ["b"]);
     }
 
     /// A kind this slice has not reached is named, not skipped silently.

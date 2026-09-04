@@ -163,6 +163,11 @@ impl Live<'_> {
                         block: id.clone(),
                         state: super::event::BlockState::Ready,
                     });
+                    emit(RunEvent::SourceArmed {
+                        run: self.run.clone(),
+                        block: id.clone(),
+                        state: source.state.clone(),
+                    });
                     armed.push(source);
                 }
                 Err(why) => {

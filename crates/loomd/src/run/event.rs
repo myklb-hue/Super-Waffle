@@ -124,6 +124,19 @@ pub enum RunEvent {
         detail: Option<String>,
     },
 
+    /// A source is armed and what it is watching: `watching ~/inbox`,
+    /// `listening on :8420/inbox`, `every 15m` (SPEC §8.2).
+    ///
+    /// Its own event rather than a console line the shell would have to parse.
+    /// A chip on a block is structured information; reading it back out of a
+    /// sentence written for a person is how the two drift apart.
+    #[serde(rename = "source.armed")]
+    SourceArmed {
+        run: String,
+        block: String,
+        state: String,
+    },
+
     /// Where a loop frame has got to: `3 / 7`, and the item it is on. The
     /// frame's own status line (SPEC §3.5).
     #[serde(rename = "frame.state")]
@@ -239,6 +252,7 @@ impl RunEvent {
             | RunEvent::BlockOutput { run, .. }
             | RunEvent::BlockDone { run, .. }
             | RunEvent::BlockError { run, .. }
+            | RunEvent::SourceArmed { run, .. }
             | RunEvent::FrameState { run, .. }
             | RunEvent::WireActive { run, .. }
             | RunEvent::Console { run, .. }

@@ -14,7 +14,7 @@
 
 import { create } from 'zustand';
 import type { BlockState, Decision, Graph, Level, PortValue, RunEvent } from '@cyberloom/graph-core';
-import { answerWarning, startRun, stopRun, subscribeEvents } from './rpc';
+import { answerWarning, pauseRun, startRun, stopRun, subscribeEvents } from './rpc';
 
 /** How a block is doing, as the engine last reported it. */
 export interface BlockRun {
@@ -64,6 +64,13 @@ export interface Usage {
 
 export type Phase = 'idle' | 'running' | 'finished' | 'failed' | 'stopped';
 
+/** Where a loop frame has got to (SPEC §3.5). */
+export interface FrameRun {
+  at: number;
+  of: number;
+  item: string | null;
+}
+
 interface RunStore {
   run: string | null;
   phase: Phase;
@@ -74,6 +81,14 @@ interface RunStore {
   /** Every block the plan will visit, in order. */
   order: string[];
   blocks: Record<string, BlockRun>;
+  /** What each source is watching, once it is armed (SPEC §8.2). */
+  armed: Record<string, string>;
+  frames: Record<string, FrameRun>;
+  /** Whether the graph is holding: events queue, nothing runs (SPEC §8.1). */
+  paused: boolean;
+  /** Every event a live run has handled, newest first, for the graph panel's
+   *  recent-events list. */
+  recent: { at: number; source: string; detail: string }[];
   /** Wires that have carried a value. */
   active: string[];
   lines: ConsoleLine[];
@@ -91,6 +106,7 @@ interface RunStore {
   apply: (event: RunEvent) => void;
   begin: (path: string, graph: Graph) => Promise<void>;
   halt: () => Promise<void>;
+  hold: (paused: boolean) => Promise<void>;
   decide: (decision: Decision) => Promise<void>;
   clearConsole: () => void;
 }
@@ -102,6 +118,10 @@ const EMPTY = {
   ms: null,
   order: [],
   blocks: {},
+  armed: {},
+  frames: {},
+  paused: false,
+  recent: [],
   active: [],
   lines: [],
   trace: [],
@@ -187,6 +207,33 @@ export const useRun = create<RunStore>((set, get) => ({
         patch(event.data.block, { error: event.data.message, state: 'error' });
         break;
 
+      case 'source.armed':
+        set((s) => ({ armed: { ...s.armed, [event.data.block]: event.data.state } }));
+        break;
+
+      case 'frame.state':
+        set((s) => ({
+          frames: {
+            ...s.frames,
+            [event.data.frame]: {
+              at: event.data.at,
+              of: event.data.of,
+              item: event.data.item,
+            },
+          },
+        }));
+        // The start of a frame is the start of an event's work, which is what
+        // the recent list is for.
+        if (event.data.at === 0) {
+          set((s) => ({
+            recent: [
+              { at: since(), source: event.data.frame, detail: `${event.data.of} items` },
+              ...s.recent,
+            ].slice(0, 20),
+          }));
+        }
+        break;
+
       case 'wire.active':
         set((s) =>
           s.active.includes(event.data.wire) ? s : { active: [...s.active, event.data.wire] },
@@ -194,6 +241,18 @@ export const useRun = create<RunStore>((set, get) => ({
         break;
 
       case 'console':
+        if (event.data.message.includes(' → ') && event.data.source) {
+          set((s) => ({
+            recent: [
+              {
+                at: since(),
+                source: event.data.source!,
+                detail: event.data.message,
+              },
+              ...s.recent,
+            ].slice(0, 20),
+          }));
+        }
         say({
           at: since(),
           source: event.data.source,
@@ -307,6 +366,13 @@ export const useRun = create<RunStore>((set, get) => ({
   async halt() {
     const { run } = get();
     await stopRun(run ?? undefined);
+  },
+
+  /** Hold the graph, or let it go (SPEC §8.1). */
+  async hold(paused) {
+    const { run } = get();
+    set({ paused });
+    await pauseRun(paused, run ?? undefined);
   },
 
   async decide(decision) {

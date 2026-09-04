@@ -355,3 +355,96 @@ fn a_single_value_is_one_item() {
     assert_eq!(seen.lines().count(), 1);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// A Branch chooses: the path it did not take does not run (SPEC §6.8).
+///
+/// This is the difference between a branch and a fork, and it is not visible
+/// in the Branch block itself — it is in what happens to the blocks below the
+/// port it stayed silent on.
+#[test]
+fn a_branch_runs_one_path_and_not_the_other() {
+    let dir = scratch("branch");
+    let mut graph = graph_format::load(fixtures().join("graphs/customer-triage.loom")).unwrap();
+    graph.frames.clear();
+    graph.blocks = vec![
+        block("input", "input", None, &[("value", "urgent")]),
+        block(
+            "pick",
+            "branch",
+            None,
+            &[("condition", "label == \"urgent\"")],
+        ),
+        block(
+            "urgent",
+            "terminal",
+            None,
+            &[
+                ("command", &format!("echo took-a >> {}/seen", dir.display())),
+                ("warnBefore", "false"),
+            ],
+        ),
+        block(
+            "routine",
+            "terminal",
+            None,
+            &[
+                ("command", &format!("echo took-b >> {}/seen", dir.display())),
+                ("warnBefore", "false"),
+            ],
+        ),
+    ];
+    graph.wires = vec![
+        graph_format::Wire {
+            id: "w1".into(),
+            from: graph_format::Endpoint::new("input", "value"),
+            to: graph_format::Endpoint::new("pick", "value"),
+        },
+        graph_format::Wire {
+            id: "w2".into(),
+            from: graph_format::Endpoint::new("pick", "a"),
+            to: graph_format::Endpoint::new("urgent", "trigger"),
+        },
+        graph_format::Wire {
+            id: "w3".into(),
+            from: graph_format::Endpoint::new("pick", "b"),
+            to: graph_format::Endpoint::new("routine", "trigger"),
+        },
+    ];
+
+    let (summary, _, _) = run(&graph);
+    assert_eq!(
+        summary.outcome,
+        RunOutcome::Finished,
+        "{:?}",
+        summary.errors
+    );
+    let seen = std::fs::read_to_string(dir.join("seen")).unwrap();
+    assert_eq!(
+        seen.lines().collect::<Vec<_>>(),
+        ["took-a"],
+        "only the urgent path ran"
+    );
+
+    // And the other way, with the same graph.
+    let _ = std::fs::remove_file(dir.join("seen"));
+    graph
+        .blocks
+        .iter_mut()
+        .find(|b| b.id == "input")
+        .unwrap()
+        .settings
+        .insert(
+            "value".into(),
+            graph_format::Setting::String("noise".into()),
+        );
+    let (summary, _, _) = run(&graph);
+    assert_eq!(
+        summary.outcome,
+        RunOutcome::Finished,
+        "{:?}",
+        summary.errors
+    );
+    let seen = std::fs::read_to_string(dir.join("seen")).unwrap();
+    assert_eq!(seen.lines().collect::<Vec<_>>(), ["took-b"]);
+    let _ = std::fs::remove_dir_all(&dir);
+}

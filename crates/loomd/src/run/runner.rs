@@ -97,6 +97,10 @@ struct State<'a> {
     /// Blocks that errored or were skipped, so downstream knows why it has no
     /// input to work from.
     failed: HashSet<String>,
+    /// Blocks that have taken their turn. Distinguishes "produced nothing on
+    /// this port" from "has not run yet", which is the whole of how a Branch
+    /// decides what happens next.
+    ran: HashSet<String>,
     /// Blocks the user said not to ask about again.
     trusted: HashSet<String>,
     errors: Vec<String>,
@@ -146,6 +150,7 @@ impl<'a> Runner<'a> {
             ask,
             values: seeded,
             failed: HashSet::new(),
+            ran: HashSet::new(),
             trusted: HashSet::new(),
             errors: Vec::new(),
             stopped: false,
@@ -245,6 +250,15 @@ impl<'a> Runner<'a> {
     // ------------------------------------------------------------ one block
 
     fn step(&self, block: &Block, plan: &Plan, st: &mut State<'_>) {
+        if self.off_the_path(block, st) {
+            (st.emit)(RunEvent::BlockState {
+                run: self.run.clone(),
+                block: block.id.clone(),
+                state: BlockState::Idle,
+            });
+            return;
+        }
+
         let inputs = self.gather(block, st);
 
         // A block whose upstream failed has nothing to work from. It is skipped
@@ -299,6 +313,7 @@ impl<'a> Runner<'a> {
                 self.console(st, Some(&block.id), Level::Error, message);
             }
             Ok((outputs, figure)) => {
+                st.ran.insert(block.id.clone());
                 let mut sent = Vec::new();
                 for (port, value) in &outputs {
                     let end = Endpoint::new(&block.id, port);
@@ -463,6 +478,7 @@ impl<'a> Runner<'a> {
                             ask: &mut |_| Decision::Continue,
                             values: seeded,
                             failed: HashSet::new(),
+                            ran: HashSet::new(),
                             trusted,
                             errors: Vec::new(),
                             stopped: false,
@@ -658,6 +674,33 @@ impl<'a> Runner<'a> {
             }
         }
         None
+    }
+
+    /// Whether this block is on a path a Branch did not take.
+    ///
+    /// A Branch produces a value on exactly one of its two exec ports, so a
+    /// block below the other one has an incoming exec wire from a block that
+    /// has run and said nothing. That silence is the branch: skipping here is
+    /// what makes a Branch choose rather than fork.
+    ///
+    /// Only when *every* incoming exec wire is like that. A block reachable
+    /// two ways runs if either way was taken, which is what a Merge downstream
+    /// of a Branch has to mean.
+    fn off_the_path(&self, block: &Block, st: &State<'_>) -> bool {
+        let mut execs = 0usize;
+        let mut silent = 0usize;
+        for wire in &self.graph.wires {
+            if wire.to.node != block.id
+                || self.wire_type(wire) != Some(graph_format::PortType::Exec)
+            {
+                continue;
+            }
+            execs += 1;
+            if st.ran.contains(&wire.from.node) && !st.values.contains_key(&wire.from) {
+                silent += 1;
+            }
+        }
+        execs > 0 && execs == silent
     }
 
     fn block(&self, id: &str) -> Option<&Block> {
