@@ -571,7 +571,7 @@ figure.
 | 9 | **Actuators and feedback.** Serial and motors, `state` and `fault` ports, Toolbox `pause`, warn-before-move, motors panel. | 4 | Figure 9's motor chain; a fault pauses the Toolbox and one click resumes. |
 | 10 | **Avatar.** Rig loader (SVG states + `rig.yaml`), the four rigs with seven expressions, expression state machine, idle behaviours, lip sync from the speech audio, gaze from `look`, Stage view and resize, Avatar panel and Rigs tab, Status light and Sound cue. | 7, 9 | Figures 9, 15, 16; the home-assistant fixture runs with a face. |
 | 11 | **Workspace.** Workspace picker, graph tabs, per-workspace library, settings screen, Local-only switch and the remote-model warning, Convert-on-wire insert. | 3 | Two graphs open as tabs; a remote model warns once. |
-| 12 | **Packaging.** AppImage, then AUR; Wayland and X11 checked on CachyOS; first-run experience (engine, Ollama, Python env detection with clear messages). | 2 | A fresh CachyOS install runs the assistant fixture from the AppImage. |
+| 12 | **Packaging.** AppImage, then AUR; Wayland and X11 checked on CachyOS; first-run experience (engine, Ollama, Python env detection with clear messages; model downloads explicit and resumable, offline a supported state). | 2 | A fresh CachyOS install runs the assistant fixture from the AppImage. |
 | — | **Backlog** in the spec's order: Deploy (§15.1), Subgraphs (§15.2), Snapshots (§15.7), compiled blocks (§15.8), Presence view (§15.9), rig editor and Rive (§15.10), Convert panel (§15.5), library management screen, clickable prototype parity. | | |
 
 Slices 7, 8 and 9 are independent of each other after 4 and can run in
@@ -649,11 +649,16 @@ Decided since this plan was written:
   `cyberloom://`. Free on crates.io and npm; three unrelated Cyberlooms
   exist on the web, two of them IT services firms, so the name is clear
   to use but will not own its search results.
+- **Styling: CSS Modules, not Tailwind** (assumption 3 stands). Tailwind
+  was in the brief only as an example. Its advantage is velocity for a
+  team sharing one vocabulary, which is not this project; its cost here
+  is that the canvas needs exact pixel geometry that reads badly as
+  utility strings.
+- **Model provisioning: the network is allowed on first run** (SPEC
+  §15.13). Downloads are explicit, visible and weights-only; offline is a
+  supported state rather than a failure; the per-graph Local only switch
+  is unaffected and stays on by default. Slice 12 owns the first-run
+  flow, so the installer stays small and the model choice is not frozen
+  at build time.
 
-Things I could not decide and need from you before slice 0:
-
-- **Tailwind or not** (assumption 3).
-- **Whether the engine may reach the network at all** for model
-  downloads (Ollama pulls, whisper and piper model files) on first run,
-  or whether those are pre-provisioned by the packaging step. This is a
-  privacy-defaults question (§12.3) more than a technical one.
+Nothing is left blocking slice 0.

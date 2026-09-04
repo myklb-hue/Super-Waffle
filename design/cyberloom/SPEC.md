@@ -851,6 +851,11 @@ dangerous action; it may not prevent one.
   specialist models report.
 - Transcripts, sightings, places and times are kept in long-term memory;
   the memory hub panel states this plainly.
+- Fetching a model is not the same as sending data out. Downloading
+  weights on first run is allowed (§15.13); it tells the host which model
+  was asked for and nothing else. Sending a prompt, a frame or a
+  transcript to someone else's machine is what the Local only switch
+  governs (§15.4), and that stays on by default.
 
 ---
 
@@ -1095,6 +1100,31 @@ programmable machine. Graph files are `.loom`, the engine daemon is
 `loomd`, configuration lives in `~/.config/cyberloom/`, and the
 application id is `dev.cyberloom.app`. In conversation the product
 shortens to *Loom*; in writing and in every identifier it is Cyberloom.
+
+### 15.13 Model provisioning — v1 network on first run
+
+The engine may reach the network to fetch models: Ollama pulls, the
+whisper and piper model files, the ONNX detector and affect classifier.
+Shipping them in the installer would make it many gigabytes and freeze
+the model choice at build time, so the download happens on demand.
+
+The rules it works under:
+
+- **Never silent.** A download is an explicit action with a visible
+  destination, a size before it starts and a progress row in the status
+  bar. Nothing is fetched because a graph happened to run.
+- **Only weights.** The engine fetches model files and nothing else. It
+  does not phone home, check for updates, or report usage.
+- **Offline is a supported state.** With no network the app opens, edits,
+  and runs every graph whose models are already present. A missing model
+  is a clear message naming what is missing and where it would come from,
+  never a crash and never a silent stall.
+- **Local only is untouched.** §15.4 governs sending data to a remote
+  model at run time and stays on by default. Fetching weights is setup;
+  sending a prompt is not.
+- **The bundle carries a lockfile.** Deploy (§15.1) records model and
+  runtime versions so a bundle can be provisioned once and moved to a
+  machine that never reaches the network.
 
 ---
 
