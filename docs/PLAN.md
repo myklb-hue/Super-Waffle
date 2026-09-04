@@ -1140,3 +1140,49 @@ What is worse than it should be, and why:
   short of §15.7's "unlimited within a session". Fixing it properly means a
   document store per tab, handed to components instead of imported by them: a
   change worth making deliberately rather than as a side effect of adding tabs.
+
+---
+
+Found while building slice 12 (Packaging):
+
+- **The AppImage shipped an avatar with no face.** `shipped_rigs()` looked for a
+  `rigs/` folder beside the binary. Tauri puts resources in
+  `usr/lib/Cyberloom/` and the binary in `usr/bin/`, so it found nothing, fell
+  through to the source tree — which exists on this machine and on no user's —
+  and every rig would have been missing on every installed copy. Invisible until
+  the bundle was actually built and opened. It now knows the three layouts a
+  packaged build uses, and a test walks all three.
+- **An AppImage's working directory is whatever the launcher felt like.** The
+  host served the current directory, which from a desktop menu is often `/` or
+  the home folder. Serving that means either an empty window or an offer to
+  write graphs into somebody's home directory. It now serves the current
+  directory only when it *looks like* a workspace — graphs, or a
+  `workspace.yaml` — and `~/Cyberloom` otherwise, made on the spot.
+
+Two decisions worth recording:
+
+- **A resumed download that gets `200` starts over.** A server answering a
+  `Range` request with the whole file has decided not to resume, and appending
+  the whole file to a partial one produces a corrupt file that looks exactly
+  like a good one. The partial file also never becomes the real one until every
+  byte has arrived: a reader that finds the weights finds something complete,
+  always.
+- **`WEBKIT_DISABLE_DMABUF_RENDERER` is set on Wayland and only on Wayland.**
+  WebKitGTK's DMABUF path is broken on several drivers and the symptom is a
+  window that comes up black with nothing in any log. It is set only when
+  nothing else has set it, and left alone on X11 where the accelerated path is
+  the one that works.
+
+What this environment cannot prove:
+
+- **A fresh CachyOS install.** The AppImage was built here and its contents were
+  checked; the binary starts and fails at GTK init, because this container has
+  no display. What is proven is that the bundle exists, that it carries the
+  rigs, and that the engine can find them in the layout it carries them in. What
+  is not is the acceptance sentence itself — that a fresh CachyOS install runs
+  the assistant fixture from the AppImage — which needs CachyOS.
+- **Downloading real weights.** The network policy denies `huggingface.co` and
+  the GitHub release hosts, so `models.fetch` has never fetched a model. It has
+  fetched from a server the test starts, been cut off mid-file, and continued
+  from where it stopped with a `Range` request — which is the part that is easy
+  to get wrong.

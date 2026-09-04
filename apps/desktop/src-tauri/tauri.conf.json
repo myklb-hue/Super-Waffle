@@ -27,7 +27,27 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["appimage"],
-    "icon": ["icons/icon.png"]
+    "targets": [
+      "appimage"
+    ],
+    "icon": [
+      "icons/icon.png"
+    ],
+    "resources": {
+      "../../../rigs": "rigs"
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      },
+      "deb": {
+        "depends": [
+          "ffmpeg"
+        ]
+      }
+    },
+    "category": "Development",
+    "shortDescription": "Node-based visual programming for local AI",
+    "longDescription": "Cyberloom is a desktop application for building programs by wiring typed blocks together on a canvas. Models, runtimes, senses, memory and actuators are blocks; a wire carries a type; everything runs on your own machine unless you say otherwise."
   }
 }

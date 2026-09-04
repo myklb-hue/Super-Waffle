@@ -36,6 +36,17 @@ pub enum Request {
     WorkspaceConfigure {
         settings: Box<crate::settings::WorkspaceSettings>,
     },
+    /// Fetch a model's weights, explicitly and resumably (SPEC §15.13).
+    ///
+    /// Explicit because it is a request: nothing downloads because a graph
+    /// happened to run. Progress arrives as console events, and asking again
+    /// for something interrupted continues rather than starts over.
+    #[serde(rename = "models.fetch")]
+    ModelsFetch {
+        url: String,
+        /// Where to put it, relative to the models folder.
+        name: String,
+    },
     /// Read one graph.
     #[serde(rename = "graph.open")]
     GraphOpen { path: String },

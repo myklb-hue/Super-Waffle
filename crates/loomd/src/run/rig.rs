@@ -321,4 +321,48 @@ mod tests {
         assert!(complaint.contains("no states"), "{complaint}");
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    /// The layouts a packaged build actually uses.
+    ///
+    /// This is here rather than in `runner` because it is about rigs, and
+    /// because the bug it pins down — an AppImage whose avatar had no face —
+    /// was found by building one and looking, not by reading the code.
+    #[test]
+    fn rigs_are_found_where_a_package_puts_them() {
+        let dir = std::env::temp_dir().join(format!("cyberloom-layout-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        for (binary, resources) in [
+            ("usr/bin/cyberloom", "usr/bin/rigs"),
+            ("usr/bin/cyberloom", "usr/lib/Cyberloom/rigs"),
+            ("usr/bin/cyberloom", "usr/share/cyberloom/rigs"),
+            ("opt/cyberloom/cyberloom", "opt/cyberloom/rigs"),
+        ] {
+            let _ = std::fs::remove_dir_all(&dir);
+            let exe = dir.join(binary);
+            std::fs::create_dir_all(exe.parent().unwrap()).unwrap();
+            std::fs::write(&exe, b"").unwrap();
+            let rigs = dir.join(resources).join("line");
+            std::fs::create_dir_all(&rigs).unwrap();
+            std::fs::write(rigs.join("rig.yaml"), "name: Line\n").unwrap();
+            let found = crate::run::runner::rigs_near(Some(&exe))
+                .unwrap_or_else(|| panic!("nothing found for {resources}"));
+            assert!(
+                found.join("line/rig.yaml").is_file(),
+                "{resources}: found {}",
+                found.display()
+            );
+        }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_binary_with_no_rigs_anywhere_near_it_finds_none() {
+        let dir = std::env::temp_dir().join(format!("cyberloom-bare-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let exe = dir.join("cyberloom");
+        std::fs::write(&exe, b"").unwrap();
+        assert!(crate::run::runner::rigs_near(Some(&exe)).is_none());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

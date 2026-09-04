@@ -1,0 +1,58 @@
+# Maintainer: Mykl <mykl.b@hotmail.com>
+#
+# Arch and CachyOS. The engine and the host are one Rust workspace, so this is
+# one `cargo build` and one `npm run build`, not a chain of them.
+pkgname=cyberloom
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Node-based visual programming for local AI: typed blocks on a canvas"
+arch=('x86_64')
+url="https://github.com/myklb-hue/super-waffle"
+license=('MIT')
+
+# webkit2gtk is the window. ffmpeg is what Webcam, Microphone and Speaker use,
+# and it is a hard dependency rather than optional because a sense that cannot
+# run is worse than a larger install.
+depends=('webkit2gtk-4.1' 'gtk3' 'libayatana-appindicator' 'ffmpeg')
+# Python is optional: a graph that has no Python block and no perception block
+# never asks for it, and the settings screen says so when one does.
+optdepends=(
+  'python: custom Python blocks and the perception runtime'
+  'ollama: local language models'
+)
+makedepends=('rust' 'cargo' 'nodejs' 'npm' 'pkgconf')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir/super-waffle-$pkgver"
+  npm ci
+  npm run build
+  cargo build --release --bin cyberloom
+}
+
+check() {
+  cd "$srcdir/super-waffle-$pkgver"
+  cargo test --release --workspace
+  npm test
+}
+
+package() {
+  cd "$srcdir/super-waffle-$pkgver"
+  install -Dm755 target/release/cyberloom "$pkgdir/usr/bin/cyberloom"
+
+  # Rigs are content, not code (SPEC §11.1), and the engine looks for them
+  # beside the binary before it looks anywhere else.
+  install -d "$pkgdir/usr/share/cyberloom/rigs"
+  cp -r rigs/* "$pkgdir/usr/share/cyberloom/rigs/"
+
+  install -Dm644 packaging/cyberloom.desktop \
+    "$pkgdir/usr/share/applications/cyberloom.desktop"
+  install -Dm644 apps/desktop/src-tauri/icons/icon.png \
+    "$pkgdir/usr/share/icons/hicolor/512x512/apps/cyberloom.png"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # The example graphs, for a first run that has something to look at.
+  install -d "$pkgdir/usr/share/cyberloom/graphs"
+  install -Dm644 fixtures/graphs/*.loom "$pkgdir/usr/share/cyberloom/graphs/"
+}

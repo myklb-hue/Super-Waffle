@@ -2261,18 +2261,44 @@ fn plural(n: usize, thing: &str) -> String {
 
 /// The rigs that ship with the application (SPEC §11.1).
 ///
-/// Beside the binary in a packaged build, and at the top of the repository
-/// while developing. A workspace's own `rigs/` folder is looked at first, so a
-/// user replacing Line with their own Line does not have to move ours.
+/// A workspace's own `rigs/` folder is looked at first, so a user replacing Line
+/// with their own Line does not have to move ours. This is the fallback: the
+/// four that ship.
 fn shipped_rigs() -> std::path::PathBuf {
     if let Ok(named) = std::env::var("CYBERLOOM_RIGS") {
         return std::path::PathBuf::from(named);
     }
-    if let Ok(exe) = std::env::current_exe()
-        && let Some(beside) = exe.parent().map(|d| d.join("rigs"))
-        && beside.is_dir()
-    {
-        return beside;
-    }
-    std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../rigs"))
+    let exe = std::env::current_exe().ok();
+    rigs_near(exe.as_deref()).unwrap_or_else(|| {
+        std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../rigs"))
+    })
+}
+
+/// Where a packaged build keeps its rigs, given where its binary is.
+///
+/// Three layouts, because there are three ways this gets installed and the
+/// first draft only knew one. An AppImage puts the binary in `usr/bin` and its
+/// resources in `usr/lib/Cyberloom`; a distribution package uses
+/// `usr/share/cyberloom`; a tarball someone unpacked has everything in one
+/// folder. The bug this fixes was invisible until the AppImage was actually
+/// built and opened: looking only beside the binary found nothing, fell through
+/// to the source tree, and shipped an application whose avatar had no face.
+pub(crate) fn rigs_near(exe: Option<&std::path::Path>) -> Option<std::path::PathBuf> {
+    let folder = exe?.parent()?;
+    let name = exe?.file_stem()?.to_string_lossy().into_owned();
+    let capitalised = {
+        let mut chars = name.chars();
+        match chars.next() {
+            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+            None => name.clone(),
+        }
+    };
+    [
+        folder.join("rigs"),
+        folder.join("../lib").join(&capitalised).join("rigs"),
+        folder.join("../lib").join(&name).join("rigs"),
+        folder.join("../share").join(&name).join("rigs"),
+    ]
+    .into_iter()
+    .find(|candidate| candidate.join("line").join("rig.yaml").is_file())
 }

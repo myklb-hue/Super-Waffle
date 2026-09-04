@@ -415,6 +415,18 @@ export type Request =
 { method: "workspace.configure"; params: {
 	settings: WorkspaceSettings,
 } } | 
+/**
+ *  Fetch a model's weights, explicitly and resumably (SPEC §15.13).
+ * 
+ *  Explicit because it is a request: nothing downloads because a graph
+ *  happened to run. Progress arrives as console events, and asking again
+ *  for something interrupted continues rather than starts over.
+ */
+{ method: "models.fetch"; params: {
+	url: string,
+	/**  Where to put it, relative to the models folder. */
+	name: string,
+} } | 
 /**  Read one graph. */
 { method: "graph.open"; params: {
 	path: string,

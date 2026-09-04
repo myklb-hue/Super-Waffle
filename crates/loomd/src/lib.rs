@@ -4,6 +4,7 @@
 //! headless service (SPEC §15.1) is this without a window, and so the shell
 //! surviving an engine crash is the normal case rather than a later retrofit.
 //!
+pub mod fetch;
 pub mod rpc;
 pub mod run;
 pub mod session;
@@ -69,6 +70,57 @@ impl Engine {
                     settings,
                     probe,
                 }))
+            }
+
+            Request::ModelsFetch { url, name } => {
+                let root = self.workspace.root().to_path_buf();
+                let settings = crate::settings::WorkspaceSettings::read(&root);
+                let folder = match settings.models.as_deref() {
+                    Some(named) if std::path::Path::new(named).is_absolute() => {
+                        std::path::PathBuf::from(named)
+                    }
+                    Some(named) => root.join(named),
+                    None => root.join("models"),
+                };
+                let into = folder.join(&name);
+                let session = Arc::clone(session);
+                let run = format!("fetch-{name}");
+                // On a thread, because a download is minutes and the socket
+                // must stay answerable — the same arrangement as a run.
+                let started = std::thread::Builder::new()
+                    .name(format!("loomd-fetch-{name}"))
+                    .spawn(move || {
+                        let say = |level, message: String| {
+                            session.send_event(&crate::run::event::RunEvent::Console {
+                                run: run.clone(),
+                                source: Some(name.clone()),
+                                level,
+                                message,
+                            });
+                        };
+                        say(
+                            crate::run::event::Level::Info,
+                            format!("fetching {name} from {url}"),
+                        );
+                        let outcome = crate::fetch::resumable(&url, &into, &mut |p| {
+                            let how_far = match p.fraction() {
+                                Some(f) => format!("{:.0}%", f * 100.0),
+                                None => format!("{} bytes", p.got),
+                            };
+                            say(crate::run::event::Level::Info, format!("{name}: {how_far}"));
+                        });
+                        match outcome {
+                            Ok(path) => say(
+                                crate::run::event::Level::Info,
+                                format!("{name} is here: {}", path.display()),
+                            ),
+                            Err(e) => say(crate::run::event::Level::Error, e),
+                        }
+                    });
+                match started {
+                    Ok(_) => Reply::Acknowledged(rpc::Acknowledged { ok: true, count: 1 }),
+                    Err(e) => Reply::Error(RpcError::new("fetch", e.to_string())),
+                }
             }
 
             Request::WorkspaceConfigure { settings } => {

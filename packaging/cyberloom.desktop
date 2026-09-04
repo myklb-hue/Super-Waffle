@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Cyberloom
+GenericName=Visual programming
+Comment=Wire typed blocks into a program that runs on your own machine
+Exec=cyberloom %f
+Icon=cyberloom
+Terminal=false
+Categories=Development;IDE;
+MimeType=application/x-cyberloom-graph;
+StartupWMClass=Cyberloom

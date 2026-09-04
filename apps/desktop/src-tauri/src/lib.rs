@@ -56,12 +56,49 @@ fn rpc(state: tauri::State<'_, Host>, request: Request) -> Reply {
 /// Which folder to serve.
 ///
 /// `CYBERLOOM_WORKSPACE` first, so a test or a second window can point
-/// somewhere else; then the current directory, which is what a developer
-/// running from a checkout means.
+/// somewhere else. Then the current directory *if it looks like a workspace*,
+/// which is what a developer running from a checkout means. Otherwise
+/// `~/Cyberloom`, made on the spot.
+///
+/// The middle case is the one that matters for a packaged build. An AppImage
+/// launched from a desktop menu has a working directory of whatever the
+/// launcher felt like — often `/` or the home folder — and serving that would
+/// mean a first run that either shows nothing or offers to save graphs into
+/// somebody's home directory. A folder that contains no graphs is not a
+/// workspace someone meant to open.
 fn workspace_root() -> PathBuf {
-    std::env::var_os("CYBERLOOM_WORKSPACE")
+    if let Some(named) = std::env::var_os("CYBERLOOM_WORKSPACE") {
+        return PathBuf::from(named);
+    }
+    if let Ok(here) = std::env::current_dir()
+        && looks_like_a_workspace(&here)
+    {
+        return here;
+    }
+    let home = std::env::var_os("HOME")
         .map(PathBuf::from)
-        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+        .unwrap_or_else(|| PathBuf::from("."));
+    let mine = home.join("Cyberloom");
+    // Made rather than reported: a first run should open a window with a
+    // canvas in it, not an error about a folder that has never existed.
+    let _ = std::fs::create_dir_all(mine.join("graphs"));
+    mine
+}
+
+/// Whether a folder is somebody's workspace rather than wherever the launcher
+/// happened to start.
+fn looks_like_a_workspace(folder: &std::path::Path) -> bool {
+    if folder.join("workspace.yaml").is_file() {
+        return true;
+    }
+    let graphs = folder.join("graphs");
+    std::fs::read_dir(if graphs.is_dir() { &graphs } else { folder })
+        .map(|entries| {
+            entries
+                .filter_map(|e| e.ok())
+                .any(|e| e.path().extension().is_some_and(|x| x == "loom"))
+        })
+        .unwrap_or(false)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
