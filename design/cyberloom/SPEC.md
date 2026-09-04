@@ -274,7 +274,7 @@ the frame shows the current iteration and item.
 | `stream` | `#6fc98a` green | output arriving incrementally | `text`, `data` |
 | `image` | `#d77bd0` magenta | frames from a camera or a file | `image`, `any` |
 | `audio` | `#dcc65b` yellow | samples from a microphone | `audio`, `any` |
-| `file` | `#6fa3a8` slate-teal | a path or blob on disk | `file`, `any` |
+| `file` | `#93c76b` yellow-green | a path or blob on disk | `file`, `any` |
 | `exec` | `#e8ebf0` white | a trigger or control flow, never a value | `exec` |
 | `any` | `#8a93a3` grey | accepts every type | everything |
 

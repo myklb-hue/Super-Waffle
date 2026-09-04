@@ -49,8 +49,9 @@
   /* ---- Port types ------------------------------------------------------
    * The grammar of the whole application: a wire is coloured by its type and
    * the type is what makes a connection legal. Ten types, all distinct at a
-   * glance. --type-file was moved off #7f93c9 because it sat ten degrees from
-   * --type-memory and the two were indistinguishable on a wire. */
+   * glance. --type-file was moved off #7f93c9, which sat two degrees from
+   * --type-memory in hue; it is now the one colour in the yellow-green gap
+   * between --type-audio and --type-stream, 44 degrees from each. */
   --type-text: #56c7d6;
   --type-tools: #e0a458;
   --type-memory: #7e9ff0;
@@ -58,7 +59,7 @@
   --type-stream: #6fc98a;
   --type-image: #d77bd0;
   --type-audio: #dcc65b;
-  --type-file: #6fa3a8;
+  --type-file: #93c76b;
   --type-exec: #e8ebf0;
   --type-any: #8a93a3;
 

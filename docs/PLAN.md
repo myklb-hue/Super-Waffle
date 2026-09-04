@@ -96,7 +96,7 @@ ports.
 
 | Where | Mockup | Standardise on |
 | --- | --- | --- |
-| `file` type `#7f93c9` vs `memory` type `#7e9ff0` | Two blues 10° apart; distinguishable side by side, not at a glance on a wire | Keep `memory` `#7e9ff0`; move `file` to a slate-teal `#6fa3a8` so no two types share a hue family. Affects Library and RunModes artboards only. |
+| `file` type `#7f93c9` vs `memory` type `#7e9ff0` | Two blues 2° apart in hue; distinguishable side by side, never on a wire | Keep `memory` `#7e9ff0`; move `file` to `#93c76b`, the one colour in the yellow-green gap between `audio` and `stream` and 44° from each. A first attempt at slate-teal `#6fa3a8` was rejected in slice 0: it landed 2° from `text`, trading one same-hue collision for another. |
 | Console log text `#b3bcc7`, code text `#c3cad4`, panel prose `#c3cad4` | Three near-identical off-whites | One `--text-body` `#c3cad4`. |
 | Terminal-thoughts background `#07080a` vs `--field` `#0b0d11` | Ad hoc darker field | Use `--field`; the terminal is not darker than the code editor. |
 | Zoom pill / drag tooltip backgrounds `rgba(#12161c,.92)` and `.96` | Ad hoc floating surface | One `--float` `#12161c` at `.94`. |

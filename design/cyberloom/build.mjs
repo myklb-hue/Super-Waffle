@@ -33,7 +33,7 @@ const T = {
   tools:  '#e0a458',
   data:   '#a78bd0',
   stream: '#6fc98a',
-  file:   '#6fa3a8',
+  file:   '#93c76b',
   image:  '#d77bd0',
   audio:  '#dcc65b',
   memory: '#7e9ff0',
