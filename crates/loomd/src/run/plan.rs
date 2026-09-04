@@ -49,6 +49,13 @@ pub struct Plan {
     /// The blocks that emit on their own initiative, in file order. A graph
     /// with one of these never finishes by itself (SPEC §8.2).
     pub sources: Vec<String>,
+    /// For each loop frame, the blocks inside it in the order they run.
+    ///
+    /// These are deliberately *not* in `order`: a framed block does not take a
+    /// turn of its own, it takes one per item, and the frame is what schedules
+    /// it (SPEC §3.5). The frame stands in the main order where they would
+    /// have been.
+    pub frames: BTreeMap<String, Vec<String>>,
     /// What the plan could not do. Reported, never fatal: a graph with a
     /// problem still runs, minus the part that could not be ordered
     /// (SPEC §12.1).
@@ -161,18 +168,37 @@ pub fn plan(graph: &Graph) -> Plan {
     // Kahn's algorithm over the steps only, with ties broken by the block's
     // position in the file. Without that tiebreak the order would depend on
     // hash iteration and two runs of the same graph could log differently.
-    let steps: Vec<&str> = graph
+    // A block inside a loop frame runs once per item rather than once, so the
+    // frame takes its place in the order and the block runs under it.
+    let framed: HashMap<&str, &str> = graph
+        .blocks
+        .iter()
+        .filter_map(|b| Some((b.id.as_str(), b.frame.as_deref()?)))
+        .collect();
+
+    let mut steps: Vec<&str> = graph
         .blocks
         .iter()
         .map(|b| b.id.as_str())
         .filter(|id| !capabilities.contains(*id))
+        .filter(|id| !framed.contains_key(id))
         .collect();
+    steps.extend(graph.frames.iter().map(|f| f.id.as_str()));
     let step_set: HashSet<&str> = steps.iter().copied().collect();
 
     let mut waiting_on: HashMap<&str, HashSet<&str>> =
         steps.iter().map(|id| (*id, HashSet::new())).collect();
     for wire in &graph.wires {
-        let (from, to) = (block_of(&wire.from), block_of(&wire.to));
+        // A wire touching a block inside a frame is, for ordering, a wire on
+        // the frame: the frame is what runs and what everything else waits for.
+        let from = framed
+            .get(block_of(&wire.from))
+            .copied()
+            .unwrap_or(block_of(&wire.from));
+        let to = framed
+            .get(block_of(&wire.to))
+            .copied()
+            .unwrap_or(block_of(&wire.to));
         // A handle wire is a binding, not a dependency: the holder does not
         // wait for the tool, it is handed the ability to call it.
         let handle = port_type(&by_id, &wire.from, Side::Out).is_some_and(PortType::is_handle);
@@ -219,12 +245,17 @@ pub fn plan(graph: &Graph) -> Plan {
         ));
     }
 
-    if !graph.frames.is_empty() {
-        problems.push(format!(
-            "{} loop frame{} will run once rather than repeating: frames arrive with live graphs",
-            graph.frames.len(),
-            if graph.frames.len() == 1 { "" } else { "s" }
-        ));
+    // Inside each frame, the same ordering over just its own blocks.
+    let mut frames: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for frame in &graph.frames {
+        let inside: Vec<&str> = graph
+            .blocks
+            .iter()
+            .filter(|b| b.frame.as_deref() == Some(frame.id.as_str()))
+            .map(|b| b.id.as_str())
+            .filter(|id| !capabilities.contains(*id))
+            .collect();
+        frames.insert(frame.id.clone(), order_within(graph, &by_id, &inside));
     }
 
     let sources = graph
@@ -241,8 +272,47 @@ pub fn plan(graph: &Graph) -> Plan {
         bindings,
         wires,
         sources,
+        frames,
         problems,
     }
+}
+
+/// Kahn's algorithm over a subset, with ties broken by file order.
+///
+/// The same walk the main order uses, on the blocks inside one frame. A wire
+/// coming in from outside the frame is not a dependency here — it was already
+/// satisfied before the frame started.
+fn order_within(graph: &Graph, by_id: &HashMap<&str, &Block>, ids: &[&str]) -> Vec<String> {
+    let inside: HashSet<&str> = ids.iter().copied().collect();
+    let mut waiting_on: HashMap<&str, HashSet<&str>> =
+        ids.iter().map(|id| (*id, HashSet::new())).collect();
+    for wire in &graph.wires {
+        let (from, to) = (block_of(&wire.from), block_of(&wire.to));
+        let handle = port_type(by_id, &wire.from, Side::Out).is_some_and(PortType::is_handle);
+        if handle || !inside.contains(from) || !inside.contains(to) || from == to {
+            continue;
+        }
+        waiting_on.entry(to).or_default().insert(from);
+    }
+
+    let mut order = Vec::new();
+    let mut placed: HashSet<&str> = HashSet::new();
+    loop {
+        let ready: Vec<&str> = ids
+            .iter()
+            .copied()
+            .filter(|id| !placed.contains(id))
+            .filter(|id| waiting_on[id].iter().all(|dep| placed.contains(dep)))
+            .collect();
+        if ready.is_empty() {
+            break;
+        }
+        for id in ready {
+            placed.insert(id);
+            order.push(id.to_owned());
+        }
+    }
+    order
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -475,13 +545,15 @@ mod tests {
     fn an_event_sets_going_only_what_is_below_it() {
         let plan = plan(&fixture("inbox-triage"));
 
-        // A file arriving runs the triage branch and nothing else.
+        // A file arriving runs the loop frame — which is the step here, because
+        // the classifier and the branch are inside it and take a turn per item
+        // rather than a turn each (SPEC §3.5).
         let from_folder = plan.downstream_of("watch", "file");
-        assert!(
-            from_folder.contains(&"classify".to_owned()),
-            "{from_folder:?}"
+        assert_eq!(from_folder, ["loop-items"]);
+        assert_eq!(
+            plan.frames["loop-items"],
+            ["classify", "branch", "notify-slack", "archive"]
         );
-        assert!(from_folder.contains(&"branch".to_owned()));
         assert!(
             !from_folder.contains(&"digest".to_owned()),
             "a file must not fire the quarter-hourly digest: {from_folder:?}"
@@ -506,15 +578,26 @@ mod tests {
         assert!(plan(&fixture("customer-triage")).sources().is_empty());
     }
 
-    /// A loop frame is named as something this slice does not do, rather than
-    /// quietly running its blocks once as though that were the same thing.
+    /// A block inside a frame is the frame's to run, not the order's: it takes
+    /// a turn per item rather than a turn (SPEC §3.5).
     #[test]
-    fn a_loop_frame_says_it_will_not_repeat_yet() {
+    fn a_framed_block_runs_under_its_frame_and_not_beside_it() {
         let plan = plan(&fixture("inbox-triage"));
-        assert!(
-            plan.problems.iter().any(|p| p.contains("loop frame")),
-            "{:?}",
-            plan.problems
+        for inside in ["classify", "branch", "notify-slack", "archive"] {
+            assert!(
+                !plan.order.contains(&inside.to_owned()),
+                "{inside} should run under the frame: {:?}",
+                plan.order
+            );
+        }
+        // The frame stands where they would have been: after the source that
+        // feeds it, and in the order like any other step.
+        let at = |id: &str| plan.order.iter().position(|b| b == id);
+        assert!(at("loop-items").is_some(), "{:?}", plan.order);
+        assert!(at("watch") < at("loop-items"));
+        assert_eq!(
+            plan.frames["loop-items"],
+            ["classify", "branch", "notify-slack", "archive"]
         );
     }
 }

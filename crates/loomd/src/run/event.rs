@@ -124,6 +124,19 @@ pub enum RunEvent {
         detail: Option<String>,
     },
 
+    /// Where a loop frame has got to: `3 / 7`, and the item it is on. The
+    /// frame's own status line (SPEC §3.5).
+    #[serde(rename = "frame.state")]
+    FrameState {
+        run: String,
+        frame: String,
+        /// How many items are finished.
+        at: u32,
+        of: u32,
+        /// One line describing the current item, or none before it starts.
+        item: Option<String>,
+    },
+
     /// A wire carried a value. The canvas animates it (SPEC §5.3).
     #[serde(rename = "wire.active")]
     WireActive { run: String, wire: String },
@@ -226,6 +239,7 @@ impl RunEvent {
             | RunEvent::BlockOutput { run, .. }
             | RunEvent::BlockDone { run, .. }
             | RunEvent::BlockError { run, .. }
+            | RunEvent::FrameState { run, .. }
             | RunEvent::WireActive { run, .. }
             | RunEvent::Console { run, .. }
             | RunEvent::ToolCall { run, .. }

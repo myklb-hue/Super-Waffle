@@ -502,6 +502,19 @@ export type RunEvent = { event: "run.started"; data: {
 	/**  The full trace, for the console. The message is the one line. */
 	detail: string | null,
 } } | 
+/**
+ *  Where a loop frame has got to: `3 / 7`, and the item it is on. The
+ *  frame's own status line (SPEC §3.5).
+ */
+{ event: "frame.state"; data: {
+	run: string,
+	frame: string,
+	/**  How many items are finished. */
+	at: number,
+	of: number,
+	/**  One line describing the current item, or none before it starts. */
+	item: string | null,
+} } | 
 /**  A wire carried a value. The canvas animates it (SPEC §5.3). */
 { event: "wire.active"; data: {
 	run: string,
