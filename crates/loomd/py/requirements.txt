@@ -1,0 +1,14 @@
+# What perceive.py imports, task by task. Installed into
+# ~/.local/share/cyberloom/venv by scripts/provision.sh.
+numpy
+pillow
+onnxruntime            # detect: YOLOv8 as ONNX
+opencv-python-headless # recognise: insightface reads frames through it
+insightface            # recognise: buffalo_l, embeddings only
+faster-whisper         # transcribe
+piper-tts              # speak
+fastembed              # classify, embed: small ONNX sentence embeddings
+vaderSentiment         # affect: valence from a lexicon
+# Only to export yolov8n.pt to ONNX once; provision.sh installs the CPU torch
+# wheel first so this does not pull the CUDA build.
+ultralytics

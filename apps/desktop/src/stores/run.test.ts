@@ -66,3 +66,23 @@ describe('the face in the run store (SPEC §11)', () => {
     expect(useRun.getState().faces.lamp!.colour).toBe('#6fc98a');
   });
 });
+
+describe('a pull in progress (SPEC §15.13)', () => {
+  it('keeps the latest step per model, survives a run starting, and knows when it is done', () => {
+    const apply = useRun.getState().apply;
+    const step = (completed: number, total: number, status: string, done = false, error: string | null = null): RunEvent => ({
+      event: 'progress',
+      data: { run: 'pull-llama3.2:3b', what: 'llama3.2:3b', completed, total, status, done, error },
+    });
+    apply(step(0, 0, 'pulling manifest'));
+    apply(step(500, 2000, 'pulling 9f1a'));
+    expect(useRun.getState().progress['llama3.2:3b']).toMatchObject({ completed: 500, total: 2000, done: false });
+    // A run starting resets the run's own state and leaves the pull alone.
+    apply({ event: 'run.started', data: { run: 'r2', graph: 'g', order: [] } });
+    expect(useRun.getState().progress['llama3.2:3b']?.completed).toBe(500);
+    apply(step(1, 1, 'success', true));
+    expect(useRun.getState().progress['llama3.2:3b']).toMatchObject({ done: true, error: null });
+    apply({ event: 'progress', data: { run: 'pull-nope', what: 'nope', completed: 0, total: 0, status: 'failed', done: true, error: 'no such model' } });
+    expect(useRun.getState().progress.nope?.error).toBe('no such model');
+  });
+});

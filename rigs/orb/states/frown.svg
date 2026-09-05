@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
-  <rect width="240" height="240" fill="none"/>
-  <defs><radialGradient id="g" cx="42%" cy="36%"><stop offset="0%" stop-color="#e8865a" stop-opacity="1"/><stop offset="100%" stop-color="#e8865a" stop-opacity="0.35"/></radialGradient></defs><circle cx="120" cy="120" r="92" fill="#e8865a" opacity="0.12"/>
-  <g id="eyes"><circle cx="120" cy="120" r="66" fill="url(#g)"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="240" height="240">
+  <rect width="64" height="64" fill="none"/>
+  <circle cx="32" cy="32" r="26" fill="#4e6392" opacity=".16"/><circle cx="32" cy="32" r="20" fill="#4e6392"/><circle cx="26" cy="24" r="6" fill="#ffffff" opacity=".16"/>
+  <g id="eyes"><path d="M22 28l7 3M42 28l-7 3" fill="none" stroke="#e8ebf0" stroke-width="2.2" stroke-linecap="round"/></g>
   <g id="mouth"></g>
 </svg>

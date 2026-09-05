@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
-  <rect width="240" height="240" fill="none"/>
-  <g id="eyes"><path d="M 76 96 Q 88 106 100 96" stroke="#5f6875" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M 140 96 Q 152 106 164 96" stroke="#5f6875" stroke-width="7" fill="none" stroke-linecap="round"/></g>
-  <g id="mouth"><path d="M 104 160 Q 120 168 136 160" stroke="#5f6875" stroke-width="6" fill="none" stroke-linecap="round"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="240" height="240">
+  <rect width="64" height="64" fill="none"/>
+  
+  <g id="eyes" fill="none" stroke="#e8ebf0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 25q5 5 10 0"/><path d="M37 25q5 5 10 0"/></g>
+  <g id="mouth" fill="none" stroke="#e8ebf0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M27 44h10"/></g>
 </svg>

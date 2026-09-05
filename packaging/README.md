@@ -52,12 +52,36 @@ that already exists is never touched.
 
 ## AUR
 
-`PKGBUILD` builds from a release tarball. `ffmpeg` is a hard dependency — a
-sense that cannot run is worse than a larger install — and Python and Ollama are
-optional, because a graph with neither a Python block nor a model block never
-asks for them and the settings screen says so plainly when one does.
+`PKGBUILD` builds from a release tarball. `ffmpeg`, `python` and `ollama` are
+all hard dependencies: the application is meant to run the first time it
+opens, and a dependency it might lack is a first run that does not. A machine
+with a GPU wants `ollama-cuda` or `ollama-rocm` in place of `ollama`, which
+the install script picks for it. What pacman cannot do — the model pull, the
+virtual environment, the weights — `cyberloom-provision` does per user, and
+the package's install message says so.
 
 ## First run
+
+What a first run needs beyond the binary is downloaded, not packaged, and
+`scripts/provision.sh` (installed as `cyberloom-provision`) is what downloads
+it. It starts Ollama and pulls the default model; makes a virtual environment
+at `~/.local/share/cyberloom/venv` with `crates/loomd/py/requirements.txt` in
+it; installs `perceive.py`, the engine's perception helper, into
+`~/.local/share/cyberloom/models`; and fetches the weights each perception
+block needs — the YOLOv8n detector (as `.pt` from GitHub, exported to ONNX once,
+because no ONNX is published), the Piper voice, the Whisper model, the
+insightface face pack and the embedding model. Every download is skipped once
+it is here, every step runs even if an earlier one failed, and the exit code
+says whether anything is still missing. The install script runs it; the AUR
+package prints how to.
+
+The engine finds all of that the same way the settings screen does
+(`settings::models_folder`, `settings::python_for`): the workspace's own
+setting when it made one, the venv when it exists, `python3` otherwise. The
+settings screen probes Python, ffmpeg, Ollama and the models every time it
+opens, says what to do about each, and can pull a model with a progress bar.
+When the window opens on a machine that lacks any of the four, a line above
+the canvas says so and opens that screen.
 
 There is no installer step and no project file. The host serves, in order:
 

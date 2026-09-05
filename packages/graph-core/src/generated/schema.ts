@@ -447,6 +447,15 @@ export type Request =
 	/**  Where to put it, relative to the models folder. */
 	name: string,
 } } | 
+/**
+ *  Pull a model into Ollama, explicitly and visibly (SPEC §15.13).
+ * 
+ *  Answers at once; progress arrives as `run.progress` events carrying
+ *  the model's name, and the last of them says `done`.
+ */
+{ method: "models.pull"; params: {
+	model: string,
+} } | 
 /**  Read one graph. */
 { method: "graph.open"; params: {
 	path: string,
@@ -682,6 +691,28 @@ export type RunEvent = { event: "run.started"; data: {
 { event: "held"; data: {
 	run: string,
 	held: boolean,
+} } | 
+/**
+ *  Something long is being fetched: a model pulled into Ollama, weights
+ *  downloaded. One event per step, the last one `done`, with `error` set
+ *  when it did not finish. The shell draws a bar from it (SPEC §15.13:
+ *  downloads are explicit and visible).
+ */
+{ event: "progress"; data: {
+	run: string,
+	/**  What is being fetched, as a person would name it: `llama3.2:3b`. */
+	what: string,
+	/**
+	 *  Bytes, as a float because the schema crosses to TypeScript, which
+	 *  has no integer wide enough for a model's size.
+	 */
+	completed: number,
+	/**  Zero until the server says how much there is. */
+	total: number,
+	/**  The last word from the server: `pulling manifest`, `success`. */
+	status: string,
+	done: boolean,
+	error: string | null,
 } } | 
 /**  A wire carried a value. The canvas animates it (SPEC §5.3). */
 { event: "wire.active"; data: {

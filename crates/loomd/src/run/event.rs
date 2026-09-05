@@ -211,6 +211,25 @@ pub enum RunEvent {
     #[serde(rename = "held")]
     Held { run: String, held: bool },
 
+    /// Something long is being fetched: a model pulled into Ollama, weights
+    /// downloaded. One event per step, the last one `done`, with `error` set
+    /// when it did not finish. The shell draws a bar from it (SPEC §15.13:
+    /// downloads are explicit and visible).
+    Progress {
+        run: String,
+        /// What is being fetched, as a person would name it: `llama3.2:3b`.
+        what: String,
+        /// Bytes, as a float because the schema crosses to TypeScript, which
+        /// has no integer wide enough for a model's size.
+        completed: f64,
+        /// Zero until the server says how much there is.
+        total: f64,
+        /// The last word from the server: `pulling manifest`, `success`.
+        status: String,
+        done: bool,
+        error: Option<String>,
+    },
+
     /// A wire carried a value. The canvas animates it (SPEC §5.3).
     #[serde(rename = "wire.active")]
     WireActive { run: String, wire: String },
@@ -318,6 +337,7 @@ impl RunEvent {
             | RunEvent::FrameState { run, .. }
             | RunEvent::Face { run, .. }
             | RunEvent::Held { run, .. }
+            | RunEvent::Progress { run, .. }
             | RunEvent::WireActive { run, .. }
             | RunEvent::Console { run, .. }
             | RunEvent::ToolCall { run, .. }

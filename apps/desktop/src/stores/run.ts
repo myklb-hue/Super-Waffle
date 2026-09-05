@@ -50,6 +50,17 @@ export interface FaceRun {
   colour: string;
 }
 
+/** Something long being fetched — a model pulled into Ollama — as the engine
+ *  last reported it (SPEC §15.13: downloads are explicit and visible). */
+export interface ProgressRun {
+  what: string;
+  completed: number;
+  total: number;
+  status: string;
+  done: boolean;
+  error: string | null;
+}
+
 export interface ConsoleLine {
   /** Milliseconds since the run started, which is what the drawer shows. */
   at: number;
@@ -110,6 +121,8 @@ interface RunStore {
   previews: Record<string, string>;
   /** What each face is wearing, by block id (SPEC §11.3). */
   faces: Record<string, FaceRun>;
+  /** Pulls and downloads in flight or lately finished, by what they fetch. */
+  progress: Record<string, ProgressRun>;
   frames: Record<string, FrameRun>;
   /** Whether the graph is holding: events queue, nothing runs (SPEC §8.1). */
   paused: boolean;
@@ -148,6 +161,7 @@ const EMPTY = {
   armed: {},
   previews: {},
   faces: {},
+  progress: {},
   frames: {},
   paused: false,
   recent: [],
@@ -199,6 +213,7 @@ export const useRun = create<RunStore>((set, get) => ({
       case 'run.started':
         set({
           ...EMPTY,
+          progress: get().progress,
           run: event.data.run,
           phase: 'running',
           startedAt: Date.now(),
@@ -305,6 +320,24 @@ export const useRun = create<RunStore>((set, get) => ({
 
       case 'held':
         set({ paused: event.data.held });
+        break;
+
+      // A pull or a download is not a run's business and outlives `run.started`
+      // resetting the rest, so it is kept on its own key rather than in EMPTY.
+      case 'progress':
+        set((s) => ({
+          progress: {
+            ...s.progress,
+            [event.data.what]: {
+              what: event.data.what,
+              completed: event.data.completed,
+              total: event.data.total,
+              status: event.data.status,
+              done: event.data.done,
+              error: event.data.error,
+            },
+          },
+        }));
         break;
 
       case 'wire.active':

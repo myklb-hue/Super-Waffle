@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Build Cyberloom from this checkout and install it, with a menu entry.
 #
-#   scripts/install.sh              build, then install for this user (~/.local)
+#   scripts/install.sh              build, install for this user (~/.local),
+#                                   and provision what a first run needs
 #   scripts/install.sh --system     the same, into /usr/local, with sudo
 #   scripts/install.sh --uninstall  remove what a previous run put there
+#   scripts/install.sh --no-provision   skip Ollama, Python and the models
 #
 # Written for CachyOS and anything else that has pacman; on another
 # distribution it skips the dependency step and tells you what it would have
@@ -23,6 +25,11 @@
 # apps/desktop/src-tauri/src/lib.rs). If that folder does not exist yet, this
 # script creates it and copies the examples in, so the first window has
 # something to look at. It never touches a ~/Cyberloom that already exists.
+#
+# After installing it runs scripts/provision.sh, which starts Ollama and pulls
+# the default model, makes the Python environment the perception helper runs
+# in, and fetches the weights the example graphs use. That is what makes the
+# application run, rather than open, the first time (SPEC §15.13).
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,6 +39,7 @@ system=0
 skip_deps=0
 skip_build=0
 uninstall=0
+provision=1
 
 usage() {
   sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
@@ -44,6 +52,7 @@ while [ $# -gt 0 ]; do
     --skip-deps) skip_deps=1 ;;
     --no-build) skip_build=1 ;;
     --uninstall) uninstall=1 ;;
+    --no-provision) provision=0 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -63,7 +72,7 @@ as_owner() {
 # ---------------------------------------------------------------- uninstall
 if [ "$uninstall" = 1 ]; then
   say "Removing Cyberloom from $prefix"
-  as_owner rm -f "$prefix/bin/cyberloom" \
+  as_owner rm -f "$prefix/bin/cyberloom" "$prefix/bin/cyberloom-provision" \
     "$prefix/share/applications/cyberloom.desktop" \
     "$prefix/share/icons/hicolor/512x512/apps/cyberloom.png"
   as_owner rm -rf "$prefix/lib/cyberloom" "$prefix/share/cyberloom" "$prefix/share/licenses/cyberloom"
@@ -78,8 +87,15 @@ fi
 # only when there is no cargo already, because the `rust` package conflicts
 # with a rustup install, and pacman would refuse rather than pick one.
 if [ "$skip_deps" = 0 ]; then
-  packages=(base-devel git nodejs npm pkgconf webkit2gtk-4.1 gtk3 libayatana-appindicator librsvg ffmpeg)
+  packages=(base-devel git nodejs npm pkgconf webkit2gtk-4.1 gtk3 libayatana-appindicator librsvg ffmpeg python curl)
   command -v cargo >/dev/null || packages+=(rust)
+  # Ollama, built for whatever GPU is here: the plain package is CPU only.
+  if ! command -v ollama >/dev/null; then
+    if command -v nvidia-smi >/dev/null; then packages+=(ollama-cuda)
+    elif command -v rocminfo >/dev/null; then packages+=(ollama-rocm)
+    else packages+=(ollama)
+    fi
+  fi
   if command -v pacman >/dev/null; then
     # -Syu, not -S: on Arch a package list that has not been synced names
     # files the mirrors no longer have, and the install fails with a 404 on
@@ -135,6 +151,9 @@ as_owner cp -r rigs/. "$prefix/lib/cyberloom/rigs/"
 as_owner install -Dm644 apps/desktop/src-tauri/icons/icon.png \
   "$prefix/share/icons/hicolor/512x512/apps/cyberloom.png"
 as_owner install -Dm644 LICENSE "$prefix/share/licenses/cyberloom/LICENSE"
+as_owner install -Dm755 scripts/provision.sh "$prefix/bin/cyberloom-provision"
+as_owner install -Dm644 crates/loomd/py/perceive.py "$prefix/lib/cyberloom/py/perceive.py"
+as_owner install -Dm644 crates/loomd/py/requirements.txt "$prefix/lib/cyberloom/py/requirements.txt"
 as_owner mkdir -p "$prefix/share/cyberloom/graphs"
 as_owner install -m644 fixtures/graphs/*.loom "$prefix/share/cyberloom/graphs/"
 
@@ -156,6 +175,18 @@ if [ ! -e "$HOME/Cyberloom" ]; then
   mkdir -p "$HOME/Cyberloom/graphs"
   cp fixtures/graphs/*.loom "$HOME/Cyberloom/graphs/"
   say "Created ~/Cyberloom with the example graphs in it"
+fi
+
+# --------------------------------------------------------------- provision
+# Ollama and its model, the Python environment and the perception helper, the
+# weights. Each part is skipped when it is already there, and a part that
+# fails is reported without stopping the rest.
+if [ "$provision" = 1 ]; then
+  say "Provisioning what a first run needs (Ollama, Python, models)"
+  if ! "$here/scripts/provision.sh"; then
+    warn "provisioning did not finish; the application still runs, and its settings screen says what is missing."
+    echo "    Finish it with: $here/scripts/provision.sh"
+  fi
 fi
 
 # ------------------------------------------------------------------- report

@@ -13,7 +13,7 @@
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// What the user chose, stored in `workspace.yaml`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
@@ -98,6 +98,55 @@ impl WorkspaceSettings {
     }
 }
 
+/// Where Cyberloom keeps what is per user rather than per workspace: the
+/// perception helper, its virtual environment, the weights. Under the XDG
+/// data folder, so `~/.local/share/cyberloom` unless the environment says
+/// otherwise.
+pub fn data_dir() -> PathBuf {
+    if let Some(xdg) = std::env::var_os("XDG_DATA_HOME").filter(|v| !v.is_empty()) {
+        return PathBuf::from(xdg).join("cyberloom");
+    }
+    std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join(".local/share/cyberloom")
+}
+
+/// The models folder: where the perception helper and the weights live.
+///
+/// `CYBERLOOM_MODELS` first, for a test or a second install. Then the
+/// workspace's own setting, absolute or relative to the workspace. Otherwise
+/// the user's data folder — per user rather than per workspace, because
+/// weights are large, shared between graphs, and have no business in a folder
+/// someone might commit. The probe, the engine and the downloader all resolve
+/// it here, so they cannot disagree about where "here" is.
+pub fn models_folder(settings: &WorkspaceSettings, root: &Path) -> PathBuf {
+    if let Some(set) = std::env::var_os("CYBERLOOM_MODELS").filter(|v| !v.is_empty()) {
+        return PathBuf::from(set);
+    }
+    match settings.models.as_deref() {
+        Some(named) if Path::new(named).is_absolute() => PathBuf::from(named),
+        Some(named) => root.join(named),
+        None => data_dir().join("models"),
+    }
+}
+
+/// The Python that runs the perception helper and custom Python blocks.
+///
+/// The workspace's choice when it made one; otherwise the virtual environment
+/// provisioning made, when it is there — that is where the helper's packages
+/// are; otherwise whatever `python3` resolves to.
+pub fn python_for(settings: &WorkspaceSettings) -> PathBuf {
+    if let Some(chosen) = settings.python.as_deref().filter(|p| !p.trim().is_empty()) {
+        return PathBuf::from(chosen);
+    }
+    let venv = data_dir().join("venv/bin/python");
+    if venv.is_file() {
+        return venv;
+    }
+    PathBuf::from("python3")
+}
+
 /// What is actually on this machine (SPEC §15.13, and slice 12's first run).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -131,9 +180,12 @@ impl Probe {
     pub fn now(settings: &WorkspaceSettings, root: &Path) -> Self {
         Self {
             python: version(
-                settings.python.as_deref().unwrap_or("python3"),
+                &python_for(settings).display().to_string(),
                 "Python",
-                Some("Install python3, or point at an interpreter in Settings."),
+                Some(
+                    "Run scripts/provision.sh (installed as cyberloom-provision): it makes the \
+                     Python environment the perception helper runs in.",
+                ),
             ),
             ffmpeg: version(
                 "ffmpeg",
@@ -141,7 +193,7 @@ impl Probe {
                 Some("Install ffmpeg. Without it a Webcam, Microphone or Speaker cannot run."),
             ),
             ollama: ollama(settings.ollama.as_deref()),
-            models: models(settings.models.as_deref(), root),
+            models: models(&models_folder(settings, root)),
         }
     }
 }
@@ -215,13 +267,10 @@ fn ollama(endpoint: Option<&str>) -> Found {
     }
 }
 
-fn models(chosen: Option<&str>, root: &Path) -> Found {
-    let folder = match chosen {
-        Some(named) if Path::new(named).is_absolute() => Path::new(named).to_path_buf(),
-        Some(named) => root.join(named),
-        None => root.join("models"),
-    };
-    let weights = std::fs::read_dir(&folder)
+/// The models folder: the helper the engine runs, and the weights it loads.
+fn models(folder: &Path) -> Found {
+    let helper = folder.join("perceive.py").is_file();
+    let weights = std::fs::read_dir(folder)
         .map(|entries| {
             entries
                 .filter_map(|e| e.ok())
@@ -235,15 +284,17 @@ fn models(chosen: Option<&str>, root: &Path) -> Found {
         .unwrap_or(0);
     Found {
         name: "Models".to_owned(),
-        ok: weights > 0,
+        ok: helper && weights > 0,
         detail: format!(
-            "{} · {weights} weight{}",
+            "{} · helper {} · {weights} weight{}",
             folder.display(),
+            if helper { "ready" } else { "missing" },
             if weights == 1 { "" } else { "s" }
         ),
-        fix: (weights == 0).then(|| {
-            "Perception blocks need weights here. Downloading them is explicit and \
-             resumable, and offline is a supported state."
+        fix: (!helper || weights == 0).then(|| {
+            "Run scripts/provision.sh (installed as cyberloom-provision). It installs the \
+             perception helper and fetches the weights; each download is explicit and \
+             skipped once it is here."
                 .to_owned()
         }),
     }

@@ -95,9 +95,17 @@ export async function refreshRigs(): Promise<void> {
   }
 }
 
-/** Every rig the shell has, in name order. */
+/** The four that ship, in the order Figure 15 shows them. */
+const SHIPPED_ORDER = ['line', 'robot', 'orb', 'pixel'];
+
+/** Every rig the shell has: the shipped four in their order, then the
+ *  workspace's own, by name. */
 export function rigIds(rigs: Record<string, KnownRig> = useRigs.getState().rigs): string[] {
-  return Object.keys(rigs).sort();
+  const shipped = SHIPPED_ORDER.filter((id) => id in rigs);
+  const own = Object.keys(rigs)
+    .filter((id) => !SHIPPED_ORDER.includes(id))
+    .sort();
+  return [...shipped, ...own];
 }
 
 /** The states of one rig, or an empty set for a rig nobody has. */

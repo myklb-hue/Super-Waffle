@@ -233,3 +233,50 @@
   align-items: center;
   gap: var(--sp-4);
 }
+
+/* The Avatar panel (Figure 15). */
+.rigTiles {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.rigTiles .rigChoice {
+  flex: 1;
+  min-width: 0;
+}
+
+.rigFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.hint {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-prose);
+  color: var(--text-low);
+}
+
+.readout {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+  margin-bottom: var(--sp-3);
+}
+
+.liveLines {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: 1.7;
+  color: var(--text-mid);
+}

@@ -1265,3 +1265,57 @@ What this environment cannot prove:
   captures, the settings probe, the live camera — and failed here until it was
   installed; with it, all 305 pass. The avatar's own suite is hermetic either
   way, now that the scripted voice writes its own audio.
+
+
+---
+
+Found on the first real run, on CachyOS, and in looking at the Avatar against
+the mockups afterwards:
+
+- **The rigs were not the mockups' rigs.** The shipped SVGs were drawn by hand
+  "from the mockups" and had drifted: coloured mouths on a monochrome Line, an
+  Orb that never changed colour, a cyan Pixel where the figure is amber, a
+  Robot with different eyes. `scripts/gen-rigs.mjs` now carries the mockup
+  generator's own drawing code and writes the rigs from it, split into the
+  `#eyes` and `#mouth` groups the shell animates, plus a `sleepy` in each
+  rig's idiom. The rigs cannot drift from Figure 15 again without the script
+  changing.
+- **Stage and Summary were not Figure 16 and the Assistant figure.** Stage kept
+  the full header and the port labels and drew a small face in the middle;
+  Summary showed "rig / line". Stage is now the 24 px strip, dots only on the
+  edges, the face on the field colour filling the box, and the state in the
+  corner in the words the `state` port uses; Summary is the tile with the face
+  and two lines of state, and the header names the rig.
+- **The Avatar's inspector was a generic settings dump.** It is Figure 15's
+  panel now — Rig, Vocabulary, Inputs, Idle, View, Output, Live — with the
+  figure's words, the rig's numbers as placeholders, and the block's as values.
+  The idle defaults are the figure's too: a blink every 3–6 s, twelve breaths a
+  minute, four seconds to neutral, ten minutes to sleep; a blink is a range.
+- **Ollama and Python were optional, and nothing provisioned anything.** The
+  perception helper the engine runs (`perceive.py`) did not exist; the engine
+  looked for it in one models folder and the settings screen probed another;
+  the run used `python3` rather than any environment with the packages in it.
+  Now: the helper is in the repository with the seven tasks the `Perception`
+  trait asks for; `scripts/provision.sh` starts Ollama, pulls the model, makes
+  the venv, installs the helper and fetches the weights; the install script
+  runs it and the AUR package names it; `settings::models_folder` and
+  `settings::python_for` are the one answer for the probe, the run and the
+  downloader; Python and Ollama are hard dependencies.
+- **Nothing said anything on first run.** A window on a machine missing any of
+  the four now carries a line above the canvas that opens the settings screen,
+  and that screen can pull a model with a bar drawn from a new `progress`
+  event, so a download is visible rather than a promise.
+- **The settings screen was transparent.** It set its background with a token
+  that did not exist (`--bg-0`, also used by the picker and the tab strip). The
+  aliases are defined now.
+- **A release build without the Tauri CLI was a dev build**, recorded above.
+
+What this environment cannot prove:
+
+- **Provisioning end to end.** Hugging Face is unreachable from here, so the
+  voice, the Whisper model and the embedding model were not fetched; the
+  helper's `affect` task was run for real (`valence 0.70` for "what a lovely
+  morning"), its `classify` and `embed` got as far as the download and no
+  further, and `detect`, `recognise`, `transcribe` and `speak` are written to
+  their libraries' documented APIs and unrun. The first machine to run
+  `scripts/provision.sh` to the end is the one that proves it.

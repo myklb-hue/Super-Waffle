@@ -102,17 +102,48 @@ impl Engine {
                 }))
             }
 
+            Request::ModelsPull { model } => {
+                let root = self.workspace.root().to_path_buf();
+                let settings = crate::settings::WorkspaceSettings::read(&root);
+                let endpoint = settings.ollama.clone();
+                let session = Arc::clone(session);
+                let run = format!("pull-{model}");
+                let started = std::thread::Builder::new()
+                    .name(format!("loomd-pull-{model}"))
+                    .spawn(move || {
+                        let progress = |completed: u64, total: u64, status: &str, done, error| {
+                            session.send_event(&crate::run::event::RunEvent::Progress {
+                                run: run.clone(),
+                                what: model.clone(),
+                                completed: completed as f64,
+                                total: total as f64,
+                                status: status.to_owned(),
+                                done,
+                                error,
+                            });
+                        };
+                        let pulled = crate::run::ollama::pull(
+                            endpoint.as_deref(),
+                            &model,
+                            &mut |completed, total, status| {
+                                progress(completed, total, status, false, None)
+                            },
+                        );
+                        match pulled {
+                            Ok(()) => progress(1, 1, "success", true, None),
+                            Err(why) => progress(0, 0, "failed", true, Some(why)),
+                        }
+                    });
+                match started {
+                    Ok(_) => Reply::Acknowledged(rpc::Acknowledged { ok: true, count: 1 }),
+                    Err(e) => Reply::Error(RpcError::new("pull", e.to_string())),
+                }
+            }
+
             Request::ModelsFetch { url, name } => {
                 let root = self.workspace.root().to_path_buf();
                 let settings = crate::settings::WorkspaceSettings::read(&root);
-                let folder = match settings.models.as_deref() {
-                    Some(named) if std::path::Path::new(named).is_absolute() => {
-                        std::path::PathBuf::from(named)
-                    }
-                    Some(named) => root.join(named),
-                    None => root.join("models"),
-                };
-                let into = folder.join(&name);
+                let into = crate::settings::models_folder(&settings, &root).join(&name);
                 let session = Arc::clone(session);
                 let run = format!("fetch-{name}");
                 // On a thread, because a download is minutes and the socket

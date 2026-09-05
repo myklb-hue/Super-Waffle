@@ -28,8 +28,8 @@ export function Face({
   gesture,
   gestureSeq = 0,
   asleep = false,
-  blinkMs = 4000,
-  breathePerMin = 13,
+  blinkMs = 4500,
+  breathePerMin = 12,
   idle = true,
   size = 200,
 }: {
@@ -162,7 +162,8 @@ function useBlink(on: boolean, every: number): boolean {
           setTimeout(() => alive && setBlinking(false), 120);
           again();
         },
-        every * (0.65 + Math.random() * 0.8),
+        // A third either side: "every 3–6 s" around a 4.5 s middle.
+        every * (0.67 + Math.random() * 0.66),
       );
     };
     again();

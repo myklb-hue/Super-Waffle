@@ -122,6 +122,12 @@ export async function workspaceSettings() {
   return reply.data;
 }
 
+/** Pull a model into Ollama. Progress arrives as `progress` events. */
+export async function pullModel(model: string): Promise<void> {
+  const reply = await call({ method: 'models.pull', params: { model } });
+  if (reply.result === 'error') throw new Error(reply.data.message);
+}
+
 /** Every rig this workspace can wear, with its drawings (SPEC §11.1). */
 export async function listRigs(): Promise<RigInfo[]> {
   const reply = await call({ method: 'workspace.rigs' });
