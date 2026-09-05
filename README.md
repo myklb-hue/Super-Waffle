@@ -157,7 +157,7 @@ the workspace, and packaging.
 
 What is genuinely proven, and what is not, is written down slice by slice at the
 end of `docs/PLAN.md`. The short version: everything above the hardware is
-tested — 290 Rust tests and 71 TypeScript ones — and three things need a machine
+tested — 305 Rust tests and 78 TypeScript ones — and three things need a machine
 this was not built on. There is no camera or servo here, so `lavfi:` and a
 scripted controller stand in through the same code paths that open `/dev/video0`
 and a serial port. The network policy denies the model hosts, so perception has
