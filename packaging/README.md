@@ -22,6 +22,26 @@ broken on several drivers and the symptom is a window that comes up black, with
 nothing in any log to say why. It is left alone on X11, where the accelerated
 path is the one that works.
 
+## The install script
+
+`scripts/install.sh` is for the machine in front of you: it runs `pacman` for
+the dependencies, builds the shell and the host from the checkout, and installs
+the result under `~/.local` (or `/usr/local` with `--system`), with a menu
+entry. Running it again is an upgrade; `--uninstall` reverses it. It is what to
+use until there is a release for the `PKGBUILD` to fetch, and it is quicker than
+the `PKGBUILD` afterwards too, because it builds in the checkout and so builds
+incrementally.
+
+It installs the binary and the rigs together in `lib/cyberloom/`, which is the
+first place `rigs_near()` looks, and `launcher.sh` as `bin/cyberloom`. The
+launcher does for an installed binary what `AppRun.sh` does for the AppImage:
+sets `WEBKIT_DISABLE_DMABUF_RENDERER=1` on Wayland when nothing else has, so a
+menu entry on an NVIDIA machine opens a window rather than a black rectangle.
+
+If `~/Cyberloom` does not exist yet, the script creates it with the four example
+graphs in it, so the first window has something on the canvas. A `~/Cyberloom`
+that already exists is never touched.
+
 ## AUR
 
 `PKGBUILD` builds from a release tarball. `ffmpeg` is a hard dependency — a
