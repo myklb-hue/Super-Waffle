@@ -1234,6 +1234,15 @@ Found while closing out slice 10 (Avatar) against SPEC §11, after the fact:
   model about them, unless the switch is off or an Affect block is wired to
   `express`, which the setting's own hint names as the alternative.
 
+- **A release build without the Tauri CLI was a dev build.** Found on the
+  first real run on CachyOS: the installed window said "Could not connect to
+  localhost". Tauri decides dev against release by its `custom-protocol`
+  feature, not by the cargo profile; the CLI turns it on for `tauri build`,
+  and `cargo build --release`, which the install script and the `PKGBUILD`
+  both ran, does not, so the host loaded the Vite dev server's URL. Both pass
+  the feature now, and the host's `build.rs` reads the flag Tauri exports and
+  refuses a release build without it.
+
 Two decisions worth recording:
 
 - **A settle timer of zero means never.** A graph that drives every change

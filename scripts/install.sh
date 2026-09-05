@@ -113,7 +113,10 @@ if [ "$skip_build" = 0 ]; then
   say "Building the shell"
   npm run build -w @cyberloom/desktop
   say "Building the host and the engine (the first time takes a while)"
-  cargo build --release --bin cyberloom
+  # `custom-protocol` is what makes this a release build in Tauri's eyes:
+  # without it the window would look for the Vite dev server (see
+  # apps/desktop/src-tauri/Cargo.toml).
+  cargo build --release --bin cyberloom --features custom-protocol
 fi
 
 [ -x "$binary" ] || die "no binary at $binary; run without --no-build"
