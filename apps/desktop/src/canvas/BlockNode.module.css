@@ -369,3 +369,45 @@
 .stageSide {
   min-width: 0;
 }
+
+/* A Status light: the mood's colour, breathing (SPEC §11.7). */
+.lampRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.lamp {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--lamp, #56c7d6);
+  opacity: 0.35;
+  box-shadow: 0 0 0 0 transparent;
+  transition:
+    background 300ms ease-out,
+    opacity 300ms ease-out;
+}
+
+.lampLit {
+  opacity: 1;
+  animation: lampBreathe 4.6s ease-in-out infinite;
+}
+
+@keyframes lampBreathe {
+  0%,
+  100% {
+    box-shadow: 0 0 6px 1px var(--lamp, #56c7d6);
+  }
+  50% {
+    box-shadow: 0 0 16px 5px var(--lamp, #56c7d6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lampLit {
+    animation: none;
+    box-shadow: 0 0 10px 3px var(--lamp, #56c7d6);
+  }
+}

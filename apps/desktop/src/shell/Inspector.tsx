@@ -9,6 +9,7 @@ import {
   type SettingDef,
 } from '@cyberloom/graph-core';
 import {
+  Button,
   Callout,
   Chip,
   Field,
@@ -23,7 +24,8 @@ import {
   type IconName,
 } from '@cyberloom/ui';
 import { Face } from '../avatar/Face';
-import { RIGS, expressionsOf } from '../avatar/rigs';
+import { expressionsOf, rigIds, useRigs } from '../avatar/rigs';
+import { openFaceWindow } from '../avatar/window';
 import { portTypeOf, useDocument, type Selection } from '../stores/document';
 import { elapsed, useRun } from '../stores/run';
 import { ago, useSource } from '../stores/source';
@@ -301,33 +303,40 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
 function FaceSections({ block }: { block: Block }) {
   const setSetting = useDocument((d) => d.setSetting);
   const live = useRun((r) => r.faces[block.id]);
+  const known = useRigs((r) => r.rigs);
   const [preview, setPreview] = useState<string | null>(null);
   if (block.kind !== 'avatar') return null;
 
   const rig = (block.settings.rig as string) ?? 'line';
-  const words = expressionsOf(rig).filter((e) => e !== 'speaking');
+  const words = expressionsOf(rig, known[rig]?.states ?? {}).filter((e) => e !== 'speaking');
   const showing = preview ?? live?.expression ?? 'neutral';
+  const gestures = known[rig]?.gestures ?? [];
+  const output = typeof block.settings.output === 'string' ? block.settings.output : 'canvas';
 
   return (
     <>
       <Section title="Rigs" right={<Chip label={rig} color="cat-actuators" />}>
         <div className={s.rigRow}>
-          {RIGS.map((name) => (
+          {rigIds(known).map((name) => (
             <button
               key={name}
               type="button"
               className={`${s.rigChoice} ${name === rig ? s.rigChosen : ''}`}
               onClick={() => setSetting(block.id, 'rig', name)}
-              title={name}
+              title={known[name]?.shipped ? name : `${name} — from this workspace`}
             >
               <Face rig={name} expression={showing} idle={false} size={48} />
-              <span className={s.rigName}>{name}</span>
+              <span className={s.rigName}>
+                {name}
+                {known[name] && !known[name].shipped ? ' ·' : ''}
+              </span>
             </button>
           ))}
         </div>
         <div className={s.summary}>
           A rig is a folder of states, not code. Adding one is copying a folder
-          into the workspace.
+          into the workspace's <code>rigs/</code>; one with a shipped rig's name
+          replaces it. A dot marks a rig that came from this workspace.
         </div>
       </Section>
 
@@ -355,15 +364,41 @@ function FaceSections({ block }: { block: Block }) {
           from the rig, so it can only ask for expressions that exist.
           <code>speaking</code> is not among them: the mouth is driven by the
           speech port, never by a command.
+          {gestures.length > 0
+            ? ` Gestures: ${gestures.join(', ')}.`
+            : ' This rig has no gestures.'}
         </div>
       </Section>
+
+      {output === 'window' && (
+        <Section title="Window">
+          <div className={s.summary}>
+            The face opens in a window of its own when the graph first shows it
+            {block.settings.alwaysOnTop === true ? ', kept on top' : ''}
+            {typeof block.settings.screen === 'number' ? `, on screen ${block.settings.screen}` : ''}
+            . The canvas keeps showing it too.
+          </div>
+          <Button
+            label="Open now"
+            icon="face"
+            onClick={() =>
+              void openFaceWindow(block.id, rig, {
+                alwaysOnTop: block.settings.alwaysOnTop === true,
+                screen: typeof block.settings.screen === 'number' ? block.settings.screen : null,
+              })
+            }
+          />
+        </Section>
+      )}
 
       {live && (
         <Section
           title="Live"
           right={
             <Chip
-              label={live.mouth.length > 0 ? 'speaking' : live.expression}
+              label={
+                live.asleep ? 'asleep' : live.mouth.length > 0 ? 'speaking' : live.expression
+              }
               color="ok"
               dot
             />
@@ -376,13 +411,29 @@ function FaceSections({ block }: { block: Block }) {
               intensity={live.intensity}
               mouth={live.mouth}
               gaze={live.gaze}
+              gazeAt={live.gazeAt}
+              gesture={live.gesture}
+              gestureSeq={live.gestureSeq}
+              asleep={live.asleep}
+              blinkMs={live.blinkMs}
+              breathePerMin={live.breathePerMin}
               size={96}
             />
             <div>
               <div className={s.summary}>
                 {live.expression} at {live.intensity.toFixed(1)}
+                {live.asleep ? ' · asleep' : ''}
               </div>
-              {live.gaze && <div className={s.summary}>looking at {live.gaze}</div>}
+              {live.gaze && (
+                <div className={s.summary}>
+                  looking at {live.gaze}
+                  {live.gazeAt ? ` (${live.gazeAt[0].toFixed(2)}, ${live.gazeAt[1].toFixed(2)})` : ''}
+                </div>
+              )}
+              <div className={s.summary}>
+                blinks about every {(live.blinkMs / 1000).toFixed(0)} s
+                {live.breathePerMin > 0 ? `, ${live.breathePerMin} breaths a minute` : ', not breathing'}
+              </div>
             </div>
           </div>
         </Section>

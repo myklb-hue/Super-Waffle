@@ -69,9 +69,23 @@ def door_check(frame: Image, threshold: float = 0.6) -> Data:
 
 ## Running it
 
+On CachyOS, or anything else with `pacman`, one script installs the
+dependencies, builds, and puts Cyberloom in your application menu:
+
+```sh
+scripts/install.sh            # into ~/.local, no root needed beyond pacman
+scripts/install.sh --system   # into /usr/local instead
+```
+
+Run it again after pulling to upgrade; `--uninstall` takes it out again. See
+[`packaging/`](packaging/) for what it installs where.
+
+To work on it rather than just run it:
+
 ```sh
 npm ci
 npm run gen          # Rust types → TypeScript, and the catalogue
+cargo build -p loomd # the engine the dev server starts as a child process
 npm run dev          # the shell, with the engine as a child process
 ```
 
@@ -143,7 +157,7 @@ the workspace, and packaging.
 
 What is genuinely proven, and what is not, is written down slice by slice at the
 end of `docs/PLAN.md`. The short version: everything above the hardware is
-tested — 290 Rust tests and 71 TypeScript ones — and three things need a machine
+tested — 305 Rust tests and 78 TypeScript ones — and three things need a machine
 this was not built on. There is no camera or servo here, so `lavfi:` and a
 scripted controller stand in through the same code paths that open `/dev/video0`
 and a serial port. The network policy denies the model hosts, so perception has

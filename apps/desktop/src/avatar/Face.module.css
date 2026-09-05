@@ -1,11 +1,15 @@
-/* The rig, and the four things that make it alive (SPEC §11.4). */
+/* The rig, and the things that make it alive (SPEC §11.4). */
 .face {
   display: block;
   position: relative;
   opacity: var(--intensity, 1);
+  transition: opacity 400ms ease-out;
 }
 
-.face svg {
+/* The drawing itself. A second box so that a gesture and a breath can each
+   have the transform: they are different motions on different clocks. */
+.body,
+.body svg {
   width: 100%;
   height: 100%;
   display: block;
@@ -16,21 +20,21 @@
 .face :global(#eyes) {
   transform: translate(var(--gaze-x, 0), var(--gaze-y, 0)) scaleY(var(--blink, 1));
   transform-origin: center 40%;
-  transition:
-    transform 90ms ease-out;
+  transition: transform 90ms ease-out;
 }
 
 .face :global(#mouth) {
   /* The envelope opens the mouth. 1 is closed rather than 0 so a rig whose
      mouth is a line still has a line to see. */
-  transform: scaleY(calc(1 + var(--mouth, 0) * 1.15));
+  transform: scaleY(calc(1 + var(--mouth, 0)));
   transform-origin: center 65%;
   transition: transform 70ms ease-out;
 }
 
-/* Breathing: slow, small, and never in time with the blink. */
+/* Breathing: slow, small, and never in time with the blink. The period is the
+   rig's or the block's, through --breath. */
 .alive {
-  animation: breathe 4.6s ease-in-out infinite;
+  animation: breathe var(--breath, 4.6s) ease-in-out infinite;
 }
 
 @keyframes breathe {
@@ -43,8 +47,61 @@
   }
 }
 
+/* Asleep: lidded eyes come from --blink, the dim from --intensity; this is
+   only the slower breath of someone not awake. */
+.asleep {
+  animation: breathe 7s ease-in-out infinite;
+}
+
+/* Gestures (SPEC §11.2): one-shots on the drawing, not on the breath. */
+.nod {
+  animation: nod 700ms ease-in-out 1;
+}
+
+.shake {
+  animation: shake 700ms ease-in-out 1;
+}
+
+@keyframes nod {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(5%);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(3.5%);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4%);
+  }
+  40% {
+    transform: translateX(4%);
+  }
+  60% {
+    transform: translateX(-3%);
+  }
+  80% {
+    transform: translateX(2%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .alive {
+  .alive,
+  .asleep,
+  .nod,
+  .shake {
     animation: none;
   }
   .face :global(#eyes),

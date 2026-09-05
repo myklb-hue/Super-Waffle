@@ -1186,3 +1186,73 @@ What this environment cannot prove:
   fetched from a server the test starts, been cut off mid-file, and continued
   from where it stopped with a `Range` request — which is the part that is easy
   to get wrong.
+
+---
+
+Found while closing out slice 10 (Avatar) against SPEC §11, after the fact:
+
+- **The idle was half there.** The blink and the breath were in the shell; the
+  settle back to neutral, the sleep after a quiet spell and the wake on the next
+  event were nowhere, and the `idle:` block every `rig.yaml` carries was parsed
+  into a struct nothing read. The Avatar's own `settleSec`, `sleepAfterMin`,
+  `blink` and `breathePerMin` settings were declared and read by nothing either:
+  two sources of idle parameters, both dead. The settle and the sleep now run
+  in the live loop beside the memory consolidators, because they change what
+  the face *is* and the `state` port has to say the same thing the window
+  shows; the blink and the breath stay in the shell, with their numbers sent
+  in the face event so the two never disagree. The block's settings override
+  the rig's where they are set, and only there.
+- **A gesture was a no-op.** The engine validated `nod` and `shake` and answered
+  ok, and the face event had no field for them, so nothing ever nodded. The
+  event carries a gesture as a one-shot now, and the shell counts them so the
+  same gesture twice in a row plays twice.
+- **`face.render` did not exist, and neither did the window.** SPEC §11.5's
+  three outputs — a window, a screen, a device — had no setting and no code.
+  `output` is a setting now: a device is a USB device block in the graph that
+  gets one line per change, with a matrix rig's face as the sixty-four bits a
+  matrix shows, read from the drawing rather than kept as a second copy of it;
+  a window is a second webview on the same event stream, opened by the host.
+- **The Status light and the Sound cue were the Avatar with a different id.**
+  They emitted a face event and did nothing in their own medium. A light now
+  sends its device the mood, its colour and how much of it; a cue plays the
+  file named for the mood in its pack, on a change of mood and not on every
+  syllable.
+- **`speaking.svg` was never drawn.** The shell opened the current expression's
+  mouth with a scale transform, which distorted the Pixel grid and ignored the
+  mouth every rig's author had drawn for talking. While the envelope is open
+  the talking mouth is swapped into the current expression, so a smile keeps
+  smiling while it speaks.
+- **A workspace rig had a vocabulary and no face.** The model side worked and
+  the shell drew "no face to draw here". `workspace.rigs` hands the drawings
+  over, a state that carries script is refused on the way, and the picker
+  marks which rigs came from the workspace.
+- **The scripted voice needed ffmpeg.** A machine without one could not run the
+  lip-sync tests, or auto-affect's. It writes its own WAV now — a soft tone in
+  syllable-sized bursts — and the envelope's test uses the same writer.
+- **Auto-affect from speech had a switch and no behaviour.** The audio remembers
+  its words (`Media.said`, set by text-to-speech) and the Avatar asks the affect
+  model about them, unless the switch is off or an Affect block is wired to
+  `express`, which the setting's own hint names as the alternative.
+
+Two decisions worth recording:
+
+- **A settle timer of zero means never.** A graph that drives every change
+  itself wants a face that holds what it was told; a face that snapped back to
+  neutral on the next idle tick would look like a bug in that graph.
+- **The window's capability file is new.** Tauri 2 grants a webview nothing it
+  is not given, and the repository had no `capabilities/` folder, so the event
+  listener the shell has always used would have been denied in a real window.
+  `default.json` grants `core:default` to the main window and to face windows.
+  That this was never noticed is consistent with the AppImage never having
+  been opened on a machine with a display.
+
+What this environment cannot prove:
+
+- **The face window.** There is no WebKitGTK here, so the host does not build
+  and the second webview has never been opened. The URL form the host passes
+  (`index.html?face=…`) and the capability file are what the Tauri 2 API
+  documents; the shell's side is exercised in the browser build.
+- **Nothing else.** Seventeen tests need ffmpeg — the camera and microphone
+  captures, the settings probe, the live camera — and failed here until it was
+  installed; with it, all 305 pass. The avatar's own suite is hermetic either
+  way, now that the scripted voice writes its own audio.

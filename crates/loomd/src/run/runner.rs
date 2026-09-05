@@ -130,6 +130,14 @@ pub struct Face {
     /// The shape of the audio about to play, or empty for a closed mouth.
     pub mouth: Vec<u8>,
     pub gaze: Option<String>,
+    /// Where the gaze is, when the `look` came with a place and not only a
+    /// name: `0..1` from the top left of the frame.
+    pub gaze_at: Option<[f64; 2]>,
+    /// Asleep after the idle timeout (SPEC §11.4).
+    pub asleep: bool,
+    /// When the expression last changed, which is what the settle timer and
+    /// the sleep timer count from.
+    pub changed_at: Instant,
 }
 
 impl Default for Face {
@@ -140,12 +148,43 @@ impl Default for Face {
             intensity: 1.0,
             mouth: Vec::new(),
             gaze: None,
+            gaze_at: None,
+            asleep: false,
+            changed_at: Instant::now(),
         }
     }
 }
 
+impl Face {
+    /// Wear an expression, noting when, so idle knows how long it has held.
+    fn wear(&mut self, expression: &str, intensity: f64) {
+        if self.expression != expression {
+            self.changed_at = Instant::now();
+        }
+        self.expression = expression.to_owned();
+        self.intensity = intensity;
+        self.asleep = false;
+    }
+}
+
+/// A place in a frame, from the words a `look` used.
+///
+/// "gaze to a point or a person" (SPEC §11.2): a person is a name and the shell
+/// decides where they are; a point is two numbers in `0..1`, written `x,y` or
+/// `x y`. Anything else is a name.
+fn point_in(text: &str) -> Option<[f64; 2]> {
+    let mut parts = text
+        .split(|c: char| c == ',' || c.is_whitespace())
+        .filter(|p| !p.is_empty());
+    let x: f64 = parts.next()?.parse().ok()?;
+    let y: f64 = parts.next()?.parse().ok()?;
+    if parts.next().is_some() {
+        return None;
+    }
+    ((0.0..=1.0).contains(&x) && (0.0..=1.0).contains(&y)).then_some([x, y])
+}
+
 /// The devices a run has open, and the Toolboxes a fault has stopped.
-#[derive(Default)]
 pub struct Bench {
     devices: std::sync::Mutex<HashMap<String, Arc<dyn super::actuate::Device>>>,
     aim: std::sync::Mutex<HashMap<String, super::actuate::Aim>>,
@@ -163,6 +202,29 @@ pub struct Bench {
     /// Set for a run whose devices are scripted rather than real, which is how
     /// a graph with motors in it runs on a machine that has none.
     pub scripted: bool,
+    /// When the graph last had an event to act on. The sleep timer counts
+    /// from here (SPEC §11.4): "after a configurable period with no events it
+    /// sleeps; the next event wakes it".
+    last_event: std::sync::Mutex<Instant>,
+    /// Things said once for the run — a lamp that is not answering, a sound
+    /// pack with no file for a mood — because a face changes many times a
+    /// minute and the same sentence that often is noise, not news.
+    said_once: std::sync::Mutex<HashSet<String>>,
+}
+
+impl Default for Bench {
+    fn default() -> Self {
+        Self {
+            devices: Default::default(),
+            aim: Default::default(),
+            faces: Default::default(),
+            stopped: Default::default(),
+            sent_away: Default::default(),
+            scripted: false,
+            last_event: std::sync::Mutex::new(Instant::now()),
+            said_once: Default::default(),
+        }
+    }
 }
 
 impl Bench {
@@ -172,6 +234,37 @@ impl Bench {
             scripted: true,
             ..Self::default()
         }
+    }
+
+    /// Put a device on the bench before the run asks for it.
+    ///
+    /// For a test that wants to read what a block sent: the bench hands out
+    /// `dyn Device`, so the test keeps its own handle and plants it here.
+    pub fn plant(&self, block: &str, device: Arc<dyn super::actuate::Device>) {
+        self.devices
+            .lock()
+            .unwrap()
+            .insert(block.to_owned(), device);
+    }
+
+    /// An event has arrived: whatever is asleep may wake.
+    pub fn touch(&self) {
+        self.touch_at(Instant::now());
+    }
+
+    /// The same, on a clock that is not the wall's — for a test that moves
+    /// time rather than waits on it.
+    pub fn touch_at(&self, at: Instant) {
+        *self.last_event.lock().unwrap() = at;
+    }
+
+    pub fn last_event(&self) -> Instant {
+        *self.last_event.lock().unwrap()
+    }
+
+    /// Whether this is the first time the run has had this to say.
+    fn first_time(&self, key: String) -> bool {
+        self.said_once.lock().unwrap().insert(key)
     }
 
     /// Whether the warning about leaving this machine has already been given,
@@ -189,7 +282,10 @@ impl Bench {
         let made: Arc<dyn super::actuate::Device> = if self.scripted {
             Arc::new(super::actuate::Scripted::default())
         } else {
+            // A USB device calls it `port`; a Status light, which is a lamp on
+            // a serial line, calls it `device`. Same thing.
             let path = blocks::setting(block, "port")
+                .or_else(|| blocks::setting(block, "device"))
                 .ok_or("this block has no port set: give it something like /dev/ttyUSB0")?;
             let baud = blocks::number(block, "baud").unwrap_or(115_200.0) as u32;
             Arc::new(super::actuate::Serial::open(
@@ -214,8 +310,9 @@ impl Bench {
             .unwrap_or_default()
     }
 
-    fn now_facing(&self, block: &str, face: Face) {
-        self.faces.lock().unwrap().insert(block.to_owned(), face);
+    /// Remember the face, and say what it was wearing before.
+    fn now_facing(&self, block: &str, face: Face) -> Option<Face> {
+        self.faces.lock().unwrap().insert(block.to_owned(), face)
     }
 
     fn aimed(&self, block: &str) -> super::actuate::Aim {
@@ -1675,18 +1772,23 @@ impl<'a> Runner<'a> {
             ));
         };
         let mut face = self.bench.face(&block.id);
+        // A model asking for anything is an event: whatever was asleep wakes.
+        face.asleep = false;
+        let mut gesture = None;
         let said = match verb {
             "look" => {
                 if !rig.gaze {
                     return Err(format!("{} has nowhere to look", rig.name));
                 }
                 face.gaze = Some(word.to_owned());
+                face.gaze_at = point_in(word);
                 format!("looking at {word}")
             }
             "gesture" => {
                 if !rig.gestures.iter().any(|g| g == word) {
                     return Err(format!("{} has no `{word}` gesture", rig.name));
                 }
+                gesture = Some(word.to_owned());
                 word.to_owned()
             }
             _ => {
@@ -1701,19 +1803,45 @@ impl<'a> Runner<'a> {
                         rig.vocabulary().join(", ")
                     ));
                 }
-                face.expression = word.to_owned();
-                face.intensity = intensity;
+                face.wear(word, intensity);
                 format!("{word} at {intensity:.1}")
             }
         };
-        self.show(block, &rig, face, st);
+        self.show(block, &rig, face, gesture.as_deref(), st);
         Ok(said_ok(said))
     }
 
-    /// Put the face on the wire and in the window.
-    fn show(&self, block: &Block, rig: &super::rig::Rig, face: Face, st: &mut State<'_>) {
-        self.bench.now_facing(&block.id, face.clone());
-        (st.emit)(RunEvent::Face {
+    /// Put the face on the wire and in the window, during a turn.
+    fn show(
+        &self,
+        block: &Block,
+        rig: &super::rig::Rig,
+        face: Face,
+        gesture: Option<&str>,
+        st: &mut State<'_>,
+    ) {
+        let line = self.announce(block, rig, face, gesture, st.emit);
+        st.values
+            .insert(Endpoint::new(&block.id, "state"), Value::Text(line));
+    }
+
+    /// Put the face everywhere it goes: the window, the `state` port, and the
+    /// medium the block is (SPEC §11.5, §11.7).
+    ///
+    /// Takes an emitter rather than a turn's state because idle calls it too,
+    /// between events, when there is no turn. Returns the `state` line so a
+    /// caller with a turn can put it on the wire.
+    fn announce(
+        &self,
+        block: &Block,
+        rig: &super::rig::Rig,
+        face: Face,
+        gesture: Option<&str>,
+        emit: &mut dyn FnMut(RunEvent),
+    ) -> String {
+        let before = self.bench.now_facing(&block.id, face.clone());
+        let idle = rig.idle.for_block(block);
+        emit(RunEvent::Face {
             run: self.run.clone(),
             block: block.id.clone(),
             rig: rig.id.clone(),
@@ -1721,14 +1849,235 @@ impl<'a> Runner<'a> {
             intensity: face.intensity,
             mouth: face.mouth.clone(),
             gaze: face.gaze.clone(),
+            gaze_at: face.gaze_at,
+            gesture: gesture.map(str::to_owned),
+            asleep: face.asleep,
+            blink_ms: idle.blink_every.as_millis().min(u128::from(u32::MAX)) as u32,
+            breathe_per_min: idle.breathe_per_min,
+            colour: super::rig::colour_for(&face.expression).to_owned(),
         });
-        let line = match (&face.gaze, face.mouth.is_empty()) {
-            (Some(at), false) => format!("{} · speaking · looking at {at}", face.expression),
-            (Some(at), true) => format!("{} · looking at {at}", face.expression),
-            (None, false) => format!("{} · speaking", face.expression),
-            (None, true) => face.expression.clone(),
+        let line = match (&face.gaze, face.mouth.is_empty(), face.asleep) {
+            (_, _, true) => format!("{} · asleep", face.expression),
+            (Some(at), false, _) => format!("{} · speaking · looking at {at}", face.expression),
+            (Some(at), true, _) => format!("{} · looking at {at}", face.expression),
+            (None, false, _) => format!("{} · speaking", face.expression),
+            (None, true, _) => face.expression.clone(),
         };
-        self.telemetry(block, "state", &line, st);
+        self.broadcast(block, "state", &line, emit);
+
+        // The medium. The Avatar's is a window, which the event above already
+        // reached, plus whatever device it renders to; the other two members
+        // of the family (§11.7) are a lamp and a chime.
+        let mood_changed = before
+            .as_ref()
+            .is_none_or(|b| b.expression != face.expression || b.asleep != face.asleep);
+        match block.kind.as_str() {
+            "avatar" => self.render_to_device(block, rig, &face, emit),
+            "status-light" => self.light(block, &face, emit),
+            "sound-cue" if mood_changed => self.chime(block, &face, emit),
+            _ => {}
+        }
+        line
+    }
+
+    /// `face.render` (SPEC §11.5): the face, as a line, to the USB device block
+    /// this Avatar names. A matrix rig goes as the bits a matrix shows; any
+    /// other rig goes as words, and the sketch on the device decides.
+    fn render_to_device(
+        &self,
+        block: &Block,
+        rig: &super::rig::Rig,
+        face: &Face,
+        emit: &mut dyn FnMut(RunEvent),
+    ) {
+        if blocks::setting(block, "output") != Some("device") {
+            return;
+        }
+        let Some(name) = blocks::setting(block, "device") else {
+            if self.bench.first_time(format!("{}:no-device", block.id)) {
+                self.note(
+                    emit,
+                    block,
+                    Level::Warn,
+                    "output is a device, but no device block is named".into(),
+                );
+            }
+            return;
+        };
+        let Some(target) = self.graph.blocks.iter().find(|b| b.id == name) else {
+            if self
+                .bench
+                .first_time(format!("{}:no-such-device", block.id))
+            {
+                self.note(
+                    emit,
+                    block,
+                    Level::Warn,
+                    format!("`{name}` is not a block in this graph"),
+                );
+            }
+            return;
+        };
+        let bits = rig
+            .state(&face.expression)
+            .and_then(|path| std::fs::read_to_string(path).ok())
+            .and_then(|svg| super::rig::matrix_bits(&svg))
+            .map(|rows| {
+                let hex: String = rows.iter().map(|r| format!("{r:02x}")).collect();
+                format!(" {hex}")
+            })
+            .unwrap_or_default();
+        let line = format!("face {} {:.2}{bits}", face.expression, face.intensity);
+        let sent = self.bench.device(target).and_then(|d| d.send(&line));
+        if let Err(why) = sent
+            && self.bench.first_time(format!("{}:render", block.id))
+        {
+            self.note(
+                emit,
+                block,
+                Level::Warn,
+                format!("could not render to {name}: {why}"),
+            );
+        }
+    }
+
+    /// A Status light breathes a colour (SPEC §11.7): one line to its device,
+    /// naming the mood, its colour and how much of it.
+    fn light(&self, block: &Block, face: &Face, emit: &mut dyn FnMut(RunEvent)) {
+        if blocks::setting(block, "device").is_none() {
+            return;
+        }
+        let line = format!(
+            "light {} {} {:.2}",
+            face.expression,
+            super::rig::colour_for(&face.expression),
+            if face.asleep { 0.15 } else { face.intensity }
+        );
+        let sent = self.bench.device(block).and_then(|d| d.send(&line));
+        if let Err(why) = sent
+            && self.bench.first_time(format!("{}:light", block.id))
+        {
+            self.note(
+                emit,
+                block,
+                Level::Warn,
+                format!("the light is not answering: {why}"),
+            );
+        }
+    }
+
+    /// A Sound cue plays a chime per expression (SPEC §11.7): the file named
+    /// for the mood in the block's sound pack, when there is one.
+    fn chime(&self, block: &Block, face: &Face, emit: &mut dyn FnMut(RunEvent)) {
+        let Some(pack) = blocks::setting(block, "pack") else {
+            return;
+        };
+        let file = self
+            .root
+            .join(pack)
+            .join(format!("{}.wav", face.expression));
+        if !file.is_file() {
+            if self
+                .bench
+                .first_time(format!("{}:{}", block.id, face.expression))
+            {
+                self.note(
+                    emit,
+                    block,
+                    Level::Info,
+                    format!(
+                        "{pack} has no {}.wav, so that mood is silent",
+                        face.expression
+                    ),
+                );
+            }
+            return;
+        }
+        let sound = super::value::Media {
+            path: file.display().to_string(),
+            mime: "audio/wav".into(),
+            bytes: 0,
+            said: None,
+        };
+        if let Err(why) = super::sense::play(&sound, blocks::setting(block, "outputDevice"))
+            && self.bench.first_time(format!("{}:play", block.id))
+        {
+            self.note(
+                emit,
+                block,
+                Level::Warn,
+                format!("could not play the chime: {why}"),
+            );
+        }
+    }
+
+    /// A line on the console from a block, without a turn to say it in.
+    fn note(&self, emit: &mut dyn FnMut(RunEvent), block: &Block, level: Level, message: String) {
+        emit(RunEvent::Console {
+            run: self.run.clone(),
+            source: Some(block.id.clone()),
+            level,
+            message,
+        });
+    }
+
+    /// Idle, between events (SPEC §11.4).
+    ///
+    /// Three things, in order. A face that has been asleep wakes when an event
+    /// has come in since. A face holding an expression settles back to neutral
+    /// once it has held long enough — a beat for `surprised`, the settle timer
+    /// for the rest. A face that has seen no event for the sleep timeout
+    /// sleeps: a rig with a `sleepy` state wears it, and one without dims.
+    ///
+    /// `now` is a parameter so a test can move the clock rather than wait on
+    /// it. The live loop passes the real one.
+    pub fn idle_faces(&self, now: Instant, emit: &mut dyn FnMut(RunEvent)) {
+        let last_event = self.bench.last_event();
+        for block in self
+            .graph
+            .blocks
+            .iter()
+            .filter(|b| blocks::is_face(&b.kind) && !b.disabled)
+        {
+            let Some(rig) = self.rigged(block) else {
+                continue;
+            };
+            let idle = rig.idle.for_block(block);
+            let mut face = self.bench.face(&block.id);
+            let mut changed = false;
+
+            if face.asleep {
+                if last_event > face.changed_at {
+                    face.wear("neutral", 1.0);
+                    face.changed_at = now;
+                    changed = true;
+                }
+            } else {
+                let held = now.saturating_duration_since(face.changed_at);
+                if face.expression != "neutral" && held >= idle.holds(&face.expression) {
+                    face.wear("neutral", 1.0);
+                    face.changed_at = now;
+                    changed = true;
+                }
+                let quiet = now.saturating_duration_since(last_event);
+                if idle.sleep_after > std::time::Duration::ZERO && quiet >= idle.sleep_after {
+                    face.asleep = true;
+                    if rig.has("sleepy") {
+                        face.expression = "sleepy".into();
+                    }
+                    face.intensity = 1.0;
+                    face.mouth.clear();
+                    face.gaze = None;
+                    face.gaze_at = None;
+                    face.changed_at = now;
+                    changed = true;
+                }
+            }
+
+            if changed {
+                self.announce(block, &rig, face, None, emit);
+            }
+        }
     }
 
     /// The avatar taking its turn: expression from `express`, mouth from
@@ -1750,6 +2099,8 @@ impl<'a> Runner<'a> {
             ));
         };
         let mut face = self.bench.face(&block.id);
+        // Something arrived on a wire, which is an event: a sleeping face wakes.
+        face.asleep = false;
 
         if let Some(value) = inputs.get("express") {
             // An Affect model reports a mood; a Branch might send a bare word.
@@ -1768,17 +2119,49 @@ impl<'a> Runner<'a> {
                 .map(str::to_owned)
                 .unwrap_or_else(|| value.as_text());
             if rig.has(&wanted) {
-                face.expression = wanted;
-                face.intensity = data
+                let how_much = data
                     .get("intensity")
                     .or_else(|| data.get("confidence"))
                     .and_then(|v| v.as_f64())
                     .unwrap_or(1.0)
                     .clamp(0.0, 1.0);
+                face.wear(&wanted, how_much);
             }
         }
 
         if let Some(Value::Audio(sound)) = inputs.get("speech") {
+            // Auto-affect from speech: the face wears the mood of what it is
+            // saying, read from the words the voice remembered, without a tool
+            // call and without an Affect block. Off when the switch is off, and
+            // off when an Affect block is wired to `express` — the setting's own
+            // hint says that is the alternative, and a wire that is there was
+            // put there on purpose.
+            let express_wired = self
+                .graph
+                .wires
+                .iter()
+                .any(|w| w.to.node == block.id && w.to.port == "express");
+            if blocks::flag(block, "autoAffectFromSpeech")
+                && !express_wired
+                && let Some(said) = &sound.said
+            {
+                match self.eye.affect(said) {
+                    Ok(mood) if rig.has(mood.expression()) => {
+                        face.wear(mood.expression(), 1.0);
+                    }
+                    Ok(_) => {}
+                    Err(why) => {
+                        if self.bench.first_time(format!("{}:affect", block.id)) {
+                            self.console(
+                                st,
+                                Some(&block.id),
+                                Level::Warn,
+                                format!("auto-affect is on but the mood could not be read: {why}"),
+                            );
+                        }
+                    }
+                }
+            }
             // Lip sync never involves the model (§11.3): the mouth is the shape
             // of the audio that is about to play.
             face.mouth = super::sense::envelope(sound);
@@ -1803,11 +2186,28 @@ impl<'a> Runner<'a> {
                 .and_then(|v| v.as_str())
                 .map(str::to_owned)
                 .unwrap_or_else(|| value.as_text());
+            // A place, when the wire carries one: `x` and `y` in `0..1`, or
+            // `at: [x, y]`, or the text itself as two numbers. Face recognition
+            // carries a name and no place, and that is fine: the shell decides.
+            let number = |key: &str| data.get(key).and_then(|v| v.as_f64());
+            let point = match (number("x"), number("y")) {
+                (Some(x), Some(y)) => point_in(&format!("{x},{y}")),
+                _ => data
+                    .get("at")
+                    .and_then(|v| v.as_array())
+                    .and_then(|pair| {
+                        let x = pair.first()?.as_f64()?;
+                        let y = pair.get(1)?.as_f64()?;
+                        point_in(&format!("{x},{y}"))
+                    })
+                    .or_else(|| point_in(&at)),
+            };
             face.gaze = (!at.trim().is_empty() && at != "null").then_some(at);
+            face.gaze_at = point;
         }
 
         let figure = format!("{} · {}", rig.name, face.expression);
-        self.show(block, &rig, face, st);
+        self.show(block, &rig, face, None, st);
         Ok((Outputs::new(), Some(figure)))
     }
 
@@ -1893,17 +2293,25 @@ impl<'a> Runner<'a> {
     /// A device said something about itself: put it on the port and light the
     /// wire (SPEC §4.4).
     fn telemetry(&self, block: &Block, port: &str, what: &str, st: &mut State<'_>) {
-        (st.emit)(RunEvent::BlockOutput {
+        self.broadcast(block, port, what, st.emit);
+        st.values
+            .insert(Endpoint::new(&block.id, port), Value::Text(what.to_owned()));
+    }
+
+    /// A fault: the console says so, the `fault` port fires, and every Toolbox
+    /// it is wired into stops taking calls (SPEC §4.4, §9.1).
+    /// A stream port's chunk, to the window and along its wires, without a
+    /// turn's state to record it in.
+    fn broadcast(&self, block: &Block, port: &str, what: &str, emit: &mut dyn FnMut(RunEvent)) {
+        emit(RunEvent::BlockOutput {
             run: self.run.clone(),
             block: block.id.clone(),
             port: port.to_owned(),
             chunk: what.to_owned(),
         });
-        st.values
-            .insert(Endpoint::new(&block.id, port), Value::Text(what.to_owned()));
         for wire in &self.graph.wires {
             if wire.from.node == block.id && wire.from.port == port {
-                (st.emit)(RunEvent::WireActive {
+                emit(RunEvent::WireActive {
                     run: self.run.clone(),
                     wire: wire.id.clone(),
                 });
@@ -1911,8 +2319,6 @@ impl<'a> Runner<'a> {
         }
     }
 
-    /// A fault: the console says so, the `fault` port fires, and every Toolbox
-    /// it is wired into stops taking calls (SPEC §4.4, §9.1).
     fn raise(&self, block: &Block, why: &str, st: &mut State<'_>) {
         self.console(st, Some(&block.id), Level::Error, format!("fault: {why}"));
         self.telemetry(block, "fault", why, st);
@@ -2264,7 +2670,7 @@ fn plural(n: usize, thing: &str) -> String {
 /// A workspace's own `rigs/` folder is looked at first, so a user replacing Line
 /// with their own Line does not have to move ours. This is the fallback: the
 /// four that ship.
-fn shipped_rigs() -> std::path::PathBuf {
+pub(crate) fn shipped_rigs() -> std::path::PathBuf {
     if let Ok(named) = std::env::var("CYBERLOOM_RIGS") {
         return std::path::PathBuf::from(named);
     }

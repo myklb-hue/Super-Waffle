@@ -30,6 +30,15 @@ pub enum Request {
     /// What the workspace chose, and what is actually installed.
     #[serde(rename = "workspace.settings")]
     WorkspaceSettings,
+    /// Every rig this workspace can wear, with its drawings.
+    ///
+    /// The four reference rigs are bundled into the shell, so this is how a
+    /// rig the user put in their workspace reaches the window (SPEC §11.1).
+    /// The whole set is returned rather than only the workspace's, because a
+    /// workspace rig with a shipped rig's name replaces it, and the shell
+    /// should draw what the engine will run.
+    #[serde(rename = "workspace.rigs")]
+    WorkspaceRigs,
     /// Change what the workspace chose. The probe is not writable: it is a
     /// description of the machine, not a preference.
     #[serde(rename = "workspace.configure")]
@@ -136,6 +145,7 @@ pub enum Reply {
     Catalogue(Vec<block_kinds::BlockKind>),
     Workspace(Vec<GraphSummary>),
     WorkspaceInfo(Box<WorkspaceInfo>),
+    Rigs(Vec<RigInfo>),
     Graph(Box<OpenGraph>),
     Saved(Saved),
     Running(RunStarted),
@@ -221,6 +231,28 @@ pub struct WorkspaceInfo {
     pub root: String,
     pub settings: crate::settings::WorkspaceSettings,
     pub probe: crate::settings::Probe,
+}
+
+/// A rig, as the shell draws it (SPEC §11.1).
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RigInfo {
+    /// The folder name, which is what a graph's `rig` setting stores.
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    /// In manifest order, and only the ones with a drawing.
+    pub expressions: Vec<String>,
+    pub gestures: Vec<String>,
+    /// Whether `face.look` means anything on it.
+    pub gaze: bool,
+    /// A blink about this often, and this many breaths a minute.
+    pub blink_ms: u32,
+    pub breathe_per_min: u32,
+    /// One of the four that ship, as opposed to one the workspace added.
+    pub shipped: bool,
+    /// The SVG for each expression, by name.
+    pub states: std::collections::BTreeMap<String, String>,
 }
 
 /// One row of the workspace list. Enough to draw a tab without opening the file.

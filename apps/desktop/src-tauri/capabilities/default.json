@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The main window and any face windows: the core APIs the shell uses (events in, commands out), and nothing else.",
+  "windows": ["main", "face-*"],
+  "permissions": ["core:default"]
+}

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Handle, Position as FlowPosition, type NodeProps } from '@xyflow/react';
 import {
   BLOCK_MIN_WIDTH,
@@ -13,6 +14,8 @@ import type { Block, BlockState, Port, View } from '@cyberloom/graph-core';
 import type { StatusState } from '@cyberloom/ui';
 import { Chip, Grip, Icon, StatusDot, TypeDot, ViewToggle, type IconName } from '@cyberloom/ui';
 import { Face } from '../avatar/Face';
+import { aspectOf, useRigs } from '../avatar/rigs';
+import { openFaceWindow } from '../avatar/window';
 import { Editor } from '../code/Editor';
 import { useDocument } from '../stores/document';
 import { useRun, type BlockRun } from '../stores/run';
@@ -160,7 +163,11 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
               resize(
                 block.id,
                 (block.size?.w ?? BLOCK_MIN_WIDTH) + dx,
-                block.size?.h ? block.size.h + dy : null,
+                // "An Avatar keeps its rig's aspect ratio unless the lock in
+                // its inspector is turned off" (SPEC §3.4): with the lock on,
+                // the height follows the width and the grip's vertical travel
+                // is ignored.
+                aspectLocked(block) ? null : block.size?.h ? block.size.h + dy : null,
               )
             }
           />
@@ -313,6 +320,8 @@ function Body({ block }: { block: Block }) {
 
   if (block.kind === 'custom') return <CustomBody block={block} />;
   if (block.kind === 'avatar') return <AvatarBody block={block} />;
+  if (block.kind === 'status-light') return <LampBody block={block} />;
+  if (block.kind === 'sound-cue') return <CueBody block={block} />;
 
   if (value === undefined || value === null) return null;
 
@@ -335,25 +344,98 @@ function Body({ block }: { block: Block }) {
 function AvatarBody({ block }: { block: Block }) {
   const face = useRun((r) => r.faces[block.id]);
   const rig = face?.rig ?? (block.settings.rig as string) ?? 'line';
+  const states = useRigs((r) => r.rigs[rig]?.states);
   const stage = block.view === 'stage';
-  const size = stage ? (block.size?.w ?? BLOCK_MIN_WIDTH) - 24 : 44;
+  const width = (block.size?.w ?? BLOCK_MIN_WIDTH) - 24;
+  // With the lock on, the rig's own aspect decides the height. With it off,
+  // the face fits whatever box the grip made.
+  const aspect = aspectOf(states ?? {});
+  const size = stage
+    ? aspectLocked(block) || !block.size?.h
+      ? width
+      : Math.min(width, Math.max(48, block.size.h - 24 - PORT_ROW))
+    : 44;
+
+  // "A window (optionally always on top)" (SPEC §11.5): the output setting
+  // asks for one, and the first face of a run is when it opens. Asking again
+  // for a window that exists focuses it, so a face that changes a hundred
+  // times opens one window.
+  const wantsWindow = block.settings.output === 'window';
+  const hasFace = !!face;
+  const onTop = block.settings.alwaysOnTop === true;
+  const screen = typeof block.settings.screen === 'number' ? block.settings.screen : null;
+  useEffect(() => {
+    if (!wantsWindow || !hasFace) return;
+    void openFaceWindow(block.id, rig, { alwaysOnTop: onTop, screen });
+  }, [wantsWindow, hasFace, block.id, rig, onTop, screen]);
 
   return (
     <div className={stage ? s.stage : s.body}>
-      <Face
-        rig={rig}
-        expression={face?.expression}
-        intensity={face?.intensity}
-        mouth={face?.mouth}
-        gaze={face?.gaze}
-        size={size}
-      />
+      <div style={{ width: size, height: size / aspect, display: 'grid', placeItems: 'center' }}>
+        <Face
+          rig={rig}
+          expression={face?.expression}
+          intensity={face?.intensity}
+          mouth={face?.mouth}
+          gaze={face?.gaze}
+          gazeAt={face?.gazeAt}
+          gesture={face?.gesture}
+          gestureSeq={face?.gestureSeq}
+          asleep={face?.asleep}
+          blinkMs={face?.blinkMs}
+          breathePerMin={face?.breathePerMin}
+          size={size}
+        />
+      </div>
       {!stage && (
         <div className={s.stageSide}>
           <div className={s.label}>rig</div>
           <div className={s.value}>{rig}</div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Whether the Avatar's inspector lock is on. It starts on (SPEC §3.4). */
+function aspectLocked(block: Block): boolean {
+  return block.kind === 'avatar' && block.settings.keepAspect !== false;
+}
+
+/**
+ * A Status light's body: the colour it is breathing (SPEC §11.7). The same
+ * face state as an Avatar, in the medium a lamp has — a swatch, with the
+ * mood's name beside it.
+ */
+function LampBody({ block }: { block: Block }) {
+  const face = useRun((r) => r.faces[block.id]);
+  const colour = face?.colour ?? '#56c7d6';
+  return (
+    <div className={`${s.body} ${s.lampRow}`}>
+      <span
+        className={`${s.lamp} ${face && !face.asleep ? s.lampLit : ''}`}
+        style={{ ['--lamp' as string]: colour }}
+        data-testid={`lamp-${block.id}`}
+        data-colour={colour}
+      />
+      <div className={s.stageSide}>
+        <div className={s.label}>mood</div>
+        <div className={s.value}>{face?.asleep ? 'asleep' : (face?.expression ?? 'neutral')}</div>
+      </div>
+    </div>
+  );
+}
+
+/** A Sound cue's body: the last chime, by mood (SPEC §11.7). */
+function CueBody({ block }: { block: Block }) {
+  const face = useRun((r) => r.faces[block.id]);
+  const pack = block.settings.pack;
+  return (
+    <div className={s.body}>
+      <div className={s.label}>{face ? 'last cue' : 'sound pack'}</div>
+      <div className={s.value}>
+        {face ? `${face.expression}.wav` : typeof pack === 'string' && pack ? pack : 'none set'}
+      </div>
     </div>
   );
 }
