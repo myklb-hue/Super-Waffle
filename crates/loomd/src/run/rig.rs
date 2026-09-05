@@ -338,7 +338,10 @@ mod tests {
             ("opt/cyberloom/cyberloom", "opt/cyberloom/rigs"),
             // What scripts/install.sh lays down: a launcher on the PATH, and
             // the binary and rigs together under lib/.
-            ("usr/local/lib/cyberloom/cyberloom", "usr/local/lib/cyberloom/rigs"),
+            (
+                "usr/local/lib/cyberloom/cyberloom",
+                "usr/local/lib/cyberloom/rigs",
+            ),
         ] {
             let _ = std::fs::remove_dir_all(&dir);
             let exe = dir.join(binary);
