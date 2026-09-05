@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
-  <rect width="240" height="240" fill="none"/>
-  <rect x="44" y="52" width="152" height="140" rx="20" fill="#12161c" stroke="#5f6875" stroke-width="3"/><path d="M 120 52 L 120 32" stroke="#5f6875" stroke-width="4"/><circle cx="120" cy="28" r="6" fill="#56c7d6"/>
-  <g id="eyes"><path d="M 90 116 C 76 103 80 92 90 99 C 100 92 104 103 90 116 Z" fill="#e0685f"/><path d="M 150 116 C 136 103 140 92 150 99 C 160 92 164 103 150 116 Z" fill="#e0685f"/></g>
-  <g id="mouth"><rect x="86" y="154" width="10" height="8" rx="3" fill="#e0685f"/><rect x="100" y="151" width="10" height="14" rx="3" fill="#e0685f"/><rect x="114" y="149" width="10" height="18" rx="3" fill="#e0685f"/><rect x="128" y="151" width="10" height="14" rx="3" fill="#e0685f"/><rect x="142" y="154" width="10" height="8" rx="3" fill="#e0685f"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="240" height="240">
+  <rect width="64" height="64" fill="none"/>
+  <rect x="10" y="12" width="44" height="42" rx="9" fill="#191d24" stroke="#98a2ae" stroke-width="2"/><path d="M32 12V6" stroke="#98a2ae" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="5" r="2" fill="#98a2ae"/>
+  <g id="eyes"><path d="M22.5 33.225 C14.25 27.725, 16.725 21.125, 22.5 25.525 C28.275 21.125, 30.75 27.725, 22.5 33.225Z" fill="#d97f8f"/><path d="M41.5 33.225 C33.25 27.725, 35.725 21.125, 41.5 25.525 C47.275 21.125, 49.75 27.725, 41.5 33.225Z" fill="#d97f8f"/></g>
+  <g id="mouth"><rect x="20" y="38.5" width="3.6" height="3" rx="1" fill="#56c7d6"/><rect x="25.2" y="40" width="3.6" height="3" rx="1" fill="#56c7d6"/><rect x="30.4" y="42" width="3.6" height="3" rx="1" fill="#56c7d6"/><rect x="35.6" y="40" width="3.6" height="3" rx="1" fill="#56c7d6"/><rect x="40.8" y="38.5" width="3.6" height="3" rx="1" fill="#56c7d6"/></g>
 </svg>

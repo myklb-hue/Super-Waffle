@@ -17,7 +17,7 @@ expressions:
 gestures: []
 gaze: false
 idle:
-  blinkEvery: 4s
-  breathe: true
-  settleAfter: 6s
-  sleepAfter: 5m
+  blinkEvery: 3-6s
+  breathePerMin: 12
+  settleAfter: 4s
+  sleepAfter: 10m

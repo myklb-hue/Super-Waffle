@@ -484,8 +484,8 @@ fn the_event_carries_the_idle_numbers() {
     else {
         unreachable!()
     };
-    assert_eq!(*blink_ms, 4000);
-    assert_eq!(*breathe_per_min, 13);
+    assert_eq!(*blink_ms, 4500);
+    assert_eq!(*breathe_per_min, 12);
     assert_eq!(colour, "#6fc98a");
     assert!(!asleep);
 
@@ -553,26 +553,26 @@ fn a_face_settles_then_sleeps_then_wakes() {
     };
     assert_eq!(last(&events), ("smile".into(), false));
 
-    // Not yet: the settle timer is six seconds.
+    // Not yet: the settle timer is four seconds.
     let before = events.len();
     runner.idle_faces(started + Duration::from_secs(2), &mut |e| events.push(e));
     assert_eq!(events.len(), before, "nothing should have changed at 2 s");
 
     // Settled.
-    runner.idle_faces(started + Duration::from_secs(7), &mut |e| events.push(e));
+    runner.idle_faces(started + Duration::from_secs(5), &mut |e| events.push(e));
     assert_eq!(last(&events), ("neutral".into(), false));
 
-    // Asleep, wearing the state the rig has for it.
-    runner.idle_faces(started + Duration::from_secs(301), &mut |e| events.push(e));
+    // Asleep after ten quiet minutes, wearing the state the rig has for it.
+    runner.idle_faces(started + Duration::from_secs(601), &mut |e| events.push(e));
     assert_eq!(last(&events), ("sleepy".into(), true));
     // And nothing more happens while it sleeps.
     let before = events.len();
-    runner.idle_faces(started + Duration::from_secs(900), &mut |e| events.push(e));
+    runner.idle_faces(started + Duration::from_secs(1800), &mut |e| events.push(e));
     assert_eq!(events.len(), before);
 
     // An event. The next idle pass wakes it.
-    bench.touch_at(started + Duration::from_secs(900) + Duration::from_millis(1));
-    runner.idle_faces(started + Duration::from_secs(901), &mut |e| events.push(e));
+    bench.touch_at(started + Duration::from_secs(1800) + Duration::from_millis(1));
+    runner.idle_faces(started + Duration::from_secs(1801), &mut |e| events.push(e));
     assert_eq!(last(&events), ("neutral".into(), false));
 }
 
@@ -624,7 +624,7 @@ fn a_surprise_is_a_beat_and_a_matrix_sleeps_without_a_sleepy_face() {
         ("neutral".into(), false),
         "a beat is shorter than 2 s"
     );
-    runner.idle_faces(started + Duration::from_secs(301), &mut |e| events.push(e));
+    runner.idle_faces(started + Duration::from_secs(601), &mut |e| events.push(e));
     assert_eq!(last(&events), ("neutral".into(), true));
 }
 
@@ -680,8 +680,8 @@ fn the_face_renders_to_the_device_it_names() {
     let bits = words.next().expect("a matrix rig sends its bits");
     assert_eq!(bits.len(), 16, "{bits}");
     assert!(
-        bits.starts_with("66fc"),
-        "a heart starts with two bumps: {bits}"
+        bits.starts_with("0066ff"),
+        "a heart starts with two bumps then a full row: {bits}"
     );
 
     let line = render_with("line");

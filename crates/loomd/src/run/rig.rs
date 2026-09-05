@@ -49,20 +49,42 @@ pub struct Idle {
     pub sleep_after: Duration,
 }
 
-/// A resting breath. Thirteen a minute is a person at ease; it is also the
-/// 4.6 s cycle the shell used before the number was anyone's to choose.
-pub const BREATHE_PER_MIN: u32 = 13;
+/// A resting breath: twelve a minute, which is the number Figure 15 shows.
+pub const BREATHE_PER_MIN: u32 = 12;
 
 /// How long `surprised` holds: "a beat, then settles" (SPEC §11.2).
 pub const BEAT: Duration = Duration::from_millis(1500);
 
 impl Default for Idle {
+    /// Figure 15's numbers: a blink every 3–6 s, twelve breaths a minute,
+    /// four seconds to neutral, ten minutes without events to sleep.
     fn default() -> Self {
         Self {
-            blink_every: Duration::from_secs(4),
+            blink_every: Duration::from_millis(4500),
             breathe_per_min: BREATHE_PER_MIN,
-            settle_after: Duration::from_secs(6),
-            sleep_after: Duration::from_secs(300),
+            settle_after: Duration::from_secs(4),
+            sleep_after: Duration::from_secs(600),
+        }
+    }
+}
+
+/// A blink cadence, as written: `4s`, or a range like `3-6s` or `3–6 s`.
+///
+/// The panel says "every 3–6 s" because a blink is a cadence and not a
+/// metronome; the engine keeps the middle of the range and the shell spreads
+/// each blink a third either side of it, which lands on the range written.
+pub fn blink_every(text: &str) -> Option<Duration> {
+    let text = text.trim().replace(' ', "");
+    let mut ends = text.splitn(2, ['-', '–']);
+    let low = ends.next()?;
+    match ends.next() {
+        None => super::memory::parse_window(low),
+        Some(high) => {
+            // The unit is written once, on the high end.
+            let unit: String = high.chars().filter(|c| c.is_alphabetic()).collect();
+            let low = super::memory::parse_window(&format!("{low}{unit}"))?;
+            let high = super::memory::parse_window(high)?;
+            Some((low + high) / 2)
         }
     }
 }
@@ -76,7 +98,7 @@ impl Idle {
         use super::blocks::{number, setting};
         let mut idle = self;
         if let Some(text) = setting(block, "blink")
-            && let Some(every) = super::memory::parse_window(text)
+            && let Some(every) = blink_every(text)
         {
             idle.blink_every = every;
         }
@@ -191,9 +213,10 @@ pub fn matrix_bits(svg: &str) -> Option<[u8; 8]> {
     struct Cell {
         x: f64,
         y: f64,
+        size: String,
         fill: String,
     }
-    let mut cells: Vec<Cell> = Vec::new();
+    let mut squares: Vec<Cell> = Vec::new();
     for tag in svg.split("<rect").skip(1) {
         let tag = tag.split('>').next().unwrap_or("");
         let attr = |name: &str| -> Option<String> {
@@ -211,14 +234,36 @@ pub fn matrix_bits(svg: &str) -> Option<[u8; 8]> {
             continue;
         };
         if let (Ok(x), Ok(y)) = (x.parse::<f64>(), y.parse::<f64>()) {
-            cells.push(Cell { x, y, fill });
+            squares.push(Cell {
+                x,
+                y,
+                size: w,
+                fill,
+            });
         }
     }
-    if cells.len() != 64 {
+    // The cells are the squares of the commonest size; the frame behind them
+    // is a square too, and one of a kind.
+    let mut sizes: Vec<&str> = squares.iter().map(|c| c.size.as_str()).collect();
+    sizes.sort_unstable();
+    let cell_size = sizes
+        .chunk_by(|a, b| a == b)
+        .max_by_key(|run| run.len())?
+        .first()?
+        .to_string();
+    // Drawn in order, so a lit cell painted over an unlit one is the one seen.
+    let mut at: Vec<(f64, f64, String)> = Vec::new();
+    for cell in squares.iter().filter(|c| c.size == cell_size) {
+        match at.iter_mut().find(|(x, y, _)| *x == cell.x && *y == cell.y) {
+            Some(seen) => seen.2 = cell.fill.clone(),
+            None => at.push((cell.x, cell.y, cell.fill.clone())),
+        }
+    }
+    if at.len() != 64 {
         return None;
     }
-    let mut xs: Vec<f64> = cells.iter().map(|c| c.x).collect();
-    let mut ys: Vec<f64> = cells.iter().map(|c| c.y).collect();
+    let mut xs: Vec<f64> = at.iter().map(|c| c.0).collect();
+    let mut ys: Vec<f64> = at.iter().map(|c| c.1).collect();
     xs.sort_by(f64::total_cmp);
     xs.dedup();
     ys.sort_by(f64::total_cmp);
@@ -226,18 +271,18 @@ pub fn matrix_bits(svg: &str) -> Option<[u8; 8]> {
     if xs.len() != 8 || ys.len() != 8 {
         return None;
     }
-    let off = cells
+    let off = at
         .iter()
-        .map(|c| c.fill.as_str())
+        .map(|c| c.2.as_str())
         .min_by_key(|fill| luminance(fill))?
         .to_owned();
     let mut rows = [0u8; 8];
-    for cell in &cells {
-        if cell.fill == off {
+    for (x, y, fill) in &at {
+        if *fill == off {
             continue;
         }
-        let col = xs.iter().position(|x| *x == cell.x)?;
-        let row = ys.iter().position(|y| *y == cell.y)?;
+        let col = xs.iter().position(|v| v == x)?;
+        let row = ys.iter().position(|v| v == y)?;
         rows[row] |= 0x80 >> col;
     }
     Some(rows)
@@ -344,7 +389,9 @@ fn parse(text: &str, id: &str) -> Result<Rig, String> {
         }
 
         match (in_idle, key) {
-            (true, "blinkEvery") => rig.idle.blink_every = every(&value, rig.idle.blink_every),
+            (true, "blinkEvery") => {
+                rig.idle.blink_every = blink_every(&value).unwrap_or(rig.idle.blink_every)
+            }
             (true, "breathe") => {
                 if value == "false" {
                     rig.idle.breathe_per_min = 0;
@@ -467,10 +514,20 @@ mod tests {
     #[test]
     fn idle_is_read_from_the_manifest() {
         let line = load(&rigs().join("line")).unwrap();
-        assert_eq!(line.idle.blink_every, Duration::from_secs(4));
-        assert_eq!(line.idle.settle_after, Duration::from_secs(6));
-        assert_eq!(line.idle.sleep_after, Duration::from_secs(300));
-        assert_eq!(line.idle.breathe_per_min, BREATHE_PER_MIN);
+        // "every 3–6 s": the middle of the range.
+        assert_eq!(line.idle.blink_every, Duration::from_millis(4500));
+        assert_eq!(line.idle.settle_after, Duration::from_secs(4));
+        assert_eq!(line.idle.sleep_after, Duration::from_secs(600));
+        assert_eq!(line.idle.breathe_per_min, 12);
+    }
+
+    #[test]
+    fn a_blink_is_a_number_or_a_range() {
+        assert_eq!(blink_every("4s"), Some(Duration::from_secs(4)));
+        assert_eq!(blink_every("3-6s"), Some(Duration::from_millis(4500)));
+        assert_eq!(blink_every("3–6 s"), Some(Duration::from_millis(4500)));
+        assert_eq!(blink_every("2 - 4s"), Some(Duration::from_secs(3)));
+        assert_eq!(blink_every("soon"), None);
     }
 
     /// The block's settings win over the manifest, and only where they are set.
@@ -488,8 +545,8 @@ mod tests {
         assert_eq!(idle.settle_after, Duration::from_millis(1500));
         assert_eq!(idle.breathe_per_min, 0);
         // Not set, so the rig's own.
-        assert_eq!(idle.blink_every, Duration::from_secs(4));
-        assert_eq!(idle.sleep_after, Duration::from_secs(300));
+        assert_eq!(idle.blink_every, Duration::from_millis(4500));
+        assert_eq!(idle.sleep_after, Duration::from_secs(600));
     }
 
     /// "surprised: a beat, then settles"; "neutral: idle returns here".
@@ -497,7 +554,7 @@ mod tests {
     fn a_surprise_is_a_beat_and_neutral_holds_forever() {
         let idle = Idle::default();
         assert_eq!(idle.holds("surprised"), BEAT);
-        assert_eq!(idle.holds("smile"), Duration::from_secs(6));
+        assert_eq!(idle.holds("smile"), Duration::from_secs(4));
         assert_eq!(idle.holds("neutral"), Duration::MAX);
         assert_eq!(idle.holds("sleepy"), Duration::MAX);
         let never = Idle {
@@ -550,10 +607,12 @@ mod tests {
             matrix_bits(&svg).unwrap_or_else(|| panic!("{e} is not a matrix"))
         };
         let love = read("love");
-        // A heart: two bumps on the top row, a full row under them, a point.
-        assert_eq!(love[0], 0b0110_0110, "{love:?}");
-        assert_eq!(love[1], 0b1111_1100, "{love:?}");
-        assert!(love[7] == 0, "{love:?}");
+        // Figure 15's heart: two bumps, two full rows, narrowing to a point.
+        assert_eq!(love[0], 0, "{love:?}");
+        assert_eq!(love[1], 0b0110_0110, "{love:?}");
+        assert_eq!(love[2], 0b1111_1111, "{love:?}");
+        assert_eq!(love[6], 0b0001_1000, "{love:?}");
+        assert_eq!(love[7], 0, "{love:?}");
         let neutral = read("neutral");
         assert_ne!(neutral, love);
         assert!(neutral.iter().any(|row| *row != 0));

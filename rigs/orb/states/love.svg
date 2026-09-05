@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
-  <rect width="240" height="240" fill="none"/>
-  <defs><radialGradient id="g" cx="42%" cy="36%"><stop offset="0%" stop-color="#e0685f" stop-opacity="1"/><stop offset="100%" stop-color="#e0685f" stop-opacity="0.35"/></radialGradient></defs><circle cx="120" cy="120" r="92" fill="#e0685f" opacity="0.15"/>
-  <g id="eyes"><circle cx="120" cy="120" r="66" fill="url(#g)"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="240" height="240">
+  <rect width="64" height="64" fill="none"/>
+  <circle cx="32" cy="32" r="26" fill="#d97f8f" opacity=".16"/><circle cx="32" cy="32" r="20" fill="#d97f8f"/><circle cx="26" cy="24" r="6" fill="#ffffff" opacity=".16"/>
+  <g id="eyes"><path d="M26 33.04 C21.2 29.84, 22.64 26, 26 28.56 C29.36 26, 30.8 29.84, 26 33.04Z" fill="#0b0d11"/><path d="M38 33.04 C33.2 29.84, 34.64 26, 38 28.56 C41.36 26, 42.8 29.84, 38 33.04Z" fill="#0b0d11"/><path d="M51 16.23 C45.9 12.83, 47.43 8.75, 51 11.47 C54.57 8.75, 56.1 12.83, 51 16.23Z" fill="#d97f8f"/></g>
   <g id="mouth"></g>
 </svg>
