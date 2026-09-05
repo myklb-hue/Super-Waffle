@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { WorkspaceInfo, WorkspaceSettings } from '@cyberloom/graph-core';
 import { Button, Callout, Chip, Field, Label, Section, StatusDot, SwitchRow } from '@cyberloom/ui';
-import { configureWorkspace, workspaceSettings } from '../stores/rpc';
+import { pullModel, workspaceSettings, configureWorkspace } from '../stores/rpc';
+import { useRun } from '../stores/run';
 import s from './Settings.module.css';
 
 /**
@@ -38,6 +39,9 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   const change = <K extends keyof WorkspaceSettings>(key: K, value: WorkspaceSettings[K]) =>
     setDraft({ ...draft, [key]: value });
+  // Look again, keeping what is being typed: a pull that finished should turn
+  // the Ollama row's model count over without losing an unsaved field.
+  const refresh = () => workspaceSettings().then((got) => setInfo(got));
 
   const found = [info.probe.python, info.probe.ffmpeg, info.probe.ollama, info.probe.models];
   const missing = found.filter((f) => !f.ok).length;
@@ -71,6 +75,9 @@ export function Settings({ onClose }: { onClose: () => void }) {
                   <div className={s.foundName}>{thing.name}</div>
                   <div className={s.foundDetail}>{thing.detail}</div>
                   {thing.fix && <div className={s.foundFix}>{thing.fix}</div>}
+                  {thing.name === 'Ollama' && thing.ok && (
+                    <Pull model={draft.model ?? 'llama3.2:3b'} onDone={() => void refresh()} />
+                  )}
                 </div>
               </div>
             ))}
@@ -148,6 +155,57 @@ export function Settings({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Pull a model into Ollama from here, and watch it arrive (SPEC §15.13:
+ * "model downloads explicit and resumable"). Ollama's own pull resumes what
+ * it already has, so a second click after a dropped connection continues.
+ */
+function Pull({ model, onDone }: { model: string; onDone: () => void }) {
+  const progress = useRun((r) => r.progress[model]);
+  const [asked, setAsked] = useState<string | null>(null);
+  const busy = !!progress && !progress.done;
+  const fraction = progress && progress.total > 0 ? progress.completed / progress.total : null;
+
+  useEffect(() => {
+    if (progress?.done && !progress.error) onDone();
+    // The probe is what changes; onDone is stable enough for this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress?.done]);
+
+  return (
+    <div className={s.pull} data-testid={`pull-${model}`}>
+      <Button
+        label={busy ? `Pulling ${model}…` : `Pull ${model}`}
+        icon="llm"
+        loading={busy}
+        disabled={busy}
+        onClick={() => {
+          setAsked(null);
+          pullModel(model).catch((e: unknown) => setAsked(e instanceof Error ? e.message : String(e)));
+        }}
+      />
+      {progress && (
+        <div className={s.pullState}>
+          <div className={s.bar}>
+            <div
+              className={s.barFill}
+              style={{ width: `${Math.round((fraction ?? (progress.done ? 1 : 0)) * 100)}%` }}
+            />
+          </div>
+          <div className={s.pullLine}>
+            {progress.error
+              ? progress.error
+              : progress.done
+                ? `${model} is here`
+                : `${progress.status}${fraction !== null ? ` · ${Math.round(fraction * 100)}% of ${(progress.total / 1e9).toFixed(1)} GB` : ''}`}
+          </div>
+        </div>
+      )}
+      {asked && <div className={s.pullLine}>{asked}</div>}
     </div>
   );
 }

@@ -10,16 +10,14 @@ arch=('x86_64')
 url="https://github.com/myklb-hue/super-waffle"
 license=('MIT')
 
-# webkit2gtk is the window. ffmpeg is what Webcam, Microphone and Speaker use,
-# and it is a hard dependency rather than optional because a sense that cannot
-# run is worse than a larger install.
-depends=('webkit2gtk-4.1' 'gtk3' 'libayatana-appindicator' 'ffmpeg')
-# Python is optional: a graph that has no Python block and no perception block
-# never asks for it, and the settings screen says so when one does.
-optdepends=(
-  'python: custom Python blocks and the perception runtime'
-  'ollama: local language models'
-)
+# webkit2gtk is the window. ffmpeg is what Webcam, Microphone and Speaker use.
+# Python runs the perception helper and custom Python blocks; Ollama runs the
+# models. All hard dependencies: the application is meant to run the first
+# time it opens, and a dependency it might lack is a first run that does not.
+# `ollama` here is the CPU build; a machine with a GPU wants ollama-cuda or
+# ollama-rocm in its place, which provide the same `ollama`.
+depends=('webkit2gtk-4.1' 'gtk3' 'libayatana-appindicator' 'ffmpeg' 'python' 'ollama' 'curl')
+install=cyberloom.install
 makedepends=('rust' 'cargo' 'nodejs' 'npm' 'pkgconf')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
 sha256sums=('SKIP')
@@ -53,6 +51,13 @@ package() {
   install -Dm644 apps/desktop/src-tauri/icons/icon.png \
     "$pkgdir/usr/share/icons/hicolor/512x512/apps/cyberloom.png"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # What a first run needs beyond the binary is downloaded, not packaged: the
+  # provisioning script does it, per user, on demand. The helper it installs
+  # ships beside it.
+  install -Dm755 scripts/provision.sh "$pkgdir/usr/bin/cyberloom-provision"
+  install -Dm644 crates/loomd/py/perceive.py "$pkgdir/usr/lib/cyberloom/py/perceive.py"
+  install -Dm644 crates/loomd/py/requirements.txt "$pkgdir/usr/lib/cyberloom/py/requirements.txt"
 
   # The example graphs, for a first run that has something to look at.
   install -d "$pkgdir/usr/share/cyberloom/graphs"

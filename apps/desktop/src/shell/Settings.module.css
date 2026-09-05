@@ -95,3 +95,37 @@
   font-size: var(--fs-xs);
   color: var(--text-low);
 }
+
+/* Pulling a model from the settings screen (SPEC §15.13). */
+.pull {
+  margin-top: var(--sp-3);
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: start;
+}
+
+.pullState {
+  width: 100%;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.bar {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 200ms ease-out;
+}
+
+.pullLine {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-low);
+}

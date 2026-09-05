@@ -56,6 +56,12 @@ pub enum Request {
         /// Where to put it, relative to the models folder.
         name: String,
     },
+    /// Pull a model into Ollama, explicitly and visibly (SPEC §15.13).
+    ///
+    /// Answers at once; progress arrives as `run.progress` events carrying
+    /// the model's name, and the last of them says `done`.
+    #[serde(rename = "models.pull")]
+    ModelsPull { model: String },
     /// Read one graph.
     #[serde(rename = "graph.open")]
     GraphOpen { path: String },

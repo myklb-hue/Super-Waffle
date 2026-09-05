@@ -350,3 +350,40 @@
   align-items: center;
   gap: var(--sp-3);
 }
+
+/* The first-run line above the canvas (SPEC §15.13). */
+.firstRun {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-2) var(--sp-5);
+  background: color-mix(in srgb, var(--warn) 10%, var(--bar));
+  border-bottom: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+}
+
+.firstRunText {
+  flex: 1;
+  min-width: 0;
+}
+
+.firstRunAction {
+  padding: 3px 10px;
+  border: 1px solid var(--warn);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--warn);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.firstRunDismiss {
+  border: 0;
+  background: transparent;
+  color: var(--text-low);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}

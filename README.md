@@ -70,15 +70,21 @@ def door_check(frame: Image, threshold: float = 0.6) -> Data:
 ## Running it
 
 On CachyOS, or anything else with `pacman`, one script installs the
-dependencies, builds, and puts Cyberloom in your application menu:
+dependencies, builds, puts Cyberloom in your application menu, and provisions
+what a first run needs — Ollama with its model, the Python environment the
+perception helper runs in, and the weights the example graphs use — so the
+assistant graph runs the first time the window opens:
 
 ```sh
 scripts/install.sh            # into ~/.local, no root needed beyond pacman
 scripts/install.sh --system   # into /usr/local instead
+scripts/provision.sh          # the first-run part on its own, again if needed
 ```
 
 Run it again after pulling to upgrade; `--uninstall` takes it out again. See
-[`packaging/`](packaging/) for what it installs where.
+[`packaging/`](packaging/) for what it installs where. The settings screen
+(the three dots at the top right) shows what the machine has and what it does
+not, and can pull a model from there.
 
 To work on it rather than just run it:
 

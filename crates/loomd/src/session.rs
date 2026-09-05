@@ -148,10 +148,14 @@ impl Session {
                 // One bench for the whole run: a fault raised while handling
                 // one event has to still be holding when the next arrives.
                 let bench = Arc::new(crate::run::runner::Bench::default());
+                // The helper and the interpreter that runs it, resolved the
+                // way the settings screen resolves them, so what the probe
+                // says is ready is what the run uses.
+                let chosen = crate::settings::WorkspaceSettings::read(&root);
                 let eye: Arc<dyn crate::run::perceive::Perception> =
                     Arc::new(crate::run::perceive::Local::new(
-                        models_folder(),
-                        std::path::PathBuf::from("python3"),
+                        crate::settings::models_folder(&chosen, &root),
+                        crate::settings::python_for(&chosen),
                     ));
 
                 match graph.run_mode {
@@ -277,20 +281,6 @@ impl Session {
     pub fn finish(&self) {
         let _ = self.out.send(Outgoing::Done);
     }
-}
-
-/// Where perception models live.
-///
-/// `~/.local/share/cyberloom/models`, or `CYBERLOOM_MODELS`. Under the user's
-/// own data folder rather than the workspace: weights are large, shared
-/// between graphs, and have no business in a folder someone might commit.
-fn models_folder() -> std::path::PathBuf {
-    if let Some(set) = std::env::var_os("CYBERLOOM_MODELS") {
-        return std::path::PathBuf::from(set);
-    }
-    let home = std::env::var_os("HOME").map(std::path::PathBuf::from);
-    home.unwrap_or_else(|| std::path::PathBuf::from("."))
-        .join(".local/share/cyberloom/models")
 }
 
 /// Which provider a graph's models should go through.

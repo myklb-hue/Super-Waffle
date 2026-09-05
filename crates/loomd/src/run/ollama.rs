@@ -28,6 +28,59 @@ pub struct Ollama {
     agent: ureq::Agent,
 }
 
+/// Pull a model into Ollama, reporting as it comes (SPEC §15.13).
+///
+/// `/api/pull` streams one JSON object per line — `{status}` for the steps
+/// and `{status, completed, total}` for each layer as it downloads — and ends
+/// with `{"status":"success"}` or `{"error"}`. `say` is called with the bytes
+/// so far, the bytes in all (zero until known) and the server's word for what
+/// it is doing. Ollama's own store is where the model lands; this only asks.
+pub fn pull(
+    endpoint: Option<&str>,
+    model: &str,
+    say: &mut dyn FnMut(u64, u64, &str),
+) -> Result<(), String> {
+    let client = Ollama::new(endpoint);
+    let response = client
+        .agent
+        .post(format!("{}/api/pull", client.endpoint))
+        .send_json(&serde_json::json!({ "name": model, "stream": true }))
+        .map_err(|e| match &e {
+            ureq::Error::StatusCode(code) => format!("ollama answered {code} to a pull of {model}"),
+            _ => unreachable_message(&client.endpoint, &e),
+        })?;
+    #[derive(Deserialize)]
+    struct Step {
+        status: Option<String>,
+        completed: Option<u64>,
+        total: Option<u64>,
+        error: Option<String>,
+    }
+    let mut finished = false;
+    for line in BufReader::new(response.into_body().into_reader()).lines() {
+        let line = line.map_err(|e| e.to_string())?;
+        if line.trim().is_empty() {
+            continue;
+        }
+        let step: Step = serde_json::from_str(&line).map_err(|e| format!("{e}: {line}"))?;
+        if let Some(error) = step.error {
+            return Err(error);
+        }
+        let status = step.status.unwrap_or_default();
+        finished |= status == "success";
+        say(
+            step.completed.unwrap_or(0),
+            step.total.unwrap_or(0),
+            &status,
+        );
+    }
+    if finished {
+        Ok(())
+    } else {
+        Err(format!("the pull of {model} ended without success"))
+    }
+}
+
 impl Ollama {
     pub fn new(endpoint: Option<&str>) -> Self {
         let endpoint = endpoint
@@ -404,5 +457,37 @@ mod tests {
         assert!(Ollama::new(None).local());
         assert!(Ollama::new(Some("http://localhost:11434")).local());
         assert!(!Ollama::new(Some("https://models.example.com")).local());
+    }
+
+    /// A pull is a stream of steps, and the last of them is `success`.
+    #[test]
+    fn a_pull_reports_each_layer_and_ends_on_success() {
+        let (endpoint, server) = stub(
+            "{\"status\":\"pulling manifest\"}\n\
+             {\"status\":\"pulling 9f1a\",\"digest\":\"sha256:9f1a\",\"total\":2000,\"completed\":500}\n\
+             {\"status\":\"pulling 9f1a\",\"digest\":\"sha256:9f1a\",\"total\":2000,\"completed\":2000}\n\
+             {\"status\":\"verifying sha256 digest\"}\n\
+             {\"status\":\"success\"}\n",
+        );
+        let mut seen: Vec<(u64, u64, String)> = Vec::new();
+        pull(Some(&endpoint), "llama3.2:3b", &mut |c, t, s| {
+            seen.push((c, t, s.to_owned()))
+        })
+        .unwrap();
+        let sent = server.join().unwrap();
+        assert!(
+            sent.contains("llama3.2:3b") && sent.contains("\"stream\""),
+            "{sent}"
+        );
+        assert_eq!(seen[1], (500, 2000, "pulling 9f1a".to_owned()));
+        assert_eq!(seen.last().unwrap().2, "success");
+    }
+
+    #[test]
+    fn a_pull_that_the_server_refuses_says_why() {
+        let (endpoint, _server) =
+            stub("{\"error\":\"pull model manifest: file does not exist\"}\n");
+        let err = pull(Some(&endpoint), "nope:latest", &mut |_, _, _| {}).unwrap_err();
+        assert!(err.contains("does not exist"), "{err}");
     }
 }

@@ -6,6 +6,7 @@ import { Canvas } from '../canvas/Canvas';
 import { Console } from './Console';
 import { Inspector } from './Inspector';
 import { Settings } from './Settings';
+import { workspaceSettings } from '../stores/rpc';
 import { Tabs } from './Tabs';
 import { RunFigures, Transport, WarningPrompt } from './Transport';
 import { useDocument } from '../stores/document';
@@ -36,6 +37,7 @@ export function Shell({ engine }: ShellProps) {
   return (
     <div className={s.shell}>
       <TopBar saveState={save.state} onSettings={() => setSettings(true)} />
+      <FirstRun onSettings={() => setSettings(true)} />
       <Tabs />
       <div className={s.middle}>
         <Library />
@@ -261,4 +263,46 @@ export function useSearchShortcut() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+}
+
+/**
+ * What a first run says when the machine is not ready (SPEC §15.13).
+ *
+ * The probe runs when the window opens. If Ollama, Python, ffmpeg or the
+ * models are not here, a line above the canvas says how many and opens the
+ * settings screen, which says which and what to do. It goes away when all four
+ * are found, or when dismissed for this window. Offline is a supported state:
+ * this is a notice, not a gate, and the canvas underneath works.
+ */
+function FirstRun({ onSettings }: { onSettings: () => void }) {
+  const [missing, setMissing] = useState<string[]>([]);
+  const [dismissed, setDismissed] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void workspaceSettings()
+      .then((info) => {
+        if (cancelled) return;
+        const found = [info.probe.ollama, info.probe.python, info.probe.ffmpeg, info.probe.models];
+        setMissing(found.filter((f) => !f.ok).map((f) => f.name));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  if (dismissed || missing.length === 0) return null;
+  return (
+    <div className={s.firstRun} role="status" data-testid="first-run">
+      <span className={s.firstRunText}>
+        Not on this machine yet: {missing.join(', ')}. A graph that needs {missing.length === 1 ? 'it' : 'them'} will
+        say so on the block; everything else runs.
+      </span>
+      <button type="button" className={s.firstRunAction} onClick={onSettings}>
+        See what to do
+      </button>
+      <button type="button" className={s.firstRunDismiss} onClick={() => setDismissed(true)} aria-label="Dismiss">
+        ×
+      </button>
+    </div>
+  );
 }
