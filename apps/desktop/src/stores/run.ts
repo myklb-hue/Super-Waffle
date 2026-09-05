@@ -35,6 +35,19 @@ export interface FaceRun {
   /** The shape of the audio playing, 0–255 a bucket. Empty when it is quiet. */
   mouth: number[];
   gaze: string | null;
+  /** Where that is, `0..1` from the top left, when the look came with a place. */
+  gazeAt: [number, number] | null;
+  /** The last one-shot gesture, and a count that changes every time one
+   *  arrives — so the same gesture twice in a row plays twice. */
+  gesture: string | null;
+  gestureSeq: number;
+  /** Asleep after the idle timeout (SPEC §11.4). */
+  asleep: boolean;
+  /** The idle the engine asked for: from the rig, overridden by the block. */
+  blinkMs: number;
+  breathePerMin: number;
+  /** The mood's colour, for a Status light's swatch. */
+  colour: string;
 }
 
 export interface ConsoleLine {
@@ -263,18 +276,31 @@ export const useRun = create<RunStore>((set, get) => ({
       // a graph may have more than one face in it — an Avatar and a Status
       // light are the same vocabulary in two media (§11.7).
       case 'face':
-        set((st) => ({
-          faces: {
-            ...st.faces,
-            [event.data.block]: {
-              rig: event.data.rig,
-              expression: event.data.expression,
-              intensity: event.data.intensity,
-              mouth: event.data.mouth,
-              gaze: event.data.gaze,
+        set((st) => {
+          const before = st.faces[event.data.block];
+          const gestured = event.data.gesture !== null;
+          return {
+            faces: {
+              ...st.faces,
+              [event.data.block]: {
+                rig: event.data.rig,
+                expression: event.data.expression,
+                intensity: event.data.intensity,
+                mouth: event.data.mouth,
+                gaze: event.data.gaze,
+                gazeAt: event.data.gazeAt ? [event.data.gazeAt[0]!, event.data.gazeAt[1]!] : null,
+                // A gesture is carried by one event and is not state; the
+                // sequence number is how the face knows a new one arrived.
+                gesture: gestured ? event.data.gesture : (before?.gesture ?? null),
+                gestureSeq: (before?.gestureSeq ?? 0) + (gestured ? 1 : 0),
+                asleep: event.data.asleep,
+                blinkMs: event.data.blinkMs,
+                breathePerMin: event.data.breathePerMin,
+                colour: event.data.colour,
+              },
             },
-          },
-        }));
+          };
+        });
         break;
 
       case 'held':

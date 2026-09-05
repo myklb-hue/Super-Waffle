@@ -16,7 +16,7 @@ use loomd::{Engine, Reply, Request, RpcError, Workspace};
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 
 /// The name the window listens on. One channel for every event, because the
 /// shell already has to tell them apart by their tag.
@@ -51,6 +51,50 @@ fn rpc(state: tauri::State<'_, Host>, request: Request) -> Reply {
             Reply::Error(RpcError::new("engine", why))
         }
     }
+}
+
+/// A window that is only a face (SPEC §11.5).
+///
+/// The Avatar's `output` setting can ask for a window, optionally always on
+/// top, optionally on a particular screen. The window is a second webview on
+/// the same event stream — `handle.emit` below reaches every window — loading
+/// the shell with `?face=<block>`, which draws that block's face and nothing
+/// else. One per block: asking again focuses the one that exists.
+#[tauri::command]
+fn face_window(
+    app: tauri::AppHandle,
+    block: String,
+    rig: String,
+    always_on_top: bool,
+    screen: Option<u32>,
+) -> Result<(), String> {
+    // A window label is an identifier, not a free string.
+    let slug: String = block
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect();
+    let label = format!("face-{slug}");
+    if let Some(existing) = app.get_webview_window(&label) {
+        let _ = existing.set_always_on_top(always_on_top);
+        return existing.set_focus().map_err(|e| e.to_string());
+    }
+    let url = format!("index.html?face={block}&rig={rig}");
+    let mut window =
+        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(url.into()))
+            .title(format!("Cyberloom · {block}"))
+            .inner_size(360.0, 360.0)
+            .min_inner_size(120.0, 120.0)
+            .always_on_top(always_on_top);
+    // "A specific screen": counted the way the system lists them. A number
+    // past the end means the last one rather than nowhere.
+    if let Some(wanted) = screen
+        && let Ok(monitors) = app.available_monitors()
+        && let Some(monitor) = monitors.get((wanted as usize).min(monitors.len().saturating_sub(1)))
+    {
+        let at = monitor.position();
+        window = window.position(f64::from(at.x) + 48.0, f64::from(at.y) + 48.0);
+    }
+    window.build().map(|_| ()).map_err(|e| e.to_string())
 }
 
 /// Which folder to serve.
@@ -142,7 +186,7 @@ pub fn run() {
                 })?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![rpc])
+        .invoke_handler(tauri::generate_handler![rpc, face_window])
         .run(tauri::generate_context!())
         .expect("the window could not be created");
 }

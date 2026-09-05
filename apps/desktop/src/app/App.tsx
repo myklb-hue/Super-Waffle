@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { FaceWindow } from '../avatar/FaceWindow';
+import { refreshRigs } from '../avatar/rigs';
 import { Shell } from '../shell/Shell';
 import { Picker, remember } from '../shell/Picker';
 import { engineStatus, listWorkspace, useWorkspace } from '../stores/rpc';
@@ -17,6 +19,18 @@ type State =
  * strip owns what is open and the document store owns what is being edited.
  */
 export function App() {
+  // `?face=<block>` is a window that is only that block's face (SPEC §11.5):
+  // no canvas, no picker, no engine start of its own — it listens to the run
+  // the main window is driving.
+  const asked = new URLSearchParams(window.location.search);
+  const faceOf = asked.get('face');
+  if (faceOf) {
+    return <FaceWindow block={faceOf} rig={asked.get('rig') ?? 'line'} />;
+  }
+  return <Main />;
+}
+
+function Main() {
   const [state, setState] = useState<State>({ phase: 'starting' });
   // The folder to serve, from the URL. Absent means "whatever the host started
   // with", which is how the application opens where it left off; `?pick`
@@ -38,6 +52,9 @@ export function App() {
         }
         const status = await engineStatus();
         const graphs = await listWorkspace();
+        // The rigs this workspace can wear, including its own (SPEC §11.1).
+        // Not awaited: the bundled four are drawn until the answer arrives.
+        void refreshRigs();
         if (graphs.length === 0) {
           if (!cancelled) {
             setState({ phase: 'unreachable', message: 'the workspace holds no graphs' });

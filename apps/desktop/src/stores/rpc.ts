@@ -23,6 +23,7 @@ import type {
   OpenGraph,
   Reply,
   Request,
+  RigInfo,
   RunEvent,
   RunStarted,
   Saved,
@@ -118,6 +119,13 @@ export async function useWorkspace(path: string): Promise<string> {
 export async function workspaceSettings() {
   const reply = await call({ method: 'workspace.settings' });
   if (reply.result !== 'workspaceInfo') throw new Error('the engine did not describe the workspace');
+  return reply.data;
+}
+
+/** Every rig this workspace can wear, with its drawings (SPEC §11.1). */
+export async function listRigs(): Promise<RigInfo[]> {
+  const reply = await call({ method: 'workspace.rigs' });
+  if (reply.result !== 'rigs') throw new Error('the engine did not list the rigs');
   return reply.data;
 }
 
