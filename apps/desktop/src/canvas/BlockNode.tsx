@@ -78,11 +78,20 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
   // is not covered in controls (SPEC §3.4). Hover is CSS; selection is this.
   const showControls = selected;
   const resizable = block.view === 'stage' || block.view === 'code' || hasStage(block.kind);
+  const stage = block.view === 'stage';
+  // The Avatar's header names its rig (the Assistant figure), except in
+  // Stage, where the strip has room for the title and nothing else.
+  const face = useRun((r) => r.faces[block.id]);
+  const rigWorn =
+    block.kind === 'avatar' && !stage && block.view !== 'compact'
+      ? (face?.rig ?? (typeof block.settings.rig === 'string' ? block.settings.rig : 'line'))
+      : null;
 
   return (
     <div
       className={[
         s.block,
+        stage && s.stageView,
         selected && s.selected,
         broken && s.broken,
         live?.state === 'running' && s.running,
@@ -95,7 +104,7 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
       data-kind={block.kind}
     >
       <header
-        className={s.header}
+        className={`${s.header} ${stage ? s.headerStage : ''}`}
         // Double-clicking the header cycles the views (SPEC §2.4). The toggle
         // does the same thing with a click; this is the gesture for someone
         // who is already dragging the block around by its header.
@@ -109,6 +118,7 @@ export function BlockNode({ data, selected }: NodeProps & { data: BlockNodeData 
         {block.kind === 'custom' && block.source && (
           <Chip label={shortLanguage(block.source.language)} color="cat-custom" />
         )}
+        {rigWorn && <Chip label={rigWorn} color="cat-actuators" />}
         <span className={`${s.toggle} ${showControls ? s.toggleShown : ''}`}>
           <ViewToggle
             active={block.view}
@@ -346,15 +356,14 @@ function AvatarBody({ block }: { block: Block }) {
   const rig = face?.rig ?? (block.settings.rig as string) ?? 'line';
   const states = useRigs((r) => r.rigs[rig]?.states);
   const stage = block.view === 'stage';
-  const width = (block.size?.w ?? BLOCK_MIN_WIDTH) - 24;
+  const width = block.size?.w ?? BLOCK_MIN_WIDTH;
   // With the lock on, the rig's own aspect decides the height. With it off,
-  // the face fits whatever box the grip made.
+  // the box is whatever the grip made it.
   const aspect = aspectOf(states ?? {});
-  const size = stage
-    ? aspectLocked(block) || !block.size?.h
-      ? width
-      : Math.min(width, Math.max(48, block.size.h - 24 - PORT_ROW))
-    : 44;
+  const boxH = aspectLocked(block) || !block.size?.h ? Math.round(width / aspect) : block.size.h;
+  // Figure 16: a 200 face in a 240 box, on the field colour.
+  const size = stage ? Math.round(Math.min(width, boxH) * 0.83) : 40;
+  const speaking = (face?.mouth.length ?? 0) > 0;
 
   // "A window (optionally always on top)" (SPEC §11.5): the output setting
   // asks for one, and the first face of a run is when it opens. Asking again
@@ -369,30 +378,55 @@ function AvatarBody({ block }: { block: Block }) {
     void openFaceWindow(block.id, rig, { alwaysOnTop: onTop, screen });
   }, [wantsWindow, hasFace, block.id, rig, onTop, screen]);
 
-  return (
-    <div className={stage ? s.stage : s.body}>
-      <div style={{ width: size, height: size / aspect, display: 'grid', placeItems: 'center' }}>
-        <Face
-          rig={rig}
-          expression={face?.expression}
-          intensity={face?.intensity}
-          mouth={face?.mouth}
-          gaze={face?.gaze}
-          gazeAt={face?.gazeAt}
-          gesture={face?.gesture}
-          gestureSeq={face?.gestureSeq}
-          asleep={face?.asleep}
-          blinkMs={face?.blinkMs}
-          breathePerMin={face?.breathePerMin}
-          size={size}
-        />
+  const drawn = (
+    <Face
+      rig={rig}
+      expression={face?.expression}
+      intensity={face?.intensity}
+      mouth={face?.mouth}
+      gaze={face?.gaze}
+      gazeAt={face?.gazeAt}
+      gesture={face?.gesture}
+      gestureSeq={face?.gestureSeq}
+      asleep={face?.asleep}
+      blinkMs={face?.blinkMs}
+      breathePerMin={face?.breathePerMin}
+      size={size}
+    />
+  );
+
+  if (stage) {
+    // The picture fills the block; what it is doing sits in the corner in
+    // the same words the state port uses (Figure 16).
+    const said = [face?.expression ?? 'neutral', speaking && 'speaking', face?.asleep && 'asleep']
+      .filter(Boolean)
+      .join(' · ');
+    return (
+      <div className={s.stageBox} style={{ height: boxH }} data-testid={`stage-${block.id}`}>
+        {drawn}
+        <span className={s.stageFoot}>
+          {said} · {width} × {boxH}
+        </span>
       </div>
-      {!stage && (
-        <div className={s.stageSide}>
-          <div className={s.label}>rig</div>
-          <div className={s.value}>{rig}</div>
-        </div>
-      )}
+    );
+  }
+
+  // Summary: a thumbnail with what it is doing beside it, so a busy graph
+  // still says whether the assistant is smiling (the Assistant figure).
+  const second = face?.gaze
+    ? `looking at ${face.gaze}`
+    : face?.asleep
+      ? 'asleep'
+      : rig;
+  return (
+    <div className={`${s.body} ${s.faceRow}`}>
+      <span className={s.faceTile}>{drawn}</span>
+      <span className={s.faceLines}>
+        {face?.expression ?? 'neutral'}
+        {speaking ? ' · speaking' : ''}
+        <br />
+        {second}
+      </span>
     </div>
   );
 }

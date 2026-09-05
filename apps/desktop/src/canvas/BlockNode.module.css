@@ -353,10 +353,87 @@
 }
 
 /* Stage view: the rig fills the block (SPEC §11.6). */
-.stage {
+/* Stage (SPEC §3.4, Figure 16): the header shrinks to a strip, the port
+ * labels go and only the dots stay on the edges, and the picture fills the
+ * rest. The ports leave the flow so the picture starts under the strip; the
+ * dots keep the y that graph-core's portY gives them for this view. */
+.stageView {
+  position: relative;
+}
+
+.headerStage {
+  height: var(--block-header-stage-h);
+  gap: var(--sp-3);
+  padding: 0 var(--sp-3);
+}
+
+.headerStage .title {
+  font-size: var(--fs-sm);
+}
+
+.stageView .ports {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--block-header-stage-h);
+  pointer-events: none;
+}
+
+.stageView .portIn,
+.stageView .portOut {
+  pointer-events: auto;
+}
+
+.stageView .portLabel {
+  display: none;
+}
+
+.stageBox {
+  position: relative;
   display: grid;
   place-items: center;
-  padding: 12px;
+  overflow: hidden;
+  background: var(--field);
+  border-radius: 0 0 calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px);
+}
+
+.stageFoot {
+  position: absolute;
+  left: 9px;
+  bottom: 7px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* Summary: a thumbnail with what it is doing beside it (the Assistant figure). */
+.faceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.faceTile {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--field);
+  border: 1px solid var(--line-soft);
+}
+
+.faceLines {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text-faint);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Summary view: a thumbnail with what it is doing beside it. */

@@ -26,6 +26,13 @@
   --float: #12161c;       /* zoom pill, minimap, drag tooltip; used at 94% */
   --line: #242932;        /* borders */
   --line-soft: #1a1e25;   /* hairlines inside panels, block header rule */
+  /* Aliases the shell's stylesheets reached for before these names existed:
+     the settings screen, the picker and the tab strip all set a background
+     with --bg-0 and were transparent for want of it. */
+  --bg-0: var(--ground);
+  --bg-1: var(--field);
+  --border: var(--line);
+  --border-strong: var(--text-faint);
 
   /* The canvas dot grid. One place, because the grid unit is also the snap. */
   --grid-dot: rgba(255, 255, 255, 0.055);

@@ -7,11 +7,13 @@ import {
   type Generated,
   type Graph,
   type SettingDef,
+  type View,
 } from '@cyberloom/graph-core';
 import {
   Button,
   Callout,
   Chip,
+  ConnectionRow,
   Field,
   Icon,
   Label,
@@ -91,7 +93,10 @@ function Head({ graph, selection }: { graph: Graph; selection: Selection }) {
     icon = (kind?.icon ?? 'code') as IconName;
     colour = `cat-${kind?.category ?? 'custom'}`;
     title = block?.title ?? kind?.title ?? block?.kind ?? 'Block';
-    sub = `${kind?.category ?? 'custom'} · ${block?.id ?? ''}`;
+    sub =
+      block?.kind === 'avatar'
+        ? `${kind?.category ?? 'actuators'} · ${typeof block.settings.rig === 'string' ? block.settings.rig : 'line'}.rig · ${block.view} view`
+        : `${kind?.category ?? 'custom'} · ${block?.id ?? ''}`;
   } else if (selection.kind === 'block') {
     icon = 'chunk';
     title = `${selection.ids.length} blocks`;
@@ -270,6 +275,10 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
         </Section>
       )}
 
+      {/* The Avatar's panel leads with its rig (Figure 15); its Inputs section
+          says what feeds it, so the port list follows rather than leads. */}
+      <FaceSections graph={graph} block={block} />
+
       <Section title="Ports">
         <Ports graph={graph} block={block} />
       </Section>
@@ -277,7 +286,6 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
       <SenseSections block={block} />
       <MemorySections graph={graph} block={block} />
       <ActuatorSections graph={graph} block={block} />
-      <FaceSections block={block} />
 
       <Section title="On the canvas">
         <SwitchRow
@@ -292,31 +300,64 @@ function BlockPanel({ graph, id }: { graph: Graph; id: string }) {
 }
 
 /**
- * The Avatar's sections, and its Rigs tab (Figure 15).
+ * The Avatar's panel (Figure 15): Rig, Vocabulary, Inputs, Idle, View, Output,
+ * Live — in that order, with the figure's words.
  *
- * Rigs is a picker rather than a list, because a rig is a look and the only
+ * Rig is a picker rather than a list, because a rig is a look and the only
  * useful way to choose a look is to see it. The vocabulary below it is the
  * point of §11.2: it is generated from the rig, so changing the rig changes
  * what the model may ask for — and the panel shows that happening rather than
- * describing it.
+ * describing it. Idle's fields show the rig's numbers as placeholders and the
+ * block's, when set, as values.
  */
-function FaceSections({ block }: { block: Block }) {
+function FaceSections({ graph, block }: { graph: Graph; block: Block }) {
   const setSetting = useDocument((d) => d.setSetting);
+  const setView = useDocument((d) => d.setBlockView);
   const live = useRun((r) => r.faces[block.id]);
   const known = useRigs((r) => r.rigs);
   const [preview, setPreview] = useState<string | null>(null);
   if (block.kind !== 'avatar') return null;
 
   const rig = (block.settings.rig as string) ?? 'line';
-  const words = expressionsOf(rig, known[rig]?.states ?? {}).filter((e) => e !== 'speaking');
+  const worn = known[rig];
+  const words = expressionsOf(rig, worn?.states ?? {});
+  const gestures = worn?.gestures ?? [];
+  // The vocabulary as the figure lists it: the expressions, then `look` where
+  // the rig can, then the gestures it has.
+  const vocabulary = [...words, ...(worn?.gaze !== false ? ['look'] : []), ...gestures];
   const showing = preview ?? live?.expression ?? 'neutral';
-  const gestures = known[rig]?.gestures ?? [];
   const output = typeof block.settings.output === 'string' ? block.settings.output : 'canvas';
+  const view = block.view;
+  const width = block.size?.w ?? 200;
+  const locked = block.settings.keepAspect !== false;
+  const text = (name: string) => {
+    const v = block.settings[name];
+    return v === undefined || v === null ? '' : String(v);
+  };
+  const number = (name: string, v: string) => setSetting(block.id, name, v.trim() === '' ? null : Number(v) || 0);
+
+  // What feeds each input, for the Inputs rows.
+  const feeding = (port: string) => {
+    const wire = graph.wires.find((w) => w.to.node === block.id && w.to.port === port);
+    if (!wire) return null;
+    const from = graph.blocks.find((b) => b.id === wire.from.node);
+    return from ? (from.title ?? lookupKind(from.kind)?.title ?? from.kind) : wire.from.node;
+  };
+  const input = (port: string, does: string) => {
+    const from = feeding(port);
+    return {
+      meta: from ? `${from} · ${does}` : `not wired · ${does}`,
+      state: (from ? (live ? 'running' : 'ok') : 'off') as 'running' | 'ok' | 'off',
+    };
+  };
+  const speech = input('speech', 'lip sync from amplitude');
+  const express = input('express', 'expression as a value');
+  const look = input('look', 'gaze follows a person');
 
   return (
     <>
-      <Section title="Rigs" right={<Chip label={rig} color="cat-actuators" />}>
-        <div className={s.rigRow}>
+      <Section title="Rig" tint="cat-actuators" right={<Chip label={rig} color="cat-actuators" />}>
+        <div className={s.rigTiles}>
           {rigIds(known).map((name) => (
             <button
               key={name}
@@ -325,80 +366,193 @@ function FaceSections({ block }: { block: Block }) {
               onClick={() => setSetting(block.id, 'rig', name)}
               title={known[name]?.shipped ? name : `${name} — from this workspace`}
             >
-              <Face rig={name} expression={showing} idle={false} size={48} />
+              <Face rig={name} expression={showing} idle={false} size={40} />
               <span className={s.rigName}>
-                {name}
+                {known[name]?.name ?? name}
                 {known[name] && !known[name].shipped ? ' ·' : ''}
               </span>
             </button>
           ))}
         </div>
-        <div className={s.summary}>
-          A rig is a folder of states, not code. Adding one is copying a folder
-          into the workspace's <code>rigs/</code>; one with a shipped rig's name
-          replaces it. A dot marks a rig that came from this workspace.
+        <div className={s.rigFoot}>
+          <span className={s.summary}>Rigs are content, not code.</span>
+          <span className={s.spacer} />
+          <Chip label="add rig…" color="text-mid" />
+        </div>
+        <div className={s.hint}>
+          Add one by copying a folder of states into the workspace's <code>rigs/</code>. A dot
+          marks a rig that came from there.
         </div>
       </Section>
 
-      <Section
-        title="Vocabulary"
-        right={<Chip label={`${words.length}`} color="ok" />}
-      >
-        <div className={s.rigRow}>
-          {words.map((word) => (
+      <Section title="Vocabulary" right={<Chip label={`${vocabulary.length}`} color="type-tools" />}>
+        <div className={s.chips}>
+          {vocabulary.map((word) => (
             <button
               key={word}
               type="button"
               className={`${s.wordChip} ${showing === word ? s.wordChosen : ''}`}
-              onMouseEnter={() => setPreview(word)}
+              onMouseEnter={() => words.includes(word) && setPreview(word)}
               onMouseLeave={() => setPreview(null)}
-              onFocus={() => setPreview(word)}
+              onFocus={() => words.includes(word) && setPreview(word)}
               onBlur={() => setPreview(null)}
             >
               {word}
             </button>
           ))}
         </div>
-        <div className={s.summary}>
-          This is what <code>face.express</code> offers the model — generated
-          from the rig, so it can only ask for expressions that exist.
-          <code>speaking</code> is not among them: the mouth is driven by the
-          speech port, never by a command.
-          {gestures.length > 0
-            ? ` Gestures: ${gestures.join(', ')}.`
-            : ' This rig has no gestures.'}
+        <Label>Offered as</Label>
+        <div className={s.readout}>
+          face.express{worn?.gaze !== false ? ', face.look' : ''}
+          {gestures.length > 0 ? ', face.gesture' : ''}
+        </div>
+        <div className={s.hint}>
+          Generated from the rig. A rig without <code>frown</code> simply doesn't offer it;
+          <code>speaking</code> is a state, not a command — the mouth is driven by the speech
+          port.
         </div>
       </Section>
 
-      {output === 'window' && (
-        <Section title="Window">
-          <div className={s.summary}>
-            The face opens in a window of its own when the graph first shows it
-            {block.settings.alwaysOnTop === true ? ', kept on top' : ''}
-            {typeof block.settings.screen === 'number' ? `, on screen ${block.settings.screen}` : ''}
-            . The canvas keeps showing it too.
-          </div>
-          <Button
-            label="Open now"
-            icon="face"
-            onClick={() =>
-              void openFaceWindow(block.id, rig, {
-                alwaysOnTop: block.settings.alwaysOnTop === true,
-                screen: typeof block.settings.screen === 'number' ? block.settings.screen : null,
-              })
-            }
-          />
-        </Section>
-      )}
+      <Section title="Inputs">
+        <div className={s.ports}>
+          <ConnectionRow icon="note" name="speech" meta={speech.meta} kind="audio" state={speech.state} />
+          <ConnectionRow icon="face" name="express" meta={express.meta} kind="data" state={express.state} />
+          <ConnectionRow icon="approve" name="look" meta={look.meta} kind="data" state={look.state} />
+        </div>
+        <SwitchRow
+          label="Auto-affect from speech"
+          hint={
+            block.settings.autoAffectFromSpeech === false
+              ? 'off — an Affect block feeds express instead'
+              : 'on — the face wears the mood of what it says'
+          }
+          on={block.settings.autoAffectFromSpeech !== false}
+          onChange={(on) => setSetting(block.id, 'autoAffectFromSpeech', on)}
+        />
+      </Section>
+
+      <Section title="Idle">
+        <Label>Blink</Label>
+        <Field
+          value={text('blink')}
+          placeholder="every 3–6 s"
+          mono
+          onChange={(v) => setSetting(block.id, 'blink', v)}
+        />
+        <Label>Breathe</Label>
+        <Field
+          value={text('breathePerMin')}
+          placeholder="on · 12 / min"
+          mono
+          suffix="/ min"
+          onChange={(v) => number('breathePerMin', v)}
+        />
+        <Label>Settle to neutral after</Label>
+        <Field
+          value={text('settleSec')}
+          placeholder="4 s"
+          mono
+          suffix="s"
+          onChange={(v) => number('settleSec', v)}
+        />
+        <Label>Sleep after</Label>
+        <Field
+          value={text('sleepAfterMin')}
+          placeholder="10 min without events"
+          mono
+          suffix="min"
+          onChange={(v) => number('sleepAfterMin', v)}
+        />
+        <div className={s.hint}>
+          Blank is what the rig says. Zero for settle holds a face until told otherwise; zero
+          for sleep never sleeps.
+        </div>
+      </Section>
+
+      <Section title="View">
+        <Segmented
+          options={['Compact', 'Summary', 'Stage']}
+          value={view.charAt(0).toUpperCase() + view.slice(1)}
+          color="accent"
+          label="View"
+          onChange={(v) => setView(block.id, v.toLowerCase() as View)}
+        />
+        <Label>Size on canvas</Label>
+        <div className={s.readout}>
+          {view === 'stage'
+            ? `${width} × ${locked || !block.size?.h ? width : block.size.h} · drag the corner`
+            : `${width} wide · drag the corner`}
+        </div>
+        <SwitchRow
+          label="Keep aspect"
+          hint="the rig stays square while you resize"
+          on={locked}
+          onChange={(on) => setSetting(block.id, 'keepAspect', on)}
+        />
+      </Section>
+
+      <Section title="Output">
+        <Label>Target</Label>
+        <Segmented
+          options={['canvas', 'window', 'device']}
+          value={output}
+          label="Output"
+          onChange={(v) => setSetting(block.id, 'output', v)}
+        />
+        {output === 'window' && (
+          <>
+            <SwitchRow
+              label="Always on top"
+              on={block.settings.alwaysOnTop === true}
+              onChange={(on) => setSetting(block.id, 'alwaysOnTop', on)}
+            />
+            <Label>Screen</Label>
+            <Field
+              value={text('screen')}
+              placeholder="wherever the host puts it"
+              mono
+              onChange={(v) => number('screen', v)}
+            />
+            <div className={s.rigFoot}>
+              <span className={s.hint}>Opens when the graph first shows the face.</span>
+              <span className={s.spacer} />
+              <Button
+                label="Open now"
+                icon="face"
+                onClick={() =>
+                  void openFaceWindow(block.id, rig, {
+                    alwaysOnTop: block.settings.alwaysOnTop === true,
+                    screen: typeof block.settings.screen === 'number' ? block.settings.screen : null,
+                  })
+                }
+              />
+            </div>
+          </>
+        )}
+        {output === 'device' && (
+          <>
+            <Label>Device block</Label>
+            <Field
+              value={text('device')}
+              placeholder="the id of a USB device block"
+              mono
+              onChange={(v) => setSetting(block.id, 'device', v)}
+            />
+          </>
+        )}
+        <div className={s.hint}>
+          Or a physical face over USB — the avatar calls <code>face.render</code> on a device block,
+          with a matrix rig's face as the bits a matrix shows.
+        </div>
+      </Section>
 
       {live && (
         <Section
           title="Live"
+          tint="ok"
           right={
             <Chip
-              label={
-                live.asleep ? 'asleep' : live.mouth.length > 0 ? 'speaking' : live.expression
-              }
+              label={live.asleep ? 'asleep' : live.mouth.length > 0 ? 'speaking' : 'running'}
               color="ok"
               dot
             />
@@ -417,23 +571,15 @@ function FaceSections({ block }: { block: Block }) {
               asleep={live.asleep}
               blinkMs={live.blinkMs}
               breathePerMin={live.breathePerMin}
-              size={96}
+              size={44}
             />
-            <div>
-              <div className={s.summary}>
-                {live.expression} at {live.intensity.toFixed(1)}
-                {live.asleep ? ' · asleep' : ''}
-              </div>
-              {live.gaze && (
-                <div className={s.summary}>
-                  looking at {live.gaze}
-                  {live.gazeAt ? ` (${live.gazeAt[0].toFixed(2)}, ${live.gazeAt[1].toFixed(2)})` : ''}
-                </div>
-              )}
-              <div className={s.summary}>
-                blinks about every {(live.blinkMs / 1000).toFixed(0)} s
-                {live.breathePerMin > 0 ? `, ${live.breathePerMin} breaths a minute` : ', not breathing'}
-              </div>
+            <div className={s.liveLines}>
+              {live.expression} · {live.intensity.toFixed(1)}
+              {live.asleep ? ' · asleep' : ''}
+              <br />
+              {[live.mouth.length > 0 && 'speaking', live.gaze && `looking at ${live.gaze}`]
+                .filter(Boolean)
+                .join(' · ') || 'quiet'}
             </div>
           </div>
         </Section>
@@ -623,8 +769,25 @@ const CAPTURES = ['webcam', 'microphone'];
  * the sentence saying what it costs is the one to keep.
  */
 function claimed(block: Block): readonly string[] {
+  if (block.kind === 'avatar') return AVATAR_SETTINGS;
   return CAPTURES.includes(block.kind) ? ['store'] : [];
 }
+
+/** Every setting the Avatar declares; Figure 15's panel places each of them
+ *  itself, in its own section, so the generic list would only repeat them. */
+const AVATAR_SETTINGS = [
+  'rig',
+  'autoAffectFromSpeech',
+  'blink',
+  'breathePerMin',
+  'settleSec',
+  'sleepAfterMin',
+  'keepAspect',
+  'output',
+  'alwaysOnTop',
+  'screen',
+  'device',
+] as const;
 
 /**
  * The sections a block that reaches the world has (Figure 6).

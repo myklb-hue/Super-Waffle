@@ -3,7 +3,7 @@ import { aspectOf, expressionsOf, rigIds, stateOf, useRigs } from './rigs';
 
 describe('the rigs the shell can draw (SPEC §11.1)', () => {
   it('starts with the four that ship, in name order', () => {
-    expect(rigIds()).toEqual(['line', 'orb', 'pixel', 'robot']);
+    expect(rigIds()).toEqual(['line', 'robot', 'orb', 'pixel']);
     expect(stateOf('line', 'smile')).toContain('<svg');
     // A face a rig cannot make falls back to neutral rather than to nothing.
     expect(stateOf('pixel', 'sleepy')).toBe(stateOf('pixel', 'neutral'));
@@ -55,7 +55,7 @@ describe('the rigs the shell can draw (SPEC §11.1)', () => {
         states: { neutral: '<svg><!-- mine --></svg>' },
       },
     ]);
-    expect(rigIds()).toEqual(['line', 'moon', 'orb', 'pixel', 'robot']);
+    expect(rigIds()).toEqual(['line', 'robot', 'orb', 'pixel', 'moon']);
     expect(stateOf('moon', 'smile')).toBe('<svg/>');
     expect(stateOf('line', 'neutral')).toContain('mine');
     expect(stateOf('line', 'neutral')).not.toBe(before);
