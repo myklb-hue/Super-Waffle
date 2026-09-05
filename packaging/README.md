@@ -32,6 +32,14 @@ use until there is a release for the `PKGBUILD` to fetch, and it is quicker than
 the `PKGBUILD` afterwards too, because it builds in the checkout and so builds
 incrementally.
 
+One thing both it and the `PKGBUILD` have to get right, because Tauri does
+not: `cargo build --release` alone produces a *dev* host, which loads the Vite
+dev server's URL and shows "Could not connect to localhost" on any machine
+without one. Tauri gates dev against release on the `custom-protocol` feature,
+which its own CLI turns on and a plain cargo build does not. Both pass
+`--features custom-protocol`, and the host's `build.rs` refuses a release build
+without it, so the mistake is a compile error rather than a blank window.
+
 It installs the binary and the rigs together in `lib/cyberloom/`, which is the
 first place `rigs_near()` looks, and `launcher.sh` as `bin/cyberloom`. The
 launcher does for an installed binary what `AppRun.sh` does for the AppImage:

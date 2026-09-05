@@ -28,7 +28,9 @@ build() {
   cd "$srcdir/super-waffle-$pkgver"
   npm ci
   npm run build
-  cargo build --release --bin cyberloom
+  # `custom-protocol` is what makes this a release build in Tauri's eyes;
+  # without it the window looks for a dev server that is not there.
+  cargo build --release --bin cyberloom --features custom-protocol
 }
 
 check() {

@@ -10,6 +10,15 @@ repository.workspace = true
 name = "cyberloom_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+# Tauri decides "dev" or "release" by this feature, not by the cargo profile:
+# without it the window loads the Vite dev server's URL and, with no dev server
+# running, shows "Could not connect to localhost". The Tauri CLI turns it on
+# for `tauri build`; a plain `cargo build --release` has to be told —
+# `--features custom-protocol` — and build.rs refuses a release build that
+# was not, so the mistake is a compile error rather than a blank window.
+[features]
+custom-protocol = ["tauri/custom-protocol"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

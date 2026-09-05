@@ -81,8 +81,12 @@ if [ "$skip_deps" = 0 ]; then
   packages=(base-devel git nodejs npm pkgconf webkit2gtk-4.1 gtk3 libayatana-appindicator librsvg ffmpeg)
   command -v cargo >/dev/null || packages+=(rust)
   if command -v pacman >/dev/null; then
-    say "Installing build and runtime dependencies (pacman will ask before changing anything)"
-    sudo pacman -S --needed "${packages[@]}"
+    # -Syu, not -S: on Arch a package list that has not been synced names
+    # files the mirrors no longer have, and the install fails with a 404 on
+    # something like enchant. Syncing without upgrading (-Sy) is worse — a
+    # partial upgrade — so this is the full one. pacman still asks first.
+    say "Syncing pacman and installing build and runtime dependencies (pacman will ask before changing anything)"
+    sudo pacman -Syu --needed "${packages[@]}"
   else
     warn "no pacman here; make sure these are installed some other way: ${packages[*]}"
   fi
@@ -109,7 +113,10 @@ if [ "$skip_build" = 0 ]; then
   say "Building the shell"
   npm run build -w @cyberloom/desktop
   say "Building the host and the engine (the first time takes a while)"
-  cargo build --release --bin cyberloom
+  # `custom-protocol` is what makes this a release build in Tauri's eyes:
+  # without it the window would look for the Vite dev server (see
+  # apps/desktop/src-tauri/Cargo.toml).
+  cargo build --release --bin cyberloom --features custom-protocol
 fi
 
 [ -x "$binary" ] || die "no binary at $binary; run without --no-build"
