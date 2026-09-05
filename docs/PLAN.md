@@ -1252,7 +1252,7 @@ What this environment cannot prove:
   and the second webview has never been opened. The URL form the host passes
   (`index.html?face=…`) and the capability file are what the Tauri 2 API
   documents; the shell's side is exercised in the browser build.
-- **Seventeen tests that need ffmpeg.** Every failure in this container's run
-  says "ffmpeg is not installed": the camera and microphone captures, the
-  settings probe, the live camera. None touches the avatar, and the avatar's
-  own suite is hermetic now that the scripted voice writes its own audio.
+- **Nothing else.** Seventeen tests need ffmpeg — the camera and microphone
+  captures, the settings probe, the live camera — and failed here until it was
+  installed; with it, all 305 pass. The avatar's own suite is hermetic either
+  way, now that the scripted voice writes its own audio.
