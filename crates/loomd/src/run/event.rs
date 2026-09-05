@@ -184,6 +184,22 @@ pub enum RunEvent {
         mouth: Vec<u8>,
         /// Who or what it is looking at, in the words the `look` port used.
         gaze: Option<String>,
+        /// Where that is, when it is known: a point in the frame, `0..1` from
+        /// the top left. A name alone leaves this empty and the shell decides.
+        gaze_at: Option<[f64; 2]>,
+        /// A one-shot gesture (`nod`, `shake`) carried by this event and this
+        /// event only; it is not part of the face's state.
+        gesture: Option<String>,
+        /// Asleep after the idle timeout (SPEC §11.4). A rig with a `sleepy`
+        /// state wears it; one without dims.
+        asleep: bool,
+        /// The idle the shell should animate: a blink about this often, and
+        /// this many breaths a minute (zero for none). From the rig, overridden
+        /// by the block.
+        blink_ms: u32,
+        breathe_per_min: u32,
+        /// The mood's colour, for the media that have a colour and not a face.
+        colour: String,
     },
 
     /// The engine held the graph itself, or let it go again.

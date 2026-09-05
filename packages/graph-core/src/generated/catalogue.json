@@ -1836,6 +1836,50 @@
         "max": null,
         "hint": null,
         "default": "true"
+      },
+      {
+        "name": "output",
+        "label": "Output",
+        "kind": "select",
+        "options": [
+          "canvas",
+          "window",
+          "device"
+        ],
+        "min": null,
+        "max": null,
+        "hint": null,
+        "default": "canvas"
+      },
+      {
+        "name": "alwaysOnTop",
+        "label": "Always on top",
+        "kind": "bool",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null,
+        "default": "false"
+      },
+      {
+        "name": "screen",
+        "label": "Screen",
+        "kind": "number",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null,
+        "default": null
+      },
+      {
+        "name": "device",
+        "label": "Device block",
+        "kind": "text",
+        "options": [],
+        "min": null,
+        "max": null,
+        "hint": null,
+        "default": null
       }
     ],
     "source": false,

@@ -55,6 +55,15 @@ pub struct Media {
     /// `image/png`, `audio/wav`. The shell picks a preview from it.
     pub mime: String,
     pub bytes: u32,
+    /// The words, when the audio is speech this engine produced.
+    ///
+    /// A text-to-speech block knows what it said; the audio it hands on does
+    /// not, unless it is written here. An Avatar with *auto-affect from speech*
+    /// reads this to wear the mood of what is being said, without a tool call
+    /// and without an Affect block wired in (SPEC §11.3). Captured audio has
+    /// none: what a microphone heard is for speech-to-text to decide.
+    #[serde(default)]
+    pub said: Option<String>,
 }
 
 impl Value {
@@ -196,6 +205,7 @@ mod tests {
             path: "/tmp/frame.png".into(),
             mime: "image/png".into(),
             bytes: 2_400_000,
+            said: None,
         });
         assert_eq!(image.summary(40), "image/png · 2.3 MB");
         // The value itself is still the path, so a file port can take it.

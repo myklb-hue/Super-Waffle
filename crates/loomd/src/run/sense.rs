@@ -210,6 +210,7 @@ pub fn keep(what: &Media, into: &Path) -> Result<Media, String> {
         path: kept.display().to_string(),
         mime: what.mime.clone(),
         bytes: what.bytes,
+        said: None,
     })
 }
 
@@ -334,7 +335,32 @@ fn describe(path: &Path, mime: &str) -> Result<Media, String> {
         path: path.display().to_string(),
         mime: mime.to_owned(),
         bytes: bytes.min(u64::from(u32::MAX)) as u32,
+        said: None,
     })
+}
+
+/// A 16-bit mono PCM WAV around some samples.
+///
+/// The scripted voice writes one, and so does the envelope's own test: the
+/// format is forty-four bytes of header, and having it here means neither
+/// needs ffmpeg to make a sound.
+pub fn wav(samples: &[i16], rate: u32) -> Vec<u8> {
+    let data: Vec<u8> = samples.iter().flat_map(|s| s.to_le_bytes()).collect();
+    let mut out = Vec::with_capacity(44 + data.len());
+    out.extend(b"RIFF");
+    out.extend(((36 + data.len()) as u32).to_le_bytes());
+    out.extend(b"WAVEfmt ");
+    out.extend(16u32.to_le_bytes());
+    out.extend(1u16.to_le_bytes()); // PCM
+    out.extend(1u16.to_le_bytes()); // mono
+    out.extend(rate.to_le_bytes());
+    out.extend((rate * 2).to_le_bytes());
+    out.extend(2u16.to_le_bytes());
+    out.extend(16u16.to_le_bytes());
+    out.extend(b"data");
+    out.extend((data.len() as u32).to_le_bytes());
+    out.extend(&data);
+    out
 }
 
 /// How many buckets a lip-sync envelope has per second of audio.
@@ -640,11 +666,13 @@ mod tests {
             path: loud.display().to_string(),
             mime: "audio/wav".into(),
             bytes: 0,
+            said: None,
         });
         let hush = envelope(&Media {
             path: quiet.display().to_string(),
             mime: "audio/wav".into(),
             bytes: 0,
+            said: None,
         });
         assert!(
             tone.len() >= ENVELOPE_HZ - 1 && tone.len() <= ENVELOPE_HZ + 1,
@@ -667,32 +695,18 @@ mod tests {
         let scratch = Scratch::open("scale-test").unwrap();
         let path = scratch.file("made", "wav");
         let rate = 12u32 * 100;
-        let mut samples: Vec<u8> = Vec::new();
-        for i in 0..rate {
-            // The first half is full scale, the second is silence.
-            let value: i16 = if i < rate / 2 { i16::MAX } else { 0 };
-            samples.extend(value.to_le_bytes());
-        }
-        let mut wav = Vec::new();
-        wav.extend(b"RIFF");
-        wav.extend(((36 + samples.len()) as u32).to_le_bytes());
-        wav.extend(b"WAVEfmt ");
-        wav.extend(16u32.to_le_bytes());
-        wav.extend(1u16.to_le_bytes()); // PCM
-        wav.extend(1u16.to_le_bytes()); // mono
-        wav.extend(rate.to_le_bytes());
-        wav.extend((rate * 2).to_le_bytes());
-        wav.extend(2u16.to_le_bytes());
-        wav.extend(16u16.to_le_bytes());
-        wav.extend(b"data");
-        wav.extend((samples.len() as u32).to_le_bytes());
-        wav.extend(&samples);
+        // The first half is full scale, the second is silence.
+        let samples: Vec<i16> = (0..rate)
+            .map(|i| if i < rate / 2 { i16::MAX } else { 0 })
+            .collect();
+        let wav = wav(&samples, rate);
         std::fs::write(&path, &wav).unwrap();
 
         let shape = envelope(&Media {
             path: path.display().to_string(),
             mime: "audio/wav".into(),
             bytes: wav.len() as u32,
+            said: None,
         });
         assert_eq!(shape.len(), ENVELOPE_HZ);
         assert_eq!(shape[0], 255, "full scale should be the top of the range");
@@ -706,6 +720,7 @@ mod tests {
                 path: "/nowhere/at/all.wav".into(),
                 mime: "audio/wav".into(),
                 bytes: 0,
+                said: None,
             })
             .is_empty()
         );

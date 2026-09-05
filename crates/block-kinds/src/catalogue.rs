@@ -571,11 +571,20 @@ pub static KINDS: &[BlockKind] = &[
                 switch("autoAffectFromSpeech", "Auto-affect from speech", true),
                 "Off: an Affect block feeds express instead.",
             ),
+            // Idle (SPEC §11.4). Blank means what the rig's manifest says.
             setting("blink", "Blink", SettingKind::Text),
             setting("breathePerMin", "Breathe", SettingKind::Number),
             setting("settleSec", "Settle to neutral after", SettingKind::Number),
             setting("sleepAfterMin", "Sleep after", SettingKind::Number),
             switch("keepAspect", "Keep aspect", true),
+            // Output (SPEC §11.5): "the target is a setting, not a wire". The
+            // canvas always shows the face; a window is the shell's to open;
+            // a device is a USB device block in this graph that `face.render`
+            // sends the face to on every change.
+            select("output", "Output", &["canvas", "window", "device"]),
+            switch("alwaysOnTop", "Always on top", false),
+            setting("screen", "Screen", SettingKind::Number),
+            setting("device", "Device block", SettingKind::Text),
         ],
     },
     BlockKind {

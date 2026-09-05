@@ -58,6 +58,36 @@ impl Engine {
 
             Request::GraphCatalogue => Reply::Catalogue(block_kinds::KINDS.to_vec()),
 
+            Request::WorkspaceRigs => {
+                let describe = |rig: &crate::run::rig::Rig, shipped: bool| rpc::RigInfo {
+                    id: rig.id.clone(),
+                    name: rig.name.clone(),
+                    description: rig.description.clone(),
+                    expressions: rig.expressions.clone(),
+                    gestures: rig.gestures.clone(),
+                    gaze: rig.gaze,
+                    blink_ms: rig.idle.blink_every.as_millis().min(u128::from(u32::MAX)) as u32,
+                    breathe_per_min: rig.idle.breathe_per_min,
+                    shipped,
+                    states: rig.states(),
+                };
+                // The workspace's first, so one of its rigs with a shipped
+                // rig's name is the one the shell draws — the same precedence
+                // the runner uses when it dresses the block.
+                let mut out: Vec<rpc::RigInfo> =
+                    crate::run::rig::all(&self.workspace.root().join("rigs"))
+                        .iter()
+                        .map(|r| describe(r, false))
+                        .collect();
+                for rig in crate::run::rig::all(&crate::run::runner::shipped_rigs()) {
+                    if !out.iter().any(|r| r.id == rig.id) {
+                        out.push(describe(&rig, true));
+                    }
+                }
+                out.sort_by(|a, b| a.name.cmp(&b.name));
+                Reply::Rigs(out)
+            }
+
             Request::WorkspaceSettings => {
                 let root = self.workspace.root();
                 let settings = crate::settings::WorkspaceSettings::read(root);

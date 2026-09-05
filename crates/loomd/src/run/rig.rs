@@ -33,24 +33,94 @@ pub struct Rig {
 }
 
 /// What the block does between turns, so the avatar is alive (SPEC §11.4).
+///
+/// The rig's manifest sets the defaults, because a rig knows how it should
+/// move; the block's own settings override them, because a graph knows how
+/// long its assistant should hold a face. `Idle::for_block` applies the second
+/// to the first.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Idle {
     pub blink_every: Duration,
-    pub breathe: bool,
+    /// Breaths a minute; zero is a face that does not breathe.
+    pub breathe_per_min: u32,
     /// How long an expression holds before it settles back to neutral.
     pub settle_after: Duration,
     /// How long with no events before it sleeps. The next event wakes it.
     pub sleep_after: Duration,
 }
 
+/// A resting breath. Thirteen a minute is a person at ease; it is also the
+/// 4.6 s cycle the shell used before the number was anyone's to choose.
+pub const BREATHE_PER_MIN: u32 = 13;
+
+/// How long `surprised` holds: "a beat, then settles" (SPEC §11.2).
+pub const BEAT: Duration = Duration::from_millis(1500);
+
 impl Default for Idle {
     fn default() -> Self {
         Self {
             blink_every: Duration::from_secs(4),
-            breathe: true,
+            breathe_per_min: BREATHE_PER_MIN,
             settle_after: Duration::from_secs(6),
             sleep_after: Duration::from_secs(300),
         }
+    }
+}
+
+impl Idle {
+    /// The rig's idle, overridden by whatever the block's settings say.
+    ///
+    /// Each setting is read only when it is set: an inspector field left blank
+    /// means "what the rig says", not zero.
+    pub fn for_block(self, block: &graph_format::Block) -> Idle {
+        use super::blocks::{number, setting};
+        let mut idle = self;
+        if let Some(text) = setting(block, "blink")
+            && let Some(every) = super::memory::parse_window(text)
+        {
+            idle.blink_every = every;
+        }
+        if let Some(per_min) = number(block, "breathePerMin") {
+            idle.breathe_per_min = per_min.max(0.0).round() as u32;
+        }
+        if let Some(seconds) = number(block, "settleSec") {
+            idle.settle_after = Duration::from_secs_f64(seconds.max(0.0));
+        }
+        if let Some(minutes) = number(block, "sleepAfterMin") {
+            idle.sleep_after = Duration::from_secs_f64(minutes.max(0.0) * 60.0);
+        }
+        idle
+    }
+
+    /// How long this expression holds before idle takes it back to neutral.
+    ///
+    /// A settle timer of zero means "do not": a face that should hold what it
+    /// was told until told otherwise, which is what a graph that drives every
+    /// change itself wants.
+    pub fn holds(&self, expression: &str) -> Duration {
+        match expression {
+            "neutral" | "sleepy" => Duration::MAX,
+            _ if self.settle_after.is_zero() => Duration::MAX,
+            "surprised" => BEAT.min(self.settle_after),
+            _ => self.settle_after,
+        }
+    }
+}
+
+/// The colour a mood is, for the media that have one and not a face: a Status
+/// light breathes it, a block on the canvas can glow it (SPEC §11.7). The same
+/// vocabulary, so the same table; it lives here rather than in the shell so
+/// that a lamp on a serial port and a swatch in the window agree.
+pub fn colour_for(expression: &str) -> &'static str {
+    match expression {
+        "smile" => "#6fc98a",
+        "frown" => "#e0a04f",
+        "surprised" => "#e8ebf0",
+        "thinking" => "#8f7be8",
+        "love" => "#e0685f",
+        "sleepy" => "#3a4250",
+        // neutral, speaking, and anything a user's rig added.
+        _ => "#56c7d6",
     }
 }
 
@@ -75,6 +145,113 @@ impl Rig {
             .cloned()
             .collect()
     }
+
+    /// The drawings, by expression, for a shell that does not have them.
+    ///
+    /// The four reference rigs are bundled into the shell; a rig the user put in
+    /// their workspace is not, and this is how its faces reach the window. A
+    /// state that carries script is left out: rigs are content, not code
+    /// (SPEC §11.1), and a drawing that wanted to run something is not a
+    /// drawing.
+    pub fn states(&self) -> std::collections::BTreeMap<String, String> {
+        self.expressions
+            .iter()
+            .filter_map(|e| {
+                let text = std::fs::read_to_string(self.state(e)?).ok()?;
+                (!looks_like_code(&text)).then(|| (e.clone(), text))
+            })
+            .collect()
+    }
+}
+
+/// Whether an SVG is trying to be a program.
+///
+/// Case-insensitive on purpose, and matching on the shape of a handler
+/// attribute rather than a list of names: the point is not to catch every
+/// trick, it is that a rig's author never had a reason to write any of these.
+pub fn looks_like_code(svg: &str) -> bool {
+    let lower = svg.to_ascii_lowercase();
+    lower.contains("<script")
+        || lower.contains("javascript:")
+        || lower.contains("<foreignobject")
+        || lower
+            .split(|c: char| c.is_whitespace() || c == '<')
+            .any(|token| token.starts_with("on") && token.contains('='))
+}
+
+/// An 8 × 8 matrix rig's state as the bits a physical matrix would show.
+///
+/// This is what `face.render` sends a USB device block (SPEC §11.5). The
+/// drawing is read rather than a second copy of it kept: each cell is a square
+/// `<rect>`, the darkest fill among the cells is "off", and everything else is
+/// lit. Rows are bytes, top first; the high bit is the left column. A rig that
+/// is not a grid of sixty-four squares gets `None`, and its face goes to the
+/// device as words instead.
+pub fn matrix_bits(svg: &str) -> Option<[u8; 8]> {
+    struct Cell {
+        x: f64,
+        y: f64,
+        fill: String,
+    }
+    let mut cells: Vec<Cell> = Vec::new();
+    for tag in svg.split("<rect").skip(1) {
+        let tag = tag.split('>').next().unwrap_or("");
+        let attr = |name: &str| -> Option<String> {
+            let at = tag.find(&format!(" {name}=\""))?;
+            let rest = &tag[at + name.len() + 3..];
+            Some(rest.split('"').next()?.to_owned())
+        };
+        let (Some(w), Some(h)) = (attr("width"), attr("height")) else {
+            continue;
+        };
+        if w != h {
+            continue;
+        }
+        let (Some(x), Some(y), Some(fill)) = (attr("x"), attr("y"), attr("fill")) else {
+            continue;
+        };
+        if let (Ok(x), Ok(y)) = (x.parse::<f64>(), y.parse::<f64>()) {
+            cells.push(Cell { x, y, fill });
+        }
+    }
+    if cells.len() != 64 {
+        return None;
+    }
+    let mut xs: Vec<f64> = cells.iter().map(|c| c.x).collect();
+    let mut ys: Vec<f64> = cells.iter().map(|c| c.y).collect();
+    xs.sort_by(f64::total_cmp);
+    xs.dedup();
+    ys.sort_by(f64::total_cmp);
+    ys.dedup();
+    if xs.len() != 8 || ys.len() != 8 {
+        return None;
+    }
+    let off = cells
+        .iter()
+        .map(|c| c.fill.as_str())
+        .min_by_key(|fill| luminance(fill))?
+        .to_owned();
+    let mut rows = [0u8; 8];
+    for cell in &cells {
+        if cell.fill == off {
+            continue;
+        }
+        let col = xs.iter().position(|x| *x == cell.x)?;
+        let row = ys.iter().position(|y| *y == cell.y)?;
+        rows[row] |= 0x80 >> col;
+    }
+    Some(rows)
+}
+
+/// Roughly how bright a `#rrggbb` is. Anything that is not one counts as
+/// bright, so a named colour is never mistaken for "off".
+fn luminance(fill: &str) -> u32 {
+    let hex = fill.strip_prefix('#').unwrap_or("");
+    if hex.len() != 6 {
+        return u32::MAX;
+    }
+    let channel = |at: usize| u32::from_str_radix(&hex[at..at + 2], 16).unwrap_or(0);
+    channel(0) * 299 + channel(2) * 587 + channel(4) * 114
 }
 
 /// Read one rig folder.
@@ -168,7 +345,14 @@ fn parse(text: &str, id: &str) -> Result<Rig, String> {
 
         match (in_idle, key) {
             (true, "blinkEvery") => rig.idle.blink_every = every(&value, rig.idle.blink_every),
-            (true, "breathe") => rig.idle.breathe = value != "false",
+            (true, "breathe") => {
+                if value == "false" {
+                    rig.idle.breathe_per_min = 0;
+                }
+            }
+            (true, "breathePerMin") => {
+                rig.idle.breathe_per_min = value.parse().unwrap_or(rig.idle.breathe_per_min)
+            }
             (true, "settleAfter") => rig.idle.settle_after = every(&value, rig.idle.settle_after),
             (true, "sleepAfter") => rig.idle.sleep_after = every(&value, rig.idle.sleep_after),
             (_, "name") => rig.name = value,
@@ -286,7 +470,105 @@ mod tests {
         assert_eq!(line.idle.blink_every, Duration::from_secs(4));
         assert_eq!(line.idle.settle_after, Duration::from_secs(6));
         assert_eq!(line.idle.sleep_after, Duration::from_secs(300));
-        assert!(line.idle.breathe);
+        assert_eq!(line.idle.breathe_per_min, BREATHE_PER_MIN);
+    }
+
+    /// The block's settings win over the manifest, and only where they are set.
+    #[test]
+    fn a_blocks_settings_override_the_rigs_idle_where_they_are_set() {
+        let line = load(&rigs().join("line")).unwrap();
+        let mut block = block("face", "avatar");
+        block
+            .settings
+            .insert("settleSec".into(), graph_format::Setting::Float(1.5));
+        block
+            .settings
+            .insert("breathePerMin".into(), graph_format::Setting::Int(0));
+        let idle = line.idle.for_block(&block);
+        assert_eq!(idle.settle_after, Duration::from_millis(1500));
+        assert_eq!(idle.breathe_per_min, 0);
+        // Not set, so the rig's own.
+        assert_eq!(idle.blink_every, Duration::from_secs(4));
+        assert_eq!(idle.sleep_after, Duration::from_secs(300));
+    }
+
+    /// "surprised: a beat, then settles"; "neutral: idle returns here".
+    #[test]
+    fn a_surprise_is_a_beat_and_neutral_holds_forever() {
+        let idle = Idle::default();
+        assert_eq!(idle.holds("surprised"), BEAT);
+        assert_eq!(idle.holds("smile"), Duration::from_secs(6));
+        assert_eq!(idle.holds("neutral"), Duration::MAX);
+        assert_eq!(idle.holds("sleepy"), Duration::MAX);
+        let never = Idle {
+            settle_after: Duration::ZERO,
+            ..Idle::default()
+        };
+        assert_eq!(never.holds("smile"), Duration::MAX);
+    }
+
+    fn block(id: &str, kind: &str) -> graph_format::Block {
+        graph_format::Block {
+            id: id.into(),
+            kind: kind.into(),
+            title: None,
+            position: graph_format::Position { x: 0.0, y: 0.0 },
+            size: None,
+            view: graph_format::View::Summary,
+            settings: Default::default(),
+            ports: Vec::new(),
+            source: None,
+            disabled: false,
+            breakpoint: false,
+            frame: None,
+        }
+    }
+
+    /// The states reach a shell that lacks them, and a state that is a program
+    /// does not.
+    #[test]
+    fn states_are_handed_over_and_a_script_is_not() {
+        let line = load(&rigs().join("line")).unwrap();
+        let states = line.states();
+        assert_eq!(states.len(), line.expressions.len());
+        assert!(states["neutral"].contains("<svg"));
+
+        assert!(looks_like_code("<svg><script>alert(1)</script></svg>"));
+        assert!(looks_like_code("<svg onload=\"x()\"></svg>"));
+        assert!(looks_like_code("<svg><a href=\"javascript:x\"/></svg>"));
+        assert!(!looks_like_code(&states["neutral"]));
+        // "one" and "only" are words, not handlers.
+        assert!(!looks_like_code("<svg><title>only one</title></svg>"));
+    }
+
+    /// The Pixel rig's drawings are the bits a matrix would show (SPEC §11.5).
+    #[test]
+    fn a_pixel_state_becomes_matrix_bits() {
+        let pixel = load(&rigs().join("pixel")).unwrap();
+        let read = |e: &str| {
+            let svg = std::fs::read_to_string(pixel.state(e).unwrap()).unwrap();
+            matrix_bits(&svg).unwrap_or_else(|| panic!("{e} is not a matrix"))
+        };
+        let love = read("love");
+        // A heart: two bumps on the top row, a full row under them, a point.
+        assert_eq!(love[0], 0b0110_0110, "{love:?}");
+        assert_eq!(love[1], 0b1111_1100, "{love:?}");
+        assert!(love[7] == 0, "{love:?}");
+        let neutral = read("neutral");
+        assert_ne!(neutral, love);
+        assert!(neutral.iter().any(|row| *row != 0));
+
+        // A rig that is not a grid gets words instead.
+        let line = load(&rigs().join("line")).unwrap();
+        let svg = std::fs::read_to_string(line.state("neutral").unwrap()).unwrap();
+        assert!(matrix_bits(&svg).is_none());
+    }
+
+    #[test]
+    fn every_mood_has_a_colour_and_unknown_moods_share_neutrals() {
+        assert_eq!(colour_for("love"), "#e0685f");
+        assert_eq!(colour_for("neutral"), colour_for("moonwalk"));
+        assert_ne!(colour_for("smile"), colour_for("frown"));
     }
 
     /// A manifest that promises what the folder does not have would put an

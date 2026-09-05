@@ -270,6 +270,16 @@ export type Media = {
 	/**  `image/png`, `audio/wav`. The shell picks a preview from it. */
 	mime: string,
 	bytes: number,
+	/**
+	 *  The words, when the audio is speech this engine produced.
+	 * 
+	 *  A text-to-speech block knows what it said; the audio it hands on does
+	 *  not, unless it is written here. An Avatar with *auto-affect from speech*
+	 *  reads this to wear the mood of what is being said, without a tool call
+	 *  and without an Affect block wired in (SPEC §11.3). Captured audio has
+	 *  none: what a microphone heard is for speech-to-text to decide.
+	 */
+	said?: string | null,
 };
 
 /**
@@ -383,7 +393,7 @@ export type Reparsed = {
  *  TypeScript, reads them. Nothing in Rust parses one back, and the catalogue
  *  inside it is a table of `&'static str` that could not be parsed anyway.
  */
-export type Reply = { result: "engineStatus"; data: EngineStatus } | { result: "catalogue"; data: BlockKind[] } | { result: "workspace"; data: GraphSummary[] } | { result: "workspaceInfo"; data: WorkspaceInfo } | { result: "graph"; data: OpenGraph } | { result: "saved"; data: Saved } | { result: "running"; data: RunStarted } | 
+export type Reply = { result: "engineStatus"; data: EngineStatus } | { result: "catalogue"; data: BlockKind[] } | { result: "workspace"; data: GraphSummary[] } | { result: "workspaceInfo"; data: WorkspaceInfo } | { result: "rigs"; data: RigInfo[] } | { result: "graph"; data: OpenGraph } | { result: "saved"; data: Saved } | { result: "running"; data: RunStarted } | 
 /**
  *  What the code says the block's interface is, or why it could not be
  *  read. A failure is a reply, not an error: the block shows the line
@@ -408,6 +418,16 @@ export type Request =
 { method: "workspace.list" } | 
 /**  What the workspace chose, and what is actually installed. */
 { method: "workspace.settings" } | 
+/**
+ *  Every rig this workspace can wear, with its drawings.
+ * 
+ *  The four reference rigs are bundled into the shell, so this is how a
+ *  rig the user put in their workspace reaches the window (SPEC §11.1).
+ *  The whole set is returned rather than only the workspace's, because a
+ *  workspace rig with a shipped rig's name replaces it, and the shell
+ *  should draw what the engine will run.
+ */
+{ method: "workspace.rigs" } | 
 /**
  *  Change what the workspace chose. The probe is not writable: it is a
  *  description of the machine, not a preference.
@@ -491,6 +511,26 @@ export type Request =
 	 */
 	function?: string | null,
 } };
+
+/**  A rig, as the shell draws it (SPEC §11.1). */
+export type RigInfo = {
+	/**  The folder name, which is what a graph's `rig` setting stores. */
+	id: string,
+	name: string,
+	description: string,
+	/**  In manifest order, and only the ones with a drawing. */
+	expressions: string[],
+	gestures: string[],
+	/**  Whether `face.look` means anything on it. */
+	gaze: boolean,
+	/**  A blink about this often, and this many breaths a minute. */
+	blinkMs: number,
+	breathePerMin: number,
+	/**  One of the four that ship, as opposed to one the workspace added. */
+	shipped: boolean,
+	/**  The SVG for each expression, by name. */
+	states: { [key in string]: string },
+};
 
 export type RpcError = {
 	/**  A stable key the shell can branch on. */
@@ -606,6 +646,30 @@ export type RunEvent = { event: "run.started"; data: {
 	mouth: number[],
 	/**  Who or what it is looking at, in the words the `look` port used. */
 	gaze: string | null,
+	/**
+	 *  Where that is, when it is known: a point in the frame, `0..1` from
+	 *  the top left. A name alone leaves this empty and the shell decides.
+	 */
+	gazeAt: [(number | null), (number | null)] | null,
+	/**
+	 *  A one-shot gesture (`nod`, `shake`) carried by this event and this
+	 *  event only; it is not part of the face's state.
+	 */
+	gesture: string | null,
+	/**
+	 *  Asleep after the idle timeout (SPEC §11.4). A rig with a `sleepy`
+	 *  state wears it; one without dims.
+	 */
+	asleep: boolean,
+	/**
+	 *  The idle the shell should animate: a blink about this often, and
+	 *  this many breaths a minute (zero for none). From the rig, overridden
+	 *  by the block.
+	 */
+	blinkMs: number,
+	breathePerMin: number,
+	/**  The mood's colour, for the media that have a colour and not a face. */
+	colour: string,
 } } | 
 /**
  *  The engine held the graph itself, or let it go again.

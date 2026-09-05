@@ -110,6 +110,9 @@ impl Live<'_> {
         while !self.cancel.load(Ordering::Relaxed) {
             self.absorb(&rx, &mut queue, &mut tally, emit);
             self.consolidate_due(&plan, &mut consolidators, emit, ask);
+            // The avatar is alive between turns (SPEC §11.4): the settle and
+            // the sleep are clocks of the loop, not of any event.
+            self.runner().idle_faces(Instant::now(), emit);
 
             if self.paused.load(Ordering::Relaxed) {
                 std::thread::sleep(IDLE);
@@ -170,18 +173,22 @@ impl Live<'_> {
                 continue;
             }
             *next = now + *period;
-            let runner = Runner {
-                graph: self.graph,
-                root: self.root,
-                provider: self.provider,
-                run: self.run.clone(),
-                cancel: Arc::clone(&self.cancel),
-                scratch: Arc::clone(&self.scratch),
-                eye: Arc::clone(&self.eye),
-                vault: Arc::clone(&self.vault),
-                bench: Arc::clone(&self.bench),
-            };
-            runner.consolidate_hub(id, plan, emit, ask);
+            self.runner().consolidate_hub(id, plan, emit, ask);
+        }
+    }
+
+    /// One pass's runner, over this run's shared state.
+    fn runner(&self) -> Runner<'_> {
+        Runner {
+            graph: self.graph,
+            root: self.root,
+            provider: self.provider,
+            run: self.run.clone(),
+            cancel: Arc::clone(&self.cancel),
+            scratch: Arc::clone(&self.scratch),
+            eye: Arc::clone(&self.eye),
+            vault: Arc::clone(&self.vault),
+            bench: Arc::clone(&self.bench),
         }
     }
 
@@ -343,18 +350,9 @@ impl Live<'_> {
             seeded.insert(Endpoint::new(&event.node, &event.port), event.value.clone());
         }
 
-        let runner = Runner {
-            graph: self.graph,
-            root: self.root,
-            provider: self.provider,
-            run: self.run.clone(),
-            cancel: Arc::clone(&self.cancel),
-            scratch: Arc::clone(&self.scratch),
-            eye: Arc::clone(&self.eye),
-            vault: Arc::clone(&self.vault),
-            bench: Arc::clone(&self.bench),
-        };
-        let summary = runner.execute_steps(&steps, seeded, emit, ask);
+        // An event: whatever was asleep may wake (SPEC §11.4).
+        self.bench.touch();
+        let summary = self.runner().execute_steps(&steps, seeded, emit, ask);
 
         // "A hardware fault *pauses*; one click resumes" (SPEC §12.1). A camera
         // that is not there fails on every tick, and at a camera's tick rate

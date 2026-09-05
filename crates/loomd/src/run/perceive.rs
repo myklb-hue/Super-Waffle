@@ -262,6 +262,7 @@ impl Perception for Local {
             path: into.display().to_string(),
             mime: "audio/wav".into(),
             bytes: bytes.min(u64::from(u32::MAX)) as u32,
+            said: Some(text.to_owned()),
         })
     }
 
@@ -368,15 +369,33 @@ impl Perception for Scripted {
 
     fn speak(&self, text: &str, _voice: &str, into: &Path) -> Result<Media, PerceptionError> {
         self.seen.lock().unwrap().push(format!("speak {text}"));
-        // Silence of about the right length, so a graph downstream of a voice
-        // has real audio to work on.
+        // A sound of about the right length, so a graph downstream of a voice
+        // has real audio to work on: a soft tone in syllable-sized bursts,
+        // which is enough for a mouth to move to. Written here rather than by
+        // ffmpeg, so a scripted voice works on a machine without one.
+        let rate = 16_000u32;
         let seconds = (text.split_whitespace().count() as f64 / 2.5).max(0.2);
-        super::sense::audio(
-            &super::sense::Input::Synthetic("anullsrc=r=16000:cl=mono".into()),
-            seconds,
-            into,
-        )
-        .map_err(PerceptionError::Failed)
+        let samples: Vec<i16> = (0..(seconds * f64::from(rate)) as u32)
+            .map(|i| {
+                let t = f64::from(i) / f64::from(rate);
+                let burst = (t * 1000.0) as u64 % 300 < 180;
+                if burst {
+                    ((t * 220.0 * std::f64::consts::TAU).sin() * 0.25 * f64::from(i16::MAX)) as i16
+                } else {
+                    0
+                }
+            })
+            .collect();
+        let bytes = super::sense::wav(&samples, rate);
+        std::fs::write(into, &bytes).map_err(|e| {
+            PerceptionError::Failed(format!("could not write {}: {e}", into.display()))
+        })?;
+        Ok(Media {
+            path: into.display().to_string(),
+            mime: "audio/wav".into(),
+            bytes: bytes.len() as u32,
+            said: Some(text.to_owned()),
+        })
     }
 
     fn classify(&self, text: &str, _labels: &[String]) -> Result<(String, f64), PerceptionError> {
@@ -420,6 +439,7 @@ mod tests {
             path: "/tmp/frame.png".into(),
             mime: "image/png".into(),
             bytes: 1000,
+            said: None,
         }
     }
 
@@ -548,6 +568,8 @@ mod tests {
         let said = eye.speak("four words go here", "any", &into).unwrap();
         assert_eq!(said.mime, "audio/wav");
         assert!(said.bytes > 1000, "{} bytes", said.bytes);
+        // The audio remembers its words, which is what auto-affect reads.
+        assert_eq!(said.said.as_deref(), Some("four words go here"));
         let _ = std::fs::remove_file(&into);
     }
 }
